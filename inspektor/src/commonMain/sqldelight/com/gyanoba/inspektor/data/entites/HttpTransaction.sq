@@ -1,0 +1,42 @@
+import data.entities.HttpMethod;
+import kotlin.Boolean;
+import kotlinx.datetime.LocalDateTime;
+
+CREATE TABLE HttpTransaction (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    method TEXT AS HttpMethod NOT NULL,
+    statusCode INTEGER,
+    remoteAddress TEXT,
+    requestDate INTEGER AS LocalDateTime NOT NULL,
+    responseDate INTEGER AS LocalDateTime NOT NULL,
+    tookMs INTEGER,
+    protocol TEXT,
+    url TEXT,
+    host TEXT,
+    path TEXT,
+    scheme TEXT,
+    responseTlsVersion TEXT,
+    responseCipherSuite TEXT,
+    requestPayloadSize INTEGER,
+    requestContentType TEXT,
+    requestHeaders TEXT,
+    requestHeadersSize INTEGER,
+    requestBody TEXT,
+    isRequestBodyEncoded INTEGER AS Boolean DEFAULT 0,
+    responseCode INTEGER,
+    responseMessage TEXT,
+    error TEXT,
+    responsePayloadSize INTEGER,
+    responseContentType TEXT,
+    responseHeaders TEXT,
+    responseHeadersSize INTEGER,
+    responseBody TEXT,
+    isResponseBodyEncoded INTEGER AS Boolean DEFAULT 0,
+    responseImageData BLOB,
+    graphQlDetected INTEGER AS Boolean DEFAULT 0,
+    graphQlOperationName TEXT
+);
+
+
+getAll:
+SELECT * FROM HttpTransaction;

@@ -14,10 +14,12 @@ kermit = "2.0.0-RC5"
 ktor = "2.3.9"
 sqlDelight = "2.0.1"
 multiplatformSettings = "1.1.1"
+startupRuntime = "1.1.1"
 
 [libraries]
 
 androidx-activityCompose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
+androidx-startup-runtime = { module = "androidx.startup:startup-runtime", version.ref = "startupRuntime" }
 androidx-testManifest = { module = "androidx.compose.ui:ui-test-manifest", version.ref = "androidx-uiTest" }
 androidx-junit4 = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "androidx-uiTest" }
 napier = { module = "io.github.aakira:napier", version.ref = "napier" }

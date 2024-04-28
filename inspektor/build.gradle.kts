@@ -95,6 +95,7 @@ kotlin {
             implementation(libs.kotlinx.coroutines.android)
             implementation(libs.ktor.client.okhttp)
             implementation(libs.sqlDelight.driver.android)
+            implementation(libs.androidx.startup.runtime)
         }
 
         jvmMain.dependencies {
