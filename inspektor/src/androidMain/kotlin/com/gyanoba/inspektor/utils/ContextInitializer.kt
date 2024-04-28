@@ -1,4 +1,4 @@
-package utils
+package com.gyanoba.inspektor.utils
 
 import android.content.Context
 import androidx.startup.Initializer

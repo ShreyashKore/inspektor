@@ -1,5 +1,6 @@
 rootProject.name = "inspektor"
 include(":inspektor")
+include(":sample")
 includeBuild("convention-plugins")
 
 pluginManagement {
