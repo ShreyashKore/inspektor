@@ -4,7 +4,7 @@ import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.native.NativeSqliteDriver
 import com.gyanoba.inspektor.db.Database
 
-actual object DriverFactory {
+internal actual object DriverFactory {
     actual fun createDbDriver(): SqlDriver =
         NativeSqliteDriver(Database.Schema, DB_NAME)
 }

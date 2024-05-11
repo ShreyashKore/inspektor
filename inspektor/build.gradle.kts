@@ -1,5 +1,5 @@
-import org.jetbrains.compose.ExperimentalComposeLibrary
 import com.android.build.api.dsl.ManagedVirtualDevice
+import org.jetbrains.compose.ExperimentalComposeLibrary
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSetTree
 
@@ -16,6 +16,7 @@ group = "com.gyanoba.inspektor"
 version = "1.0"
 
 kotlin {
+    explicitApiWarning()
     androidTarget {
         publishLibraryVariants("release")
         compilations.all {

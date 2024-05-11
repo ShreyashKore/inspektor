@@ -1,22 +1,20 @@
-import data.entities.HttpMethod;
 import kotlin.Boolean;
-import kotlinx.datetime.LocalDateTime;
+import kotlinx.datetime.Instant;
 
 CREATE TABLE HttpTransaction (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    method TEXT AS HttpMethod NOT NULL,
+    method TEXT NOT NULL,
     statusCode INTEGER,
-    remoteAddress TEXT,
-    requestDate INTEGER AS LocalDateTime NOT NULL,
-    responseDate INTEGER AS LocalDateTime NOT NULL,
+    requestDate INTEGER AS Instant NOT NULL,
+    responseDate INTEGER AS Instant NOT NULL,
     tookMs INTEGER,
     protocol TEXT,
     url TEXT,
     host TEXT,
     path TEXT,
     scheme TEXT,
-    responseTlsVersion TEXT,
-    responseCipherSuite TEXT,
+    responseTlsVersion TEXT DEFAULT NULL,
+    responseCipherSuite TEXT DEFAULT NULL,
     requestPayloadSize INTEGER,
     requestContentType TEXT,
     requestHeaders TEXT,
@@ -31,12 +29,60 @@ CREATE TABLE HttpTransaction (
     responseHeaders TEXT,
     responseHeadersSize INTEGER,
     responseBody TEXT,
-    isResponseBodyEncoded INTEGER AS Boolean DEFAULT 0,
-    responseImageData BLOB,
-    graphQlDetected INTEGER AS Boolean DEFAULT 0,
-    graphQlOperationName TEXT
+    isResponseBodyEncoded INTEGER AS Boolean DEFAULT 0
 );
 
+CREATE INDEX HttpTransaction_method ON HttpTransaction(method);
+CREATE INDEX HttpTransaction_statusCode ON HttpTransaction(statusCode);
+CREATE INDEX HttpTransaction_host ON HttpTransaction(host);
+
+
+getById:
+SELECT * FROM HttpTransaction WHERE id = ?;
 
 getAll:
 SELECT * FROM HttpTransaction;
+
+getAllLatest:
+SELECT * FROM HttpTransaction ORDER BY requestDate DESC;
+
+insert:
+INSERT INTO HttpTransaction(
+   method,
+   statusCode,
+   requestDate,
+   responseDate,
+   tookMs,
+   protocol,
+   url,
+   host,
+   path,
+   scheme,
+   responseTlsVersion,
+   responseCipherSuite,
+   requestPayloadSize,
+   requestContentType,
+   requestHeaders,
+   requestHeadersSize,
+   requestBody,
+   isRequestBodyEncoded,
+   responseCode,
+   responseMessage,
+   error,
+   responsePayloadSize,
+   responseContentType,
+   responseHeaders,
+   responseHeadersSize,
+   responseBody,
+   isResponseBodyEncoded
+)
+VALUES ?;
+
+delete:
+DELETE FROM HttpTransaction WHERE id = ?;
+
+deleteAll:
+DELETE FROM HttpTransaction;
+
+deleteBefore:
+DELETE FROM HttpTransaction WHERE requestDate < ?;
