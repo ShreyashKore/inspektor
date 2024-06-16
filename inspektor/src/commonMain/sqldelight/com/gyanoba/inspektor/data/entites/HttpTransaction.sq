@@ -86,3 +86,15 @@ DELETE FROM HttpTransaction;
 
 deleteBefore:
 DELETE FROM HttpTransaction WHERE requestDate < ?;
+
+update:
+UPDATE HttpTransaction
+SET responseCode = ?,
+    responseMessage = ?,
+    responsePayloadSize = ?,
+    responseContentType = ?,
+    responseHeaders = ?,
+    responseHeadersSize = ?,
+    responseBody = ?,
+    isResponseBodyEncoded = ?
+WHERE id = :id;
