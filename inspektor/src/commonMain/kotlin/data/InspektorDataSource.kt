@@ -13,7 +13,10 @@ internal class InspektorDataSource private constructor() {
 
     suspend fun insertHttpTransaction(httpTransaction: HttpTransaction) =
         withContext(Dispatchers.IO) {
-            db.httpTransactionQueries.insert(httpTransaction)
+            db.transactionWithResult {
+                db.httpTransactionQueries.insert(httpTransaction)
+                db.httpTransactionQueries.lastInsertRowId().executeAsOne()
+            }
         }
 
     suspend fun updateHttpTransaction(httpTransaction: HttpTransaction) =

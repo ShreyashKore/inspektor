@@ -1,122 +1,163 @@
-import co.touchlab.kermit.Logger
-import com.gyanoba.inspektor.data.entites.HttpTransaction
-import data.db.createDatabase
-import io.ktor.client.call.HttpClientCall
-import io.ktor.client.plugins.Sender
+import data.InspektorDataSource
+import io.ktor.client.plugins.api.ClientPlugin
+import io.ktor.client.plugins.api.createClientPlugin
+import io.ktor.client.plugins.logging.DEFAULT
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logger
+import io.ktor.client.plugins.observer.ResponseHandler
+import io.ktor.client.plugins.observer.ResponseObserver
 import io.ktor.client.request.HttpRequestBuilder
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.Headers
-import io.ktor.http.contentLength
+import io.ktor.http.charset
 import io.ktor.http.contentType
-import io.ktor.util.date.GMTDate
-import io.ktor.util.toMap
+import io.ktor.util.AttributeKey
+import io.ktor.utils.io.InternalAPI
+import io.ktor.utils.io.KtorDsl
+import io.ktor.utils.io.charsets.Charsets
 import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-internal val logger = Logger
-
-internal class Inspektor private constructor() {
-    private val db = createDatabase()
-
-    fun insertHttpTransaction(httpTransaction: HttpTransaction) {
-        logger.d("$httpTransaction")
-        db.httpTransactionQueries.insert(httpTransaction)
-    }
-
-    fun getAllLatestHttpTransactions() = db.httpTransactionQueries.getAllLatest().executeAsList()
-
-    companion object {
-        val Instance by lazy(mode = LazyThreadSafetyMode.SYNCHRONIZED) { Inspektor() }
-    }
-}
-
-
-public val inspektor: suspend Sender.(HttpRequestBuilder) -> HttpClientCall = { requestBuilder ->
-    val startTime = Clock.System.now()
-    val call = execute(requestBuilder)
-    val endTime = Clock.System.now()
-
-    val duration = endTime - startTime
-
-    val requestBody = try {
-        call.request.content.toString()
-    } catch (e: Exception) {
-        logger.e(e) { "Failed to read request body" }
-        null
-    }
-
-    val responseBody = try {
-        call.response.bodyAsText()
-    } catch (e: Exception) {
-        logger.e(e) { "Failed to read response body" }
-        null
-    }
-
-    val inspektor = Inspektor.Instance
-
-    inspektor.insertHttpTransaction(
-        HttpTransaction(
-            id = -1,
-            method = call.request.method.value,
-            statusCode = call.response.status.value.toLong(),
-            requestDate = startTime,
-            responseDate = call.response.responseTime.toInstant(),
-            tookMs = duration.inWholeMilliseconds,
-            protocol = call.request.url.protocol.name,
-            scheme = call.request.url.protocol.name,
-            url = call.request.url.toString(),
-            host = call.request.url.host,
-            path = call.request.url.encodedPath,
-            requestPayloadSize = call.request.contentLength(),
-            requestContentType = call.request.contentType()?.contentType,
-            requestHeaders = jsonX.encodeToString(call.request.headers.toMap()),
-            requestHeadersSize = call.request.headers.approxByteCount(),
-            requestBody = requestBody,
-            isRequestBodyEncoded = requestBody == null,
-            responseCode = call.response.status.value.toLong(),
-            responseMessage = responseBody,
-            error = null,
-            responsePayloadSize = call.response.contentLength(),
-            responseContentType = call.response.contentType()?.contentType,
-            responseHeaders = jsonX.encodeToString(call.response.headers.toMap()),
-            responseHeadersSize = call.response.headers.toMap().size.toLong(),
-            responseBody = responseBody,
-            isResponseBodyEncoded = responseBody == null,
-            responseTlsVersion = null,
-            responseCipherSuite = null,
-        )
-    )
-    call
-}
-
-internal val jsonX = Json {
-    ignoreUnknownKeys = true
-}
-
-internal fun GMTDate.toInstant() = Instant.fromEpochMilliseconds(timestamp)
-
+private val ClientCallLogger = AttributeKey<HttpClientCallLogger>("CallLogger")
+private val DisableLogging = AttributeKey<Unit>("DisableLogging")
 
 /**
- * Returns the number of bytes required to encode these headers using HTTP/1.1. This is also the
- * approximate size of HTTP/2 headers before they are compressed with HACK. This value is
- * intended to be used as a metric: smaller headers are more efficient to encode and transmit.
+ * A configuration for the [Inspektor] plugin.
  */
-internal fun Headers.approxByteCount(): Long {
-    // Each header name has 2 bytes of overhead for ': ' and every header value has 2 bytes of
-    // overhead for '\r\n'.
-    val entries = entries().toList()
-    var result = (entries.size * 2 * 2).toLong()
+@KtorDsl
+public class InspektorConfig internal constructor() {
+    internal var filters = mutableListOf<(HttpRequestBuilder) -> Boolean>()
+    internal val headerSanitizers = mutableListOf<HeaderSanitizer>()
 
-    for ((name, values) in entries) {
-        result += name.length.toLong()
-        for (i in values.indices) {
-            result += values[i].length.toLong()
-            // Add 1 byte for ','
-            if (i != values.lastIndex) result += 1
+    private var _logger: Logger? = null
+
+    /**
+     * Specifies a [Logger] instance.
+     */
+    public var logger: Logger
+        get() = _logger ?: Logger.DEFAULT
+        set(value) {
+            _logger = value
         }
+
+    /**
+     * Specifies the logging level.
+     */
+    public var level: LogLevel = LogLevel.HEADERS
+
+    /**
+     * Allows you to filter log messages for calls matching a [predicate].
+     */
+    public fun filter(predicate: (HttpRequestBuilder) -> Boolean) {
+        filters.add(predicate)
     }
 
-    return result
+    /**
+     * Allows you to sanitize sensitive headers to avoid their values appearing in the logs.
+     * In the example below, Authorization header value will be replaced with '***' when logging:
+     * ```kotlin
+     * sanitizeHeader { header -> header == HttpHeaders.Authorization }
+     * ```
+     */
+    public fun sanitizeHeader(placeholder: String = "***", predicate: (String) -> Boolean) {
+        headerSanitizers.add(HeaderSanitizer(placeholder, predicate))
+    }
 }
+
+
+public val Inspektor: ClientPlugin<InspektorConfig> =
+    createClientPlugin("Inspektor", ::InspektorConfig) {
+        val inspektorDataSource = InspektorDataSource.Instance
+        val level: LogLevel = pluginConfig.level
+        if (level == LogLevel.NONE) return@createClientPlugin
+
+        val filters: List<(HttpRequestBuilder) -> Boolean> = pluginConfig.filters
+        val headerSanitizers: List<HeaderSanitizer> = pluginConfig.headerSanitizers
+
+        fun shouldBeLogged(request: HttpRequestBuilder): Boolean =
+            filters.isEmpty() || filters.any { it(request) }
+
+        on(SendMonitoringHook) { request ->
+            if (!shouldBeLogged(request)) {
+                request.attributes.put(DisableLogging, Unit)
+                return@on
+            }
+            val callLogger = HttpClientCallLogger(inspektorDataSource)
+            request.attributes.put(ClientCallLogger, callLogger)
+            val loggedRequest = try {
+                callLogger.logRequestReturnContent(request, level, headerSanitizers)
+            } catch (_: Throwable) {
+                null
+            }
+
+            try {
+                proceedWith(loggedRequest ?: request.body)
+            } catch (cause: Throwable) {
+                callLogger.addRequestException(cause)
+                throw cause
+            } finally {
+            }
+        }
+
+        on(ReceiveStateHook) { response ->
+            if (level == LogLevel.NONE || response.call.attributes.contains(DisableLogging)) return@on
+
+            val callLogger = response.call.attributes[ClientCallLogger]
+
+            var failed = false
+            val responseCode = if (level.info) response.status.value else null
+            val headers = if (level.headers)
+                Json.encodeToString(
+                    response.headers.sanitizeHeaders(headerSanitizers).entries()
+                )
+            else null
+            callLogger.addResponseHeader(
+                responseCode = responseCode,
+                responseHeaders = headers,
+                responseDate = Clock.System.now()
+            )
+            try {
+                proceed()
+            } catch (cause: Throwable) {
+                callLogger.addResponseException(cause)
+                failed = true
+                throw cause
+            } finally {
+                if (failed || !level.body) callLogger.closeResponseLog()
+            }
+        }
+
+        on(ResponseReceiveHook) { call ->
+            if (level == LogLevel.NONE || call.attributes.contains(DisableLogging)) return@on
+            try {
+                proceed()
+            } catch (cause: Throwable) {
+                val callLogger = call.attributes[ClientCallLogger]
+                if (level.info) {
+                    callLogger.addResponseException(cause)
+                }
+                callLogger.closeResponseLog()
+                throw cause
+            }
+        }
+
+        if (!level.body) return@createClientPlugin
+
+        @OptIn(InternalAPI::class)
+        val observer: ResponseHandler = observer@{
+            if (level == LogLevel.NONE || it.call.attributes.contains(DisableLogging))
+                return@observer
+
+            val callLogger = it.call.attributes[ClientCallLogger]
+            try {
+                val message = it.content.tryReadText(it.contentType()?.charset() ?: Charsets.UTF_8)
+                    ?: "[response body omitted]"
+                callLogger.addResponseBody(message, it.contentType())
+            } catch (_: Throwable) {
+            } finally {
+                callLogger.closeResponseLog()
+            }
+        }
+
+        ResponseObserver.install(ResponseObserver.prepare { onResponse(observer) }, client)
+    }
+

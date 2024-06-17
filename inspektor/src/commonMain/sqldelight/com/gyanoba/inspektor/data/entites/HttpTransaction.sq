@@ -6,7 +6,7 @@ CREATE TABLE HttpTransaction (
     method TEXT NOT NULL,
     statusCode INTEGER,
     requestDate INTEGER AS Instant NOT NULL,
-    responseDate INTEGER AS Instant NOT NULL,
+    responseDate INTEGER AS Instant,
     tookMs INTEGER,
     protocol TEXT,
     url TEXT,
@@ -98,3 +98,6 @@ SET responseCode = ?,
     responseBody = ?,
     isResponseBodyEncoded = ?
 WHERE id = :id;
+
+lastInsertRowId:
+SELECT last_insert_rowid();
