@@ -10,6 +10,7 @@ plugins {
     alias(libs.plugins.kotlinx.serialization)
     alias(libs.plugins.sqlDelight)
     id("convention.publication")
+    id("kotlinx-atomicfu")
 }
 
 group = "com.gyanoba.inspektor"
@@ -81,6 +82,7 @@ kotlin {
             implementation(libs.kermit)
             implementation(libs.ktor.core)
             implementation(libs.multiplatformSettings)
+            implementation(libs.ktor.client.logging)
         }
 
         commonTest.dependencies {

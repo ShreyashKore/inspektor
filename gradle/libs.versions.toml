@@ -1,5 +1,6 @@
 [versions]
 
+atomicfuGradlePlugin = "0.22.0"
 kotlin = "1.9.23"
 agp = "8.2.2"
 kotlinx-coroutines = "1.9.0-RC"
@@ -11,7 +12,7 @@ napier = "2.7.1"
 moko-mvvm = "0.16.1"
 kotlinx-datetime = "0.5.0"
 kermit = "2.0.0-RC5"
-ktor = "2.3.9"
+ktor = "3.0.0-beta-1"
 sqlDelight = "2.0.1"
 multiplatformSettings = "1.1.1"
 startupRuntime = "1.1.1"
@@ -22,7 +23,9 @@ androidx-activityCompose = { module = "androidx.activity:activity-compose", vers
 androidx-startup-runtime = { module = "androidx.startup:startup-runtime", version.ref = "startupRuntime" }
 androidx-testManifest = { module = "androidx.compose.ui:ui-test-manifest", version.ref = "androidx-uiTest" }
 androidx-junit4 = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "androidx-uiTest" }
+atomicfu = { module = "org.jetbrains.kotlinx:atomicfu-gradle-plugin", version.ref = "atomicfuGradlePlugin" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 napier = { module = "io.github.aakira:napier", version.ref = "napier" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }

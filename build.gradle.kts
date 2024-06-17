@@ -6,3 +6,10 @@ plugins {
     alias(libs.plugins.kotlinx.serialization).apply(false)
     alias(libs.plugins.sqlDelight).apply(false)
 }
+
+buildscript {
+    dependencies {
+        classpath(libs.atomicfu)
+    }
+}
+apply(plugin = "kotlinx-atomicfu")
