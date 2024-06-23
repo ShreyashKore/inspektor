@@ -1,0 +1,2 @@
+public actual fun openInspektor() {
+}

@@ -165,3 +165,4 @@ public val Inspektor: ClientPlugin<InspektorConfig> =
         ResponseObserver.install(ResponseObserver.prepare { onResponse(observer) }, client)
     }
 
+public expect fun openInspektor()

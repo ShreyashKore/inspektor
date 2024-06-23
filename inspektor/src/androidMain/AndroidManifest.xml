@@ -15,7 +15,8 @@
         <activity
             android:name="com.gyanoba.inspektor.MainActivity"
             android:label="Inspektor"
-            android:launchMode="singleTask" />
+            android:launchMode="singleTask"
+            android:theme="@android:style/Theme.Material.Light.NoActionBar" />
     </application>
 
 </manifest>
