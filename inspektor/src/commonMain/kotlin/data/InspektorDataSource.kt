@@ -21,6 +21,10 @@ internal class InspektorDataSource private constructor() {
             }
         }
 
+    fun getTransaction(id: Long) =
+        db.httpTransactionQueries.getById(id).asFlow()
+            .mapToOne(Dispatchers.IO)
+
     suspend fun updateHttpTransaction(httpTransaction: HttpTransaction) =
         withContext(Dispatchers.IO) {
             db.httpTransactionQueries.update(
