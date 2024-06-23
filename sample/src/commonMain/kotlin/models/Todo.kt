@@ -9,3 +9,9 @@ data class Todo(
     val title: String,
     val userId: Int
 )
+
+@Serializable
+data class Response(
+    val id: Int,
+    val content: String,
+)
