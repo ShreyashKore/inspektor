@@ -1,3 +1,6 @@
+package utils
+
+import HttpClientCallLogger
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.utils.buildHeaders

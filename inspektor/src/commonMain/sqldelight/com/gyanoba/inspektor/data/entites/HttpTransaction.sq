@@ -46,6 +46,12 @@ SELECT * FROM HttpTransaction;
 getAllLatest:
 SELECT * FROM HttpTransaction ORDER BY requestDate DESC;
 
+getAllCount:
+SELECT COUNT(*) FROM HttpTransaction;
+
+getAllLatestForDateRange:
+SELECT * FROM HttpTransaction WHERE requestDate BETWEEN :startDate AND :endDate ORDER BY requestDate DESC;
+
 insert:
 INSERT INTO HttpTransaction(
    method,

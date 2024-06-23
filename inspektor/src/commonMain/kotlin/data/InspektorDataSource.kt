@@ -1,5 +1,7 @@
 package data
 
+import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToOne
 import com.gyanoba.inspektor.data.entites.HttpTransaction
 import data.db.createDatabase
 import kotlinx.coroutines.Dispatchers
@@ -34,9 +36,15 @@ internal class InspektorDataSource private constructor() {
             )
         }
 
-    suspend fun getAllLatestHttpTransactions() = withContext(Dispatchers.IO) {
-        db.httpTransactionQueries.getAllLatest().executeAsList()
-    }
+
+    suspend fun getAllLatestHttpTransactionsForDateRange(startDate: Instant, endDate: Instant) =
+        withContext(Dispatchers.IO) {
+            db.httpTransactionQueries.getAllLatestForDateRange(startDate, endDate).executeAsList()
+        }
+
+    fun getAllHttpTransactionsCount() =
+        db.httpTransactionQueries.getAllCount().asFlow()
+            .mapToOne(Dispatchers.IO)
 
     suspend fun deleteBefore(timestamp: Instant) = withContext(Dispatchers.IO) {
         db.httpTransactionQueries.deleteBefore(timestamp)

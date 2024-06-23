@@ -1,3 +1,5 @@
+package utils
+
 import io.ktor.http.content.OutgoingContent
 import io.ktor.util.copyToBoth
 import io.ktor.utils.io.ByteChannel

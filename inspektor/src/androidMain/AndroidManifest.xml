@@ -12,6 +12,10 @@
                 android:name="com.gyanoba.inspektor.utils.ContextInitializer"
                 android:value="androidx.startup" />
         </provider>
+        <activity
+            android:name="com.gyanoba.inspektor.MainActivity"
+            android:label="Inspektor"
+            android:launchMode="singleTask" />
     </application>
 
 </manifest>
