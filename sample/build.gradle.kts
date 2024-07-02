@@ -39,10 +39,10 @@ kotlin {
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
             implementation(libs.kotlinx.coroutines.core)
-            implementation(libs.moko.mvvm)
+//            implementation(libs.moko.mvvm)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.datetime)
-            implementation(libs.kermit)
+//            implementation(libs.kermit)
             implementation(libs.ktor.core)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
@@ -52,7 +52,7 @@ kotlin {
 
         commonTest.dependencies {
             implementation(kotlin("test"))
-            implementation(libs.ktor.client.mock)
+//            implementation(libs.ktor.client.mock)
             implementation(libs.kotlinx.coroutines.test)
         }
 
@@ -67,7 +67,9 @@ kotlin {
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
-            implementation(libs.ktor.client.okhttp)
+            implementation(libs.ktor.client.java)
+//            implementation(libs.ktor.client.logging.jvm)
+//            implementation("ch.qos.logback:logback-classic:1.2.3")
         }
 
 
@@ -109,7 +111,7 @@ android {
 
 compose.desktop {
     application {
-        mainClass = "com.gyanoba.inspektor.sample.MainKt"
+        mainClass = "MainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)

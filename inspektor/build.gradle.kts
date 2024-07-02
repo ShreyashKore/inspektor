@@ -1,5 +1,4 @@
 import com.android.build.api.dsl.ManagedVirtualDevice
-import org.jetbrains.compose.ExperimentalComposeLibrary
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSetTree
 
@@ -9,7 +8,7 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlinx.serialization)
     alias(libs.plugins.sqlDelight)
-    id("convention.publication")
+//    id("convention.publication")
     id("kotlinx-atomicfu")
 }
 
@@ -79,23 +78,23 @@ kotlin {
             implementation(libs.lifecycle.runtime.compose)
             implementation(libs.androidx.navigation.compose)
             implementation(libs.sqlDelight.coroutines.extensions)
-            implementation(libs.paging.compose.common)
+//            implementation(libs.paging.compose.common)
             implementation(libs.androidx.paging3.extensions)
             implementation(libs.kotlinx.coroutines.core)
-            implementation(libs.moko.mvvm)
+//            implementation(libs.moko.mvvm)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.datetime)
             implementation(libs.kermit)
             implementation(libs.ktor.core)
             implementation(libs.multiplatformSettings)
-            implementation(libs.ktor.client.logging)
+//            implementation(libs.ktor.client.logging)
         }
 
         commonTest.dependencies {
-            implementation(kotlin("test"))
-            @OptIn(ExperimentalComposeLibrary::class)
-            implementation(compose.uiTest)
-            implementation(libs.kotlinx.coroutines.test)
+//            implementation(kotlin("test"))
+//            @OptIn(ExperimentalComposeLibrary::class)
+//            implementation(compose.uiTest)
+//            implementation(libs.kotlinx.coroutines.test)
         }
 
         androidMain.dependencies {
@@ -112,18 +111,23 @@ kotlin {
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.ktor.client.okhttp)
             implementation(libs.sqlDelight.driver.sqlite)
+//            implementation(libs.ktor.client.logging.jvm)
         }
 
-        jsMain.dependencies {
-            implementation(compose.html.core)
-            implementation(libs.ktor.client.js)
-            implementation(libs.sqlDelight.driver.js)
-        }
+//        jsMain.dependencies {
+//            implementation(compose.html.core)
+//            implementation(libs.ktor.client.js)
+//            implementation(libs.sqlDelight.driver.js)
+//        }
 
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
             implementation(libs.sqlDelight.driver.native)
         }
+
+//        jvmTest.dependencies {
+//            implementation("org.xerial:sqlite-jdbc:3.45.2.0")
+//        }
 
     }
 
@@ -168,10 +172,13 @@ android {
         kotlinCompilerExtensionVersion = "1.5.11"
     }
 }
+dependencies {
+//    implementation(libs.androidx.ui.desktop)
+}
 
 sqldelight {
     databases {
-        create("Database") {
+        create("InspectorDatabase") {
             packageName.set("com.gyanoba.inspektor.db")
         }
     }

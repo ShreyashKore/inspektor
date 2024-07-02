@@ -1,7 +1,7 @@
 rootProject.name = "inspektor"
 include(":inspektor")
 include(":sample")
-includeBuild("convention-plugins")
+//includeBuild("convention-plugins")
 
 pluginManagement {
     repositories {
@@ -13,6 +13,7 @@ pluginManagement {
 
 dependencyResolutionManagement {
     repositories {
+//        maven("https://maven.pkg.jetbrains.space/kotlin/p/wasm/experimental")
         google()
         mavenCentral()
     }
