@@ -1,6 +1,6 @@
+import org.jetbrains.compose.ExperimentalComposeLibrary
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.compose.ExperimentalComposeLibrary
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -101,6 +101,7 @@ kotlin {
         }
 
         val appleMain by creating {
+            dependsOn(commonMain)
             dependencies {
                 implementation(libs.ktor.client.darwin)
                 implementation(libs.sqlDelight.driver.native)
@@ -125,7 +126,7 @@ android {
 
 sqldelight {
     databases {
-        create("InspectorDatabase") {
+        create("InspektorDatabase") {
             packageName.set("com.gyanoba.inspektor.db")
         }
     }

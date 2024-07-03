@@ -2,9 +2,9 @@ package data.db
 
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.native.NativeSqliteDriver
-import com.gyanoba.inspektor.db.Database
+import com.gyanoba.inspektor.db.InspektorDatabase
 
 internal actual object DriverFactory {
     actual fun createDbDriver(): SqlDriver =
-        NativeSqliteDriver(Database.Schema, DB_NAME)
+        NativeSqliteDriver(InspektorDatabase.Schema, DB_NAME)
 }

@@ -1,7 +1,7 @@
 import kotlin.Boolean;
 import kotlinx.datetime.Instant;
 
-CREATE TABLE HttpTransaction (
+CREATE TABLE IF NOT EXISTS HttpTransaction (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     method TEXT NOT NULL,
     statusCode INTEGER,
@@ -32,9 +32,9 @@ CREATE TABLE HttpTransaction (
     isResponseBodyEncoded INTEGER AS Boolean DEFAULT 0
 );
 
-CREATE INDEX HttpTransaction_method ON HttpTransaction(method);
-CREATE INDEX HttpTransaction_statusCode ON HttpTransaction(statusCode);
-CREATE INDEX HttpTransaction_host ON HttpTransaction(host);
+CREATE INDEX IF NOT EXISTS HttpTransaction_method ON HttpTransaction(method);
+CREATE INDEX IF NOT EXISTS HttpTransaction_statusCode ON HttpTransaction(statusCode);
+CREATE INDEX IF NOT EXISTS HttpTransaction_host ON HttpTransaction(host);
 
 
 getById:
