@@ -1,19 +1,21 @@
 pluginManagement {
-    includeBuild("convention-plugins")
     repositories {
         google()
-        mavenCentral()
         gradlePluginPortal()
+        mavenCentral()
     }
 }
 
 dependencyResolutionManagement {
     repositories {
         google()
+        gradlePluginPortal()
         mavenCentral()
     }
-}
 
-rootProject.name = "inspektor"
-include(":inspektor")
-include(":sample")
+    versionCatalogs {
+        create("libs") {
+            from(files("../gradle/libs.versions.toml"))
+        }
+    }
+}

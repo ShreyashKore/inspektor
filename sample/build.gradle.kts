@@ -1,9 +1,10 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 plugins {
-    alias(libs.plugins.multiplatform)
-    alias(libs.plugins.compose)
     alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlinMultiplatform)
+    alias(libs.plugins.compose)
+    alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlinx.serialization)
 }
 
@@ -39,10 +40,9 @@ kotlin {
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
             implementation(libs.kotlinx.coroutines.core)
-//            implementation(libs.moko.mvvm)
+            implementation(libs.moko.mvvm)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.datetime)
-//            implementation(libs.kermit)
             implementation(libs.ktor.core)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
@@ -52,7 +52,7 @@ kotlin {
 
         commonTest.dependencies {
             implementation(kotlin("test"))
-//            implementation(libs.ktor.client.mock)
+            implementation(libs.ktor.client.mock)
             implementation(libs.kotlinx.coroutines.test)
         }
 
@@ -67,9 +67,7 @@ kotlin {
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
-            implementation(libs.ktor.client.java)
-//            implementation(libs.ktor.client.logging.jvm)
-//            implementation("ch.qos.logback:logback-classic:1.2.3")
+            implementation(libs.ktor.client.okhttp)
         }
 
 
@@ -112,11 +110,16 @@ android {
 compose.desktop {
     application {
         mainClass = "MainKt"
-
+        buildTypes.release {
+            proguard {
+                configurationFiles.from("compose-desktop.pro")
+            }
+        }
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "com.gyanoba.inspektor.sample"
             packageVersion = "1.0.0"
+            modules("java.sql")
         }
     }
 }

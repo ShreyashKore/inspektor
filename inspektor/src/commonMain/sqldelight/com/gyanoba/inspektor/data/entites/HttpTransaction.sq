@@ -1,7 +1,7 @@
 import kotlin.Boolean;
 import kotlinx.datetime.Instant;
 
-CREATE TABLE IF NOT EXISTS HttpTransaction (
+CREATE TABLE HttpTransaction (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     method TEXT NOT NULL,
     statusCode INTEGER,
