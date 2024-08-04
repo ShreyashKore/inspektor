@@ -17,7 +17,7 @@ object Api {
 //            logger = Logger.SIMPLE
 //            level = LogLevel.BODY
 //        }
-//        install(Inspektor) { }
+        install(Inspektor) { }
     }
 
     private const val BASE_URL = "https://jsonplaceholder.typicode.com"

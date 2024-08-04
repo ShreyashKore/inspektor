@@ -47,7 +47,9 @@ import utils.atLocalStartOfDay
 internal fun TransactionListScreen(
     openTransaction: (HttpTransaction) -> Unit,
 ) {
-    val viewModel = viewModel<TransactionViewModel>()
+    val viewModel = viewModel<TransactionViewModel> {
+        TransactionViewModel()
+    }
     TransactionListScreen(
         viewModel.transactions.collectAsState().value,
         openTransaction,
@@ -66,7 +68,7 @@ internal fun TransactionListScreen(
     allCount: Long,
     startDate: Instant,
     endDate: Instant,
-    onDateRangeSelected: (Instant, Instant) -> Unit
+    onDateRangeSelected: (Instant, Instant) -> Unit,
 ) {
     var showDateRangePicker by remember { mutableStateOf(false) }
 
