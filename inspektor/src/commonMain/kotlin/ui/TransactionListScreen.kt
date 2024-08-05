@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
@@ -56,7 +57,8 @@ internal fun TransactionListScreen(
         viewModel.allCount.collectAsState().value,
         viewModel.startDate.collectAsState().value,
         viewModel.endDate.collectAsState().value,
-        viewModel::onDateRangeSelected
+        viewModel::onDateRangeSelected,
+        viewModel::deleteTransactions
     )
 }
 
@@ -69,6 +71,7 @@ internal fun TransactionListScreen(
     startDate: Instant,
     endDate: Instant,
     onDateRangeSelected: (Instant, Instant) -> Unit,
+    onDeleteTransactions: (Instant) -> Unit,
 ) {
     var showDateRangePicker by remember { mutableStateOf(false) }
 
@@ -82,7 +85,14 @@ internal fun TransactionListScreen(
     }
 
     Scaffold(topBar = {
-        CenterAlignedTopAppBar(title = { Text(text = "Transactions") })
+        CenterAlignedTopAppBar(
+            title = { Text(text = "Transactions") },
+            actions = {
+                TextButton(onClick = { onDeleteTransactions(startDate) }) {
+                    Text("Delete")
+                }
+            },
+        )
     }) { paddingValues ->
         Column(Modifier.padding(paddingValues)) {
             Text(text = "Transactions: $allCount")
@@ -117,20 +127,23 @@ internal fun TransactionItem(
     Card(onClick = onClick, modifier = modifier.fillMaxWidth()) {
         Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
             Text(
-                text = transaction.statusCode?.toString() ?: "",
+                text = transaction.responseCode?.toString() ?: "",
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.width(60.dp)
             )
             Column {
                 Row {
-                    Text(text = transaction.method, style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        text = transaction.method ?: "",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
                     Text(text = transaction.path ?: "")
                 }
                 Text(text = transaction.host ?: "")
                 Row {
                     Text(
-                        text = transaction.requestDate.toLocalDateTime(TimeZone.currentSystemDefault())
-                            .format(TimeFormatters.simpleLocalAmPm)
+                        text = transaction.requestDate?.toLocalDateTime(TimeZone.currentSystemDefault())
+                            ?.format(TimeFormatters.simpleLocalAmPm) ?: ""
                     )
                     Text(text = transaction.tookMs?.toString() ?: "")
                 }
@@ -157,6 +170,13 @@ internal class TransactionViewModel : ViewModel() {
 
         inspektorDataSource.getAllLatestHttpTransactionsForDateRange(startDate, endDate)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(4000), emptyList())
+
+
+    fun deleteTransactions(beforeDate: Instant) {
+        viewModelScope.launch {
+            inspektorDataSource.deleteBefore(beforeDate)
+        }
+    }
 
     fun onDateRangeSelected(startDate: Instant, endDate: Instant) {
         _startDate.value = startDate.atLocalEndOfDay()

@@ -3,9 +3,8 @@ import kotlinx.datetime.Instant;
 
 CREATE TABLE IF NOT EXISTS HttpTransaction (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    method TEXT NOT NULL,
-    statusCode INTEGER,
-    requestDate INTEGER AS Instant NOT NULL,
+    method TEXT,
+    requestDate INTEGER AS Instant,
     responseDate INTEGER AS Instant,
     tookMs INTEGER,
     protocol TEXT,
@@ -33,7 +32,6 @@ CREATE TABLE IF NOT EXISTS HttpTransaction (
 );
 
 CREATE INDEX IF NOT EXISTS HttpTransaction_method ON HttpTransaction(method);
-CREATE INDEX IF NOT EXISTS HttpTransaction_statusCode ON HttpTransaction(statusCode);
 CREATE INDEX IF NOT EXISTS HttpTransaction_host ON HttpTransaction(host);
 
 
@@ -53,9 +51,9 @@ getAllLatestForDateRange:
 SELECT * FROM HttpTransaction WHERE requestDate BETWEEN :startDate AND :endDate ORDER BY requestDate DESC;
 
 insert:
-INSERT INTO HttpTransaction(
+INSERT OR REPLACE INTO HttpTransaction(
+   id,
    method,
-   statusCode,
    requestDate,
    responseDate,
    tookMs,
@@ -96,11 +94,15 @@ DELETE FROM HttpTransaction WHERE requestDate < ?;
 update:
 UPDATE HttpTransaction
 SET responseCode = ?,
+    responseDate = ?,
+    tookMs = ?,
     responseMessage = ?,
     responsePayloadSize = ?,
     responseContentType = ?,
     responseHeaders = ?,
     responseHeadersSize = ?,
+    responseTlsVersion = ?,
+    responseCipherSuite = ?,
     responseBody = ?,
     isResponseBodyEncoded = ?
 WHERE id = :id;

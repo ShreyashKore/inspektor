@@ -43,7 +43,7 @@ internal fun TransactionDetailsScreen(transactionId: Long, onBack: () -> Unit) {
 @Composable
 internal fun TransactionDetailsScreen(
     transaction: HttpTransaction?,
-    onBack: () -> Unit
+    onBack: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -60,7 +60,7 @@ internal fun TransactionDetailsScreen(
                     }
                     Row {
                         Text(
-                            text = transaction.method,
+                            text = transaction.method ?: "",
                             style = MaterialTheme.typography.bodyLarge
                         )
                         Text(text = transaction.path ?: "")
@@ -77,13 +77,13 @@ internal fun TransactionDetailsScreen(
             Card {
                 Row {
                     Text(
-                        text = transaction.statusCode.toString(),
+                        text = transaction.responseCode?.toString() ?: "n/a",
                         style = MaterialTheme.typography.titleMedium
                     )
                     Column {
                         Row {
                             Text(
-                                text = transaction.method,
+                                text = transaction.method ?: "",
                                 style = MaterialTheme.typography.bodyLarge
                             )
                             Text(text = transaction.path ?: "")
@@ -91,7 +91,8 @@ internal fun TransactionDetailsScreen(
                         Text(text = transaction.host ?: "")
                         Row {
                             Text(
-                                text = transaction.requestDate.format(DateTimeFormatters.simpleFormatter)
+                                text = transaction.requestDate?.format(DateTimeFormatters.simpleFormatter)
+                                    ?: ""
                             )
                             Text(text = transaction.tookMs?.toString() ?: "")
 

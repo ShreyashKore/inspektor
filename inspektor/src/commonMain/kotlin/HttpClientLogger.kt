@@ -1,7 +1,6 @@
 import data.InspektorDataSource
 import data.MutableHttpTransaction
 import data.toImmutable
-import io.ktor.http.ContentType
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -19,14 +18,22 @@ internal class HttpClientCallLogger(private val dataSource: InspektorDataSource)
     private val responseLogged = atomic(false)
 
     fun addRequestHeader(
-        url: String?,
+        url: String,
+        host: String?,
+        path: String?,
+        scheme: String?,
         method: String?,
         requestHeaders: String?,
+        requestContentType: String?,
         requestDate: Instant,
     ) {
         transactionLog.apply {
             this.url = url
+            this.host = host
+            this.path = path
+            this.scheme = scheme
             this.method = method
+            this.requestContentType = requestContentType
             this.responseHeaders = requestHeaders
             this.requestDate = requestDate
         }
@@ -41,22 +48,30 @@ internal class HttpClientCallLogger(private val dataSource: InspektorDataSource)
     }
 
     fun addResponseHeader(
+        protocol: String?,
         responseCode: Int?,
         responseHeaders: String?,
+        responseContentType: String?,
+        responsePayloadSize: Long?,
+        responseHeadersSize: Long?,
         responseDate: Instant,
     ) {
         transactionLog.apply {
+            this.protocol = protocol
             this.responseCode = responseCode?.toLong()
             this.responseHeaders = responseHeaders
             this.responseDate = responseDate
+            this.responseContentType = responseContentType
+            this.responsePayloadSize = responsePayloadSize
+            this.responseHeadersSize = responseHeadersSize
+            this.tookMs = responseDate.toEpochMilliseconds() - requestDate!!.toEpochMilliseconds()
         }
         responseHeaderMonitor.complete()
     }
 
-    suspend fun addResponseBody(body: String, contentType: ContentType?) {
+    suspend fun addResponseBody(body: String) {
         responseHeaderMonitor.join()
         transactionLog.responseBody = body
-        transactionLog.responseContentType = contentType?.contentType
     }
 
     suspend fun addResponseException(exception: Throwable) {
@@ -79,7 +94,7 @@ internal class HttpClientCallLogger(private val dataSource: InspektorDataSource)
     suspend fun closeResponseLog() {
         if (!responseLogged.compareAndSet(false, true)) return
         requestLoggedMonitor.join()
-        dataSource.updateHttpTransaction(transactionLog.toImmutable())
+        dataSource.insertHttpTransaction(transactionLog.toImmutable())
         log { "Updated transaction with id ${transactionLog.id}" }
         log { "${transactionLog.id} BODY $transactionLog" }
     }

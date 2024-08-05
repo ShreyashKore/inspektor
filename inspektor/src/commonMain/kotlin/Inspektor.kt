@@ -5,6 +5,7 @@ import io.ktor.client.plugins.observer.ResponseHandler
 import io.ktor.client.plugins.observer.ResponseObserver
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.http.charset
+import io.ktor.http.contentLength
 import io.ktor.http.contentType
 import io.ktor.util.AttributeKey
 import io.ktor.utils.io.InternalAPI
@@ -14,10 +15,12 @@ import kotlinx.datetime.Clock
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import utils.HeaderSanitizer
+import utils.approxByteCount
 import utils.log
 import utils.logRequestReturnContent
 import utils.sanitizeHeaders
 import utils.tryReadText
+import utils.typeAndSubType
 
 private val ClientCallLogger = AttributeKey<HttpClientCallLogger>("CallLogger")
 private val DisableLogging = AttributeKey<Unit>("DisableLogging")
@@ -109,15 +112,19 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
         val callLogger = response.call.attributes[ClientCallLogger]
 
         var failed = false
-        val responseCode = if (level.info) response.status.value else null
+        val responseCode = response.status.value
         val headers = if (level.headers)
             Json.encodeToString(
                 response.headers.sanitizeHeaders(headerSanitizers).entries()
             )
         else null
         callLogger.addResponseHeader(
+            protocol = response.version.toString(),
             responseCode = responseCode,
             responseHeaders = headers,
+            responseContentType = response.contentType()?.typeAndSubType,
+            responsePayloadSize = response.contentLength() ?: 0,
+            responseHeadersSize = response.headers.approxByteCount(),
             responseDate = Clock.System.now()
         )
         try {
@@ -155,7 +162,7 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
         try {
             val message = it.content.tryReadText(it.contentType()?.charset() ?: Charsets.UTF_8)
                 ?: "[response body omitted]"
-            callLogger.addResponseBody(message, it.contentType())
+            callLogger.addResponseBody(message)
         } catch (_: Throwable) {
         } finally {
             callLogger.closeResponseLog()

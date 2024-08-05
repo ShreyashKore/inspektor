@@ -1,5 +1,6 @@
 package utils
 
+import io.ktor.http.ContentType
 import io.ktor.http.Headers
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.charsets.Charset
@@ -34,3 +35,5 @@ internal suspend inline fun ByteReadChannel.tryReadText(charset: Charset): Strin
 } catch (cause: Throwable) {
     null
 }
+
+internal val ContentType.typeAndSubType get() = "$contentType/$contentSubtype"

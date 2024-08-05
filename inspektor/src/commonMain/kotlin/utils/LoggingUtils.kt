@@ -9,6 +9,8 @@ import io.ktor.http.Headers
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.charset
 import io.ktor.http.content.OutgoingContent
+import io.ktor.http.contentType
+import io.ktor.http.encodedPath
 import io.ktor.util.AttributeKey
 import io.ktor.utils.io.ByteChannel
 import io.ktor.utils.io.ByteReadChannel
@@ -28,13 +30,22 @@ internal suspend fun HttpClientCallLogger.logRequestReturnContent(
 ): OutgoingContent? {
     val content = request.body as OutgoingContent
 
-    val url = request.url.toString()
+    val url = request.url
     val method = request.method.value
     val requestDate = Clock.System.now()
     val requestHeaders =
         Json.encodeToString(content.headers.sanitizeHeaders(headerSanitizers).entries())
 
-    addRequestHeader(url, method, requestHeaders, requestDate)
+    addRequestHeader(
+        url.toString(),
+        url.host,
+        url.encodedPath,
+        url.protocol.name,
+        method,
+        requestHeaders,
+        request.contentType()?.typeAndSubType,
+        requestDate
+    )
 
     if (!level.body) {
         closeRequestLog()
@@ -57,7 +68,7 @@ internal suspend fun HttpClientCallLogger.logRequestReturnContent(
 
 
 internal fun Headers.sanitizeHeaders(
-    headerSanitizers: List<HeaderSanitizer>
+    headerSanitizers: List<HeaderSanitizer>,
 ): Headers = buildHeaders {
     forEach { name, values ->
         val sanitizedValues = values.map { value ->
@@ -70,13 +81,13 @@ internal fun Headers.sanitizeHeaders(
 
 internal class HeaderSanitizer(
     val placeholder: String = "***",
-    val predicate: (String) -> Boolean
+    val predicate: (String) -> Boolean,
 )
 
 /// Copied from ktor logging sample
 internal class LoggedContent(
     private val originalContent: OutgoingContent,
-    private val channel: ByteReadChannel
+    private val channel: ByteReadChannel,
 ) : OutgoingContent.ReadChannelContent() {
 
     override val contentType: ContentType? = originalContent.contentType
