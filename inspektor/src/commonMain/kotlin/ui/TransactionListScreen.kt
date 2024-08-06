@@ -1,55 +1,64 @@
 package ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gyanoba.inspektor.data.entites.HttpTransaction
-import data.InspektorDataSource
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format
 import kotlinx.datetime.toLocalDateTime
 import ui.components.DateRangePickerDialog
+import ui.theme.errorColor
+import ui.theme.successColor
+import ui.theme.warningColor
 import utils.DateFormatters
 import utils.TimeFormatters
-import utils.atLocalEndOfDay
-import utils.atLocalStartOfDay
 
 @Composable
 internal fun TransactionListScreen(
     openTransaction: (HttpTransaction) -> Unit,
 ) {
-    val viewModel = viewModel<TransactionViewModel> {
-        TransactionViewModel()
+    val viewModel = viewModel<TransactionListViewModel> {
+        TransactionListViewModel()
     }
     TransactionListScreen(
         viewModel.transactions.collectAsState().value,
@@ -74,6 +83,7 @@ internal fun TransactionListScreen(
     onDeleteTransactions: (Instant) -> Unit,
 ) {
     var showDateRangePicker by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     if (showDateRangePicker) {
         DateRangePickerDialog(
@@ -84,32 +94,56 @@ internal fun TransactionListScreen(
         )
     }
 
-    Scaffold(topBar = {
-        CenterAlignedTopAppBar(
-            title = { Text(text = "Transactions") },
-            actions = {
-                TextButton(onClick = { onDeleteTransactions(startDate) }) {
-                    Text("Delete")
-                }
-            },
-        )
-    }) { paddingValues ->
-        Column(Modifier.padding(paddingValues)) {
-            Text(text = "Transactions: $allCount")
-            TextButton(onClick = { showDateRangePicker = true }) {
-                val startDateFormatted = startDate.toLocalDateTime(TimeZone.currentSystemDefault())
-                    .format(DateFormatters.simpleLocalFormatter)
-                val endDateFormatted = endDate.toLocalDateTime(TimeZone.currentSystemDefault())
-                    .format(DateFormatters.simpleLocalFormatter)
-                Text(
-                    "$startDateFormatted - $endDateFormatted"
-                )
+    if (showDeleteDialog) {
+        DeleteDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            onConfirm = {
+                onDeleteTransactions(Clock.System.now())
+                showDeleteDialog = false
             }
+        )
+    }
+
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text(text = "Transactions") },
+                actions = {
+                    IconButton(onClick = { showDeleteDialog = true }) {
+                        Icon(Icons.Default.Delete, contentDescription = "Delete")
+                    }
+                },
+            )
+        },
+    ) { paddingValues ->
+        Column(Modifier.padding(paddingValues)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(text = "Transactions", style = MaterialTheme.typography.labelSmall)
+                    Text(text = "${transactions.size} of $allCount")
+                }
+                Spacer(Modifier.weight(1f))
+                TextButton(onClick = { showDateRangePicker = true }) {
+                    val startDateFormatted =
+                        startDate.toLocalDateTime(TimeZone.currentSystemDefault())
+                            .format(DateFormatters.simpleLocalFormatter)
+                    val endDateFormatted = endDate.toLocalDateTime(TimeZone.currentSystemDefault())
+                        .format(DateFormatters.simpleLocalFormatter)
+                    Text("$startDateFormatted - $endDateFormatted")
+                }
+            }
+
             LazyColumn {
                 items(transactions) { transaction ->
                     TransactionItem(
                         transaction = transaction,
                         onClick = { onClickTransaction(transaction) },
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
             }
@@ -125,61 +159,121 @@ internal fun TransactionItem(
     modifier: Modifier = Modifier,
 ) {
     Card(onClick = onClick, modifier = modifier.fillMaxWidth()) {
-        Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-            Text(
-                text = transaction.responseCode?.toString() ?: "",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.width(60.dp)
+        Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+            StatusCodeView(
+                transaction.responseCode ?: 0,
+                Modifier.width(60.dp),
             )
-            Column {
-                Row {
+            Spacer(Modifier.width(8.dp))
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Text(
                         text = transaction.method ?: "",
-                        style = MaterialTheme.typography.bodyLarge
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.W600)
                     )
-                    Text(text = transaction.path ?: "")
-                }
-                Text(text = transaction.host ?: "")
-                Row {
+                    Spacer(Modifier.width(8.dp))
                     Text(
-                        text = transaction.requestDate?.toLocalDateTime(TimeZone.currentSystemDefault())
-                            ?.format(TimeFormatters.simpleLocalAmPm) ?: ""
+                        text = transaction.path ?: "",
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.W600)
                     )
-                    Text(text = transaction.tookMs?.toString() ?: "")
                 }
+                CompositionLocalProvider(
+                    LocalContentColor provides MaterialTheme.colorScheme.onSurface.copy(
+                        .6f
+                    )
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (transaction.scheme == "https") {
+                            Icon(
+                                Icons.Default.Lock,
+                                contentDescription = "Secure",
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Spacer(Modifier.width(4.dp))
+                        }
+                        Text(
+                            text = transaction.host ?: "",
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    }
+                    Row {
+                        Text(
+                            text = transaction.requestDate?.toLocalDateTime(TimeZone.currentSystemDefault())
+                                ?.format(TimeFormatters.simpleLocalAmPm) ?: ""
+                        )
+                        Spacer(Modifier.weight(1f))
+                        Text(text = (transaction.tookMs?.toString() ?: "") + " ms")
+                    }
+                }
+
             }
         }
 
     }
 }
 
-
-internal class TransactionViewModel : ViewModel() {
-    private val inspektorDataSource = InspektorDataSource.Instance
-
-    private val _startDate = MutableStateFlow(Clock.System.now().atLocalStartOfDay())
-    val startDate = _startDate.asStateFlow()
-    private val _endDate = MutableStateFlow(Clock.System.now().atLocalEndOfDay())
-    val endDate = _endDate.asStateFlow()
-
-    val allCount = inspektorDataSource.getAllHttpTransactionsCount().stateIn(
-        viewModelScope, SharingStarted.WhileSubscribed(4000), 0
-    )
-
-    val transactions = combine(startDate, endDate, allCount) { startDate, endDate, _ ->
-
-        inspektorDataSource.getAllLatestHttpTransactionsForDateRange(startDate, endDate)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(4000), emptyList())
-
-
-    fun deleteTransactions(beforeDate: Instant) {
-        viewModelScope.launch {
-            inspektorDataSource.deleteBefore(beforeDate)
+@Composable
+internal fun StatusCodeView(
+    statusCode: Long,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        val color = when {
+            statusCode < 300 -> successColor
+            statusCode < 400 -> warningColor
+            else -> errorColor
         }
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .clip(CircleShape)
+                .background(color)
+        )
+        Spacer(Modifier.width(6.dp))
+        Text(
+            text = statusCode.toString(),
+            style = MaterialTheme.typography.titleMedium,
+        )
     }
 
-    fun onDateRangeSelected(startDate: Instant, endDate: Instant) {
-        _startDate.value = startDate.atLocalEndOfDay()
-        _endDate.value = endDate.atLocalEndOfDay()
-    }
 }
+
+
+@Composable
+internal fun DeleteDialog(
+    onDismissRequest: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = { Text("Delete Transactions") },
+        text = { Text("Are you sure you want to delete all transactions?") },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onConfirm()
+                    onDismissRequest()
+                }
+            ) {
+                Text("Delete")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
