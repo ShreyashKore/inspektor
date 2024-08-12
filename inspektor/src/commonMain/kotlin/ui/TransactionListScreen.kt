@@ -161,7 +161,7 @@ internal fun TransactionItem(
     Card(onClick = onClick, modifier = modifier.fillMaxWidth()) {
         Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
             StatusCodeView(
-                transaction.responseCode ?: 0,
+                transaction.responseCode,
                 Modifier.width(60.dp),
             )
             Spacer(Modifier.width(8.dp))
@@ -210,7 +210,7 @@ internal fun TransactionItem(
                                 ?.format(TimeFormatters.simpleLocalAmPm) ?: ""
                         )
                         Spacer(Modifier.weight(1f))
-                        Text(text = (transaction.tookMs?.toString() ?: "") + " ms")
+                        Text(text = (transaction.tookMs?.toString() ?: "--") + " ms")
                     }
                 }
 
@@ -222,7 +222,7 @@ internal fun TransactionItem(
 
 @Composable
 internal fun StatusCodeView(
-    statusCode: Long,
+    statusCode: Long?,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -230,6 +230,7 @@ internal fun StatusCodeView(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val color = when {
+            statusCode == null -> MaterialTheme.colorScheme.onSurface.copy(.5f)
             statusCode < 300 -> successColor
             statusCode < 400 -> warningColor
             else -> errorColor
@@ -242,7 +243,7 @@ internal fun StatusCodeView(
         )
         Spacer(Modifier.width(6.dp))
         Text(
-            text = statusCode.toString(),
+            text = statusCode?.toString() ?: "---",
             style = MaterialTheme.typography.titleMedium,
         )
     }

@@ -27,17 +27,7 @@ internal class InspektorDataSource private constructor() {
 
     suspend fun updateHttpTransaction(httpTransaction: HttpTransaction) =
         withContext(Dispatchers.IO) {
-            db.httpTransactionQueries.update(
-                httpTransaction.responseCode,
-                httpTransaction.responseBody,
-                httpTransaction.responsePayloadSize,
-                httpTransaction.responseContentType,
-                httpTransaction.responseHeaders,
-                httpTransaction.responseHeadersSize,
-                httpTransaction.responseBody,
-                httpTransaction.isResponseBodyEncoded,
-                httpTransaction.id,
-            )
+            db.httpTransactionQueries.insertOrReplace(httpTransaction)
         }
 
 

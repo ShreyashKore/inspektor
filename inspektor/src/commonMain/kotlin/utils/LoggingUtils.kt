@@ -33,8 +33,9 @@ internal suspend fun HttpClientCallLogger.logRequestReturnContent(
     val url = request.url
     val method = request.method.value
     val requestDate = Clock.System.now()
+    val requestHeadersSize = request.headers.build().approxByteCount()
     val requestHeaders =
-        Json.encodeToString(content.headers.sanitizeHeaders(headerSanitizers).entries())
+        Json.encodeToString(request.headers.build().sanitizeHeaders(headerSanitizers).entries())
 
     addRequestHeader(
         url.toString(),
@@ -43,7 +44,9 @@ internal suspend fun HttpClientCallLogger.logRequestReturnContent(
         url.protocol.name,
         method,
         requestHeaders,
+        requestHeadersSize,
         request.contentType()?.typeAndSubType,
+        content.contentLength,
         requestDate
     )
 
@@ -55,11 +58,13 @@ internal suspend fun HttpClientCallLogger.logRequestReturnContent(
     val charset = content.contentType?.charset() ?: Charsets.UTF_8
 
     val channel = ByteChannel()
-    var requestBody = ""
+    var requestBody: String? = null
     GlobalScope.launch(Dispatchers.Unconfined) {
-        requestBody = channel.tryReadText(charset) ?: "[request body omitted]"
+        requestBody = channel.tryReadText(charset)
     }.invokeOnCompletion {
-        addRequestBody(requestBody)
+        requestBody?.let {
+            addRequestBody(it)
+        }
         closeRequestLog()
     }
 

@@ -16,7 +16,6 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import utils.HeaderSanitizer
 import utils.approxByteCount
-import utils.log
 import utils.logRequestReturnContent
 import utils.sanitizeHeaders
 import utils.tryReadText
@@ -48,7 +47,7 @@ public class InspektorConfig internal constructor() {
     /**
      * Specifies the logging level.
      */
-    public var level: LogLevel = LogLevel.HEADERS
+    public var level: LogLevel = LogLevel.BODY
 
     /**
      * Allows you to filter log messages for calls matching a [predicate].
@@ -73,7 +72,6 @@ public class InspektorConfig internal constructor() {
 public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
     "Inspektor", ::InspektorConfig,
 ) {
-    log { "Inspektor plugin is installed" }
     val inspektorDataSource = InspektorDataSource.Instance
     val level: LogLevel = pluginConfig.level
     if (level == LogLevel.NONE) return@createClientPlugin
@@ -123,7 +121,7 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
             responseCode = responseCode,
             responseHeaders = headers,
             responseContentType = response.contentType()?.typeAndSubType,
-            responsePayloadSize = response.contentLength() ?: 0,
+            responsePayloadSize = response.contentLength(),
             responseHeadersSize = response.headers.approxByteCount(),
             responseDate = Clock.System.now()
         )
@@ -154,15 +152,17 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
 
     if (!level.body) return@createClientPlugin
 
-    val observer: ResponseHandler = observer@{
-        if (level == LogLevel.NONE || it.call.attributes.contains(DisableLogging))
+    val observer: ResponseHandler = observer@{ response ->
+        if (level == LogLevel.NONE || response.call.attributes.contains(DisableLogging))
             return@observer
 
-        val callLogger = it.call.attributes[ClientCallLogger]
+        val callLogger = response.call.attributes[ClientCallLogger]
         try {
-            val message = it.content.tryReadText(it.contentType()?.charset() ?: Charsets.UTF_8)
-                ?: "[response body omitted]"
-            callLogger.addResponseBody(message)
+            val message =
+                response.content.tryReadText(response.contentType()?.charset() ?: Charsets.UTF_8)
+            message?.let {
+                callLogger.addResponseBody(it)
+            }
         } catch (_: Throwable) {
         } finally {
             callLogger.closeResponseLog()

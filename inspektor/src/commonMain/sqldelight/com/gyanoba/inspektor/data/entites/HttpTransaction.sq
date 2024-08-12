@@ -51,6 +51,37 @@ getAllLatestForDateRange:
 SELECT * FROM HttpTransaction WHERE requestDate BETWEEN :startDate AND :endDate ORDER BY requestDate DESC;
 
 insert:
+INSERT INTO HttpTransaction(
+   method,
+   requestDate,
+   responseDate,
+   tookMs,
+   protocol,
+   url,
+   host,
+   path,
+   scheme,
+   responseTlsVersion,
+   responseCipherSuite,
+   requestPayloadSize,
+   requestContentType,
+   requestHeaders,
+   requestHeadersSize,
+   requestBody,
+   isRequestBodyEncoded,
+   responseCode,
+   responseMessage,
+   error,
+   responsePayloadSize,
+   responseContentType,
+   responseHeaders,
+   responseHeadersSize,
+   responseBody,
+   isResponseBodyEncoded
+)
+VALUES ?;
+
+insertOrReplace:
 INSERT OR REPLACE INTO HttpTransaction(
    id,
    method,

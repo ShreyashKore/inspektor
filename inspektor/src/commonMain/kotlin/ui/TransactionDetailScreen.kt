@@ -73,12 +73,16 @@ internal fun TransactionDetailsScreen(
                         Text(text = "Loading...")
                         return@CenterAlignedTopAppBar
                     }
-                    Row {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
                             text = transaction.method ?: "",
+                        )
+                        Text(
+                            text = transaction.path ?: "",
                             style = MaterialTheme.typography.bodyLarge
                         )
-                        Text(text = transaction.path ?: "")
                     }
                 },
             )
@@ -190,7 +194,6 @@ internal fun RequestBodyView(transaction: HttpTransaction) {
         EmptyBody()
         return
     }
-    println("request body: ${transaction.requestBody}")
     CodeBlock(
         AnnotatedString(transaction.requestBody),
         Modifier.fillMaxWidth()

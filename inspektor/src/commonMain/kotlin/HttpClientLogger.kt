@@ -7,7 +7,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
-import utils.log
 
 internal class HttpClientCallLogger(private val dataSource: InspektorDataSource) {
     private val transactionLog = MutableHttpTransaction()
@@ -24,7 +23,9 @@ internal class HttpClientCallLogger(private val dataSource: InspektorDataSource)
         scheme: String?,
         method: String?,
         requestHeaders: String?,
+        requestHeadersSize: Long?,
         requestContentType: String?,
+        requestPayloadSize: Long?,
         requestDate: Instant,
     ) {
         transactionLog.apply {
@@ -34,7 +35,9 @@ internal class HttpClientCallLogger(private val dataSource: InspektorDataSource)
             this.scheme = scheme
             this.method = method
             this.requestContentType = requestContentType
-            this.responseHeaders = requestHeaders
+            this.requestHeaders = requestHeaders
+            this.requestHeadersSize = requestHeadersSize
+            this.requestPayloadSize = requestPayloadSize
             this.requestDate = requestDate
         }
     }
@@ -84,9 +87,7 @@ internal class HttpClientCallLogger(private val dataSource: InspektorDataSource)
         if (!requestLogged.compareAndSet(false, true)) return@launch
         try {
             transactionLog.id = dataSource.insertHttpTransaction(transactionLog.toImmutable())
-            log { "Inserted transaction with id ${transactionLog.id}" }
         } finally {
-            log { "Closing request log for transaction ${transactionLog.id}" }
             requestLoggedMonitor.complete()
         }
     }
@@ -94,8 +95,6 @@ internal class HttpClientCallLogger(private val dataSource: InspektorDataSource)
     suspend fun closeResponseLog() {
         if (!responseLogged.compareAndSet(false, true)) return
         requestLoggedMonitor.join()
-        dataSource.insertHttpTransaction(transactionLog.toImmutable())
-        log { "Updated transaction with id ${transactionLog.id}" }
-        log { "${transactionLog.id} BODY $transactionLog" }
+        dataSource.updateHttpTransaction(transactionLog.toImmutable())
     }
 }

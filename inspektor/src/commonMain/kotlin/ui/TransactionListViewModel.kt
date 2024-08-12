@@ -28,9 +28,7 @@ internal class TransactionListViewModel : ViewModel() {
     )
 
     val transactions = combine(startDate, endDate, allCount) { startDate, endDate, _ ->
-        inspektorDataSource.getAllLatestHttpTransactionsForDateRange(startDate, endDate).also {
-            println("transactions: $it")
-        }
+        inspektorDataSource.getAllLatestHttpTransactionsForDateRange(startDate, endDate)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(4000), emptyList())
 
 
@@ -41,7 +39,7 @@ internal class TransactionListViewModel : ViewModel() {
     }
 
     fun onDateRangeSelected(startDate: Instant, endDate: Instant) {
-        _startDate.value = startDate.atLocalEndOfDay()
+        _startDate.value = startDate.atLocalStartOfDay()
         _endDate.value = endDate.atLocalEndOfDay()
     }
 }
