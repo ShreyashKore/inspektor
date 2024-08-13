@@ -1,4 +1,8 @@
 import kotlin.Boolean;
+import kotlin.collections.List;
+import kotlin.collections.Map;
+import kotlin.collections.Set;
+import kotlin.String;
 import kotlinx.datetime.Instant;
 
 CREATE TABLE IF NOT EXISTS HttpTransaction (
@@ -16,7 +20,7 @@ CREATE TABLE IF NOT EXISTS HttpTransaction (
     responseCipherSuite TEXT DEFAULT NULL,
     requestPayloadSize INTEGER,
     requestContentType TEXT,
-    requestHeaders TEXT,
+    requestHeaders TEXT AS Set<Map.Entry<String, List<String>>>,
     requestHeadersSize INTEGER,
     requestBody TEXT,
     isRequestBodyEncoded INTEGER AS Boolean DEFAULT 0,
@@ -25,7 +29,7 @@ CREATE TABLE IF NOT EXISTS HttpTransaction (
     error TEXT,
     responsePayloadSize INTEGER,
     responseContentType TEXT,
-    responseHeaders TEXT,
+    responseHeaders TEXT AS Set<Map.Entry<String, List<String>>>,
     responseHeadersSize INTEGER,
     responseBody TEXT,
     isResponseBodyEncoded INTEGER AS Boolean DEFAULT 0

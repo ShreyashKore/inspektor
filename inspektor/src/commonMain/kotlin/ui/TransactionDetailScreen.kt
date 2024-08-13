@@ -38,7 +38,6 @@ import com.gyanoba.inspektor.data.entites.HttpTransaction
 import data.InspektorDataSource
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.serialization.json.Json
 import ui.components.Accordion
 import ui.components.CodeBlock
 import ui.components.KeyValueView
@@ -153,11 +152,7 @@ internal fun HeadersView(transaction: HttpTransaction) {
                 KeyValueView("Host", transaction.host)
             }
         }
-        val requestHeaders = remember(transaction) {
-            transaction.requestHeaders?.let {
-                Json.decodeFromString<Set<Map.Entry<String, List<String>>>>(it)
-            } ?: emptySet()
-        }
+        val requestHeaders = transaction.requestHeaders ?: emptySet()
         Accordion(
             title = "Request Headers",
             modifier = Modifier.padding(8.dp, 4.dp).fillMaxWidth()
@@ -168,11 +163,7 @@ internal fun HeadersView(transaction: HttpTransaction) {
                 }
             }
         }
-        val responseHeaders = remember(transaction) {
-            transaction.responseHeaders?.let {
-                Json.decodeFromString<Set<Map.Entry<String, List<String>>>>(it)
-            } ?: emptySet()
-        }
+        val responseHeaders = transaction.responseHeaders ?: emptySet()
         Accordion(
             title = "Response Headers",
             modifier = Modifier.padding(8.dp, 4.dp).fillMaxWidth()

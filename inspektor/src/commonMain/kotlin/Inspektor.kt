@@ -1,22 +1,34 @@
 import data.InspektorDataSource
+import io.ktor.client.call.HttpClientCall
 import io.ktor.client.plugins.api.ClientPlugin
+import io.ktor.client.plugins.api.ClientPluginBuilder
 import io.ktor.client.plugins.api.createClientPlugin
 import io.ktor.client.plugins.observer.ResponseHandler
 import io.ktor.client.plugins.observer.ResponseObserver
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.http.charset
+import io.ktor.http.content.OutgoingContent
 import io.ktor.http.contentLength
 import io.ktor.http.contentType
+import io.ktor.http.encodedPath
 import io.ktor.util.AttributeKey
+import io.ktor.utils.io.ByteChannel
 import io.ktor.utils.io.InternalAPI
 import io.ktor.utils.io.KtorDsl
 import io.ktor.utils.io.charsets.Charsets
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import utils.HeaderSanitizer
+import utils.ReceiveStateHook
+import utils.ResponseReceiveHook
+import utils.SendMonitoringHook
 import utils.approxByteCount
-import utils.logRequestReturnContent
+import utils.observe
 import utils.sanitizeHeaders
 import utils.tryReadText
 import utils.typeAndSubType
@@ -83,20 +95,52 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
         filters.isEmpty() || filters.any { it(request) }
 
     on(SendMonitoringHook) { request ->
+        if (level == LogLevel.NONE) return@on
         if (!shouldBeLogged(request)) {
             request.attributes.put(DisableLogging, Unit)
             return@on
         }
-        val callLogger = HttpClientCallLogger(inspektorDataSource)
+        val callLogger = HttpClientCallLogger(inspektorDataSource, Dispatchers.IO)
         request.attributes.put(ClientCallLogger, callLogger)
-        val loggedRequest = try {
-            callLogger.logRequestReturnContent(request, level, headerSanitizers)
+        val content = request.body as OutgoingContent
+
+        callLogger.addRequestInfo(
+            url = request.url.toString(),
+            host = request.url.host,
+            path = request.url.encodedPath,
+            scheme = request.url.protocol.name,
+            method = request.method.value,
+            requestHeadersSize = request.headers.build().approxByteCount(),
+            requestContentType = request.contentType()?.typeAndSubType,
+            requestPayloadSize = content.contentLength,
+            requestDate = Clock.System.now()
+        )
+
+        if (level.headers) {
+            val requestHeaders =
+                Json.encodeToString(
+                    request.headers.build().sanitizeHeaders(headerSanitizers).entries()
+                )
+            callLogger.addRequestHeaders(headers = Json.decodeFromString(requestHeaders))
+        }
+
+        val loggedContent = try {
+            val charset = content.contentType?.charset() ?: Charsets.UTF_8
+            val channel = ByteChannel()
+            var requestBody: String? = null
+            GlobalScope.launch(Dispatchers.Unconfined) {
+                requestBody = channel.tryReadText(charset)
+            }.invokeOnCompletion {
+                requestBody?.let { callLogger.addRequestBody(it) }
+                callLogger.closeRequestLog()
+            }
+            content.observe(channel)
         } catch (_: Throwable) {
             null
         }
 
         try {
-            proceedWith(loggedRequest ?: request.body)
+            proceedWith(loggedContent ?: request.body)
         } catch (cause: Throwable) {
             callLogger.addRequestException(cause)
             throw cause
@@ -105,26 +149,28 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
     }
 
     on(ReceiveStateHook) { response ->
-        if (level == LogLevel.NONE || response.call.attributes.contains(DisableLogging)) return@on
+        if (shouldNotLog(response.call)) return@on
 
         val callLogger = response.call.attributes[ClientCallLogger]
 
         var failed = false
-        val responseCode = response.status.value
-        val headers = if (level.headers)
-            Json.encodeToString(
-                response.headers.sanitizeHeaders(headerSanitizers).entries()
-            )
-        else null
-        callLogger.addResponseHeader(
+
+        callLogger.addResponseInfo(
             protocol = response.version.toString(),
-            responseCode = responseCode,
-            responseHeaders = headers,
+            responseCode = response.status.value,
             responseContentType = response.contentType()?.typeAndSubType,
             responsePayloadSize = response.contentLength(),
             responseHeadersSize = response.headers.approxByteCount(),
             responseDate = Clock.System.now()
         )
+
+        if (level.headers) {
+            val headers = Json.encodeToString(
+                response.headers.sanitizeHeaders(headerSanitizers).entries()
+            )
+            callLogger.addResponseHeaders(headers = Json.decodeFromString(headers))
+        }
+
         try {
             proceed()
         } catch (cause: Throwable) {
@@ -137,14 +183,12 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
     }
 
     on(ResponseReceiveHook) { call ->
-        if (level == LogLevel.NONE || call.attributes.contains(DisableLogging)) return@on
+        if (shouldNotLog(call)) return@on
         try {
             proceed()
         } catch (cause: Throwable) {
             val callLogger = call.attributes[ClientCallLogger]
-            if (level.info) {
-                callLogger.addResponseException(cause)
-            }
+            callLogger.addResponseException(cause)
             callLogger.closeResponseLog()
             throw cause
         }
@@ -153,16 +197,13 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
     if (!level.body) return@createClientPlugin
 
     val observer: ResponseHandler = observer@{ response ->
-        if (level == LogLevel.NONE || response.call.attributes.contains(DisableLogging))
-            return@observer
+        if (shouldNotLog(response.call)) return@observer
 
         val callLogger = response.call.attributes[ClientCallLogger]
         try {
             val message =
                 response.content.tryReadText(response.contentType()?.charset() ?: Charsets.UTF_8)
-            message?.let {
-                callLogger.addResponseBody(it)
-            }
+            message?.let { callLogger.addResponseBody(it) }
         } catch (_: Throwable) {
         } finally {
             callLogger.closeResponseLog()
@@ -170,6 +211,10 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
     }
 
     ResponseObserver.install(ResponseObserver.prepare { onResponse(observer) }, client)
+}
+
+private inline fun ClientPluginBuilder<InspektorConfig>.shouldNotLog(call: HttpClientCall): Boolean {
+    return pluginConfig.level == LogLevel.NONE && call.attributes.contains(DisableLogging)
 }
 
 public expect fun openInspektor()

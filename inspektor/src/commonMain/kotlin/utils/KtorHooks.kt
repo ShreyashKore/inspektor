@@ -1,3 +1,5 @@
+package utils
+
 import io.ktor.client.HttpClient
 import io.ktor.client.call.HttpClientCall
 import io.ktor.client.plugins.api.ClientHook
@@ -18,7 +20,7 @@ internal object SendMonitoringHook :
 
     override fun install(
         client: HttpClient,
-        handler: suspend Context.(request: HttpRequestBuilder) -> Unit
+        handler: suspend Context.(request: HttpRequestBuilder) -> Unit,
     ) {
         client.sendPipeline.intercept(HttpSendPipeline.Monitoring) {
             handler(Context(this), context)
@@ -35,7 +37,7 @@ internal object ReceiveStateHook :
 
     override fun install(
         client: HttpClient,
-        handler: suspend Context.(response: HttpResponse) -> Unit
+        handler: suspend Context.(response: HttpResponse) -> Unit,
     ) {
         client.receivePipeline.intercept(HttpReceivePipeline.State) {
             handler(Context(this), subject)
@@ -52,7 +54,7 @@ internal object ResponseReceiveHook :
 
     override fun install(
         client: HttpClient,
-        handler: suspend Context.(call: HttpClientCall) -> Unit
+        handler: suspend Context.(call: HttpClientCall) -> Unit,
     ) {
         client.responsePipeline.intercept(HttpResponsePipeline.Receive) {
             handler(Context(this), context)
