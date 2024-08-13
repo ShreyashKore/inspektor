@@ -63,7 +63,6 @@ kotlin {
                 implementation(libs.paging.compose.common)
                 implementation(libs.androidx.paging3.extensions)
                 implementation(libs.kotlinx.coroutines.core)
-                implementation(libs.moko.mvvm)
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.kotlinx.datetime)
                 implementation(libs.ktor.core)

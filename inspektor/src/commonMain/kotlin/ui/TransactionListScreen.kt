@@ -36,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -46,11 +47,12 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format
 import kotlinx.datetime.toLocalDateTime
+import platform.getAppName
+import ui.components.DateRangeButton
 import ui.components.DateRangePickerDialog
 import ui.theme.errorColor
 import ui.theme.successColor
 import ui.theme.warningColor
-import utils.DateFormatters
 import utils.TimeFormatters
 
 @Composable
@@ -107,7 +109,24 @@ internal fun TransactionListScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(text = "Transactions") },
+                title = {
+                    val appName = remember(Unit) { getAppName() }
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text(
+                            text = "Inspektor",
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                        appName?.let {
+                            Text(
+                                text = it,
+                                style = MaterialTheme.typography.labelMedium,
+                                modifier = Modifier.alpha(0.5f)
+                            )
+                        }
+                    }
+                },
                 actions = {
                     IconButton(onClick = { showDeleteDialog = true }) {
                         Icon(Icons.Default.Delete, contentDescription = "Delete")
@@ -128,14 +147,11 @@ internal fun TransactionListScreen(
                     Text(text = "${transactions.size} of $allCount")
                 }
                 Spacer(Modifier.weight(1f))
-                TextButton(onClick = { showDateRangePicker = true }) {
-                    val startDateFormatted =
-                        startDate.toLocalDateTime(TimeZone.currentSystemDefault())
-                            .format(DateFormatters.simpleLocalFormatter)
-                    val endDateFormatted = endDate.toLocalDateTime(TimeZone.currentSystemDefault())
-                        .format(DateFormatters.simpleLocalFormatter)
-                    Text("$startDateFormatted - $endDateFormatted")
-                }
+                DateRangeButton(
+                    startDate = startDate,
+                    endDate = endDate,
+                    onClick = { showDateRangePicker = true }
+                )
             }
 
             LazyColumn {

@@ -3,19 +3,25 @@ package ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -24,8 +30,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import kotlinx.datetime.DateTimePeriod
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.format
+import kotlinx.datetime.format.DateTimeFormat
 import kotlinx.datetime.offsetAt
+import kotlinx.datetime.toLocalDateTime
+import utils.DateFormatters
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -59,7 +70,10 @@ internal fun DateRangePickerDialog(
                 MaterialTheme.colorScheme.surface, RoundedCornerShape(20.dp)
             )
         ) {
-            DateRangePicker(dateRangePickerState, Modifier.weight(1f))
+            DateRangePicker(
+                dateRangePickerState,
+                Modifier.heightIn(max = 640.dp).weight(1f, fill = false),
+            )
             Row(
                 Modifier.fillMaxWidth().padding(4.dp),
                 horizontalArrangement = Arrangement.End,
@@ -96,6 +110,37 @@ internal fun DateRangePickerDialog(
         }
     }
     DateTimePeriod
+}
+
+@Composable
+internal fun DateRangeButton(
+    startDate: Instant,
+    endDate: Instant,
+    onClick: () -> Unit,
+    dateFormatter: DateTimeFormat<LocalDateTime> = DateFormatters.simpleLocalFormatter,
+) {
+    val startDateFormatted =
+        startDate.toLocalDateTime(TimeZone.currentSystemDefault())
+            .format(dateFormatter)
+    val endDateFormatted = endDate.toLocalDateTime(TimeZone.currentSystemDefault())
+        .format(dateFormatter)
+
+    val textStyle = MaterialTheme.typography.labelMedium
+    TextButton(onClick = onClick, contentPadding = PaddingValues(10.dp, 4.dp)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                Icons.Default.DateRange,
+                contentDescription = "Date Range",
+            )
+            Spacer(Modifier.width(6.dp))
+            Column {
+                Text(startDateFormatted, style = textStyle)
+                Text(endDateFormatted, style = textStyle)
+            }
+        }
+    }
 }
 
 private fun Instant.getUtcOffsetDuration(): Duration =

@@ -1,12 +1,16 @@
 package ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -77,10 +81,11 @@ internal fun TransactionDetailsScreen(
                     ) {
                         Text(
                             text = transaction.method ?: "",
+                            style = MaterialTheme.typography.titleMedium
                         )
                         Text(
                             text = transaction.path ?: "",
-                            style = MaterialTheme.typography.bodyLarge
+                            style = MaterialTheme.typography.titleMedium
                         )
                     }
                 },
@@ -140,40 +145,66 @@ internal fun HeadersView(transaction: HttpTransaction) {
     Column(
         modifier = Modifier.verticalScroll(scrollState)
     ) {
-        Accordion(
+        SimpleAccordion(
             title = "Overview",
-            modifier = Modifier.padding(8.dp, 4.dp).fillMaxWidth(),
             initialExpanded = true
         ) {
-            Column(Modifier.padding(8.dp)) {
-                KeyValueView("URL", transaction.url)
-                KeyValueView("Method", transaction.method)
-                KeyValueView("Response Code", transaction.responseCode?.toString())
-                KeyValueView("Host", transaction.host)
+            KeyValueView("URL", transaction.url)
+            KeyValueView("Method", transaction.method)
+            KeyValueView("Response Code", transaction.responseCode?.toString())
+            KeyValueView("Host", transaction.host)
+            if (transaction.error != null) {
+                KeyValueView(
+                    "Error",
+                    transaction.error,
+                    MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.error)
+                )
             }
         }
         val requestHeaders = transaction.requestHeaders ?: emptySet()
-        Accordion(
-            title = "Request Headers",
-            modifier = Modifier.padding(8.dp, 4.dp).fillMaxWidth()
-        ) {
-            Column(Modifier.padding(8.dp)) {
-                requestHeaders.forEach {
-                    KeyValueView(it.key, it.value.joinToString("; "))
-                }
+        SimpleAccordion(title = "Request Headers (${requestHeaders.size})") {
+            requestHeaders.forEach {
+                KeyValueView(it.key, it.value.joinToString("; "))
             }
         }
         val responseHeaders = transaction.responseHeaders ?: emptySet()
-        Accordion(
-            title = "Response Headers",
-            modifier = Modifier.padding(8.dp, 4.dp).fillMaxWidth()
+        SimpleAccordion(title = "Response Headers (${responseHeaders.size})") {
+            responseHeaders.forEach {
+                KeyValueView(it.key, it.value.joinToString("; "))
+            }
+        }
+    }
+}
+
+@Composable
+private fun SimpleAccordion(
+    title: String,
+    modifier: Modifier = Modifier,
+    initialExpanded: Boolean = false,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Accordion(
+        title = {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp).fillMaxWidth()
+            )
+        },
+        initialExpanded = initialExpanded,
+        modifier = modifier.padding(8.dp, 4.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(6.dp)
+                .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(10.dp))
+                .padding(8.dp)
         ) {
-            Column(Modifier.padding(8.dp)) {
-                responseHeaders.forEach {
-                    KeyValueView(it.key, it.value.joinToString("; "))
+            SelectionContainer {
+                Column {
+                    content()
                 }
             }
-
         }
     }
 }
@@ -181,20 +212,19 @@ internal fun HeadersView(transaction: HttpTransaction) {
 
 @Composable
 internal fun RequestBodyView(transaction: HttpTransaction) {
-    if (transaction.requestBody == null) {
+    if (transaction.requestBody.isNullOrEmpty()) {
         EmptyBody()
         return
     }
     CodeBlock(
-        AnnotatedString(transaction.requestBody),
-        Modifier.fillMaxWidth()
+        AnnotatedString(transaction.requestBody), Modifier.fillMaxWidth()
     )
 }
 
 
 @Composable
 internal fun ResponseBodyView(transaction: HttpTransaction) {
-    if (transaction.responseBody == null) {
+    if (transaction.responseBody.isNullOrEmpty()) {
         EmptyBody()
         return
     }

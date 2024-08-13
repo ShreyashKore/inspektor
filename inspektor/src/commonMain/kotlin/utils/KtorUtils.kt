@@ -5,6 +5,7 @@ import io.ktor.http.Headers
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.charsets.Charset
 import io.ktor.utils.io.core.readText
+import io.ktor.utils.io.readRemaining
 
 /**
  * Returns the number of bytes required to encode these headers using HTTP/1.1. This is also the

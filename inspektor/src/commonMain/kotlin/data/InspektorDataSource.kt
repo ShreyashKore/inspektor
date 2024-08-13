@@ -1,6 +1,7 @@
 package data
 
 import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOne
 import com.gyanoba.inspektor.data.entites.HttpTransaction
 import data.db.createDatabase
@@ -35,6 +36,11 @@ internal class InspektorDataSource private constructor() {
         withContext(Dispatchers.IO) {
             db.httpTransactionQueries.getAllLatestForDateRange(startDate, endDate).executeAsList()
         }
+
+    fun getAllLatestHttpTransactionsForDateRangeFlow(startDate: Instant, endDate: Instant) =
+        db.httpTransactionQueries.getAllLatestForDateRange(startDate, endDate).asFlow()
+            .mapToList(Dispatchers.IO)
+
 
     fun getAllHttpTransactionsCount() =
         db.httpTransactionQueries.getAllCount().asFlow()

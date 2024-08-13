@@ -47,7 +47,8 @@ kotlin {
             implementation(libs.ktor.core)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
-
+            implementation(libs.multiplatformSettings)
+            implementation(libs.ktor.client.logging)
             implementation(project(":inspektor"))
         }
 
