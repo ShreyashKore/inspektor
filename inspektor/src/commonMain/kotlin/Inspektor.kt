@@ -28,6 +28,7 @@ import utils.ReceiveStateHook
 import utils.ResponseReceiveHook
 import utils.SendMonitoringHook
 import utils.approxByteCount
+import utils.logErr
 import utils.observe
 import utils.sanitizeHeaders
 import utils.tryReadText
@@ -100,7 +101,11 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
             request.attributes.put(DisableLogging, Unit)
             return@on
         }
-        val callLogger = HttpClientCallLogger(inspektorDataSource, Dispatchers.IO)
+        val callLogger = HttpClientCallLogger(
+            inspektorDataSource,
+            Dispatchers.IO,
+            NotificationManager()
+        )
         request.attributes.put(ClientCallLogger, callLogger)
         val content = request.body as OutgoingContent
 
@@ -204,7 +209,8 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
             val message =
                 response.content.tryReadText(response.contentType()?.charset() ?: Charsets.UTF_8)
             message?.let { callLogger.addResponseBody(it) }
-        } catch (_: Throwable) {
+        } catch (e: Throwable) {
+            logErr(e, "Inspektor") { "Failed to read response body" }
         } finally {
             callLogger.closeResponseLog()
         }

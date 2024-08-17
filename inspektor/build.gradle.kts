@@ -1,6 +1,8 @@
 import org.jetbrains.compose.ExperimentalComposeLibrary
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -102,11 +104,14 @@ kotlin {
         val appleMain by creating {
             dependsOn(commonMain)
             dependencies {
+                implementation("co.touchlab:stately-common:2.0.6")
+                implementation("co.touchlab:stately-iso-collections:2.0.6")
                 implementation(libs.ktor.client.darwin)
                 implementation(libs.sqlDelight.driver.native)
             }
         }
         val appleTest by creating
+        appleTest.dependsOn(commonTest)
 
         appleTargets.forEach { target ->
             getByName("${target.targetName}Main") { dependsOn(appleMain) }
@@ -130,3 +135,14 @@ sqldelight {
         }
     }
 }
+
+fun Project.linkSqlite() {
+    project.extensions.findByType(KotlinMultiplatformExtension::class.java)?.apply {
+        targets
+            .filterIsInstance<KotlinNativeTarget>()
+            .flatMap { it.binaries }
+            .forEach { compilationUnit -> compilationUnit.linkerOpts("-lsqlite3") }
+    }
+}
+
+//linkSqlite()

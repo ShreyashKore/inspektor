@@ -14,6 +14,7 @@ private const val TAG = "Inspektor HttpClientCallLogger"
 internal class HttpClientCallLogger(
     private val dataSource: InspektorDataSource,
     private val ioDispatcher: CoroutineDispatcher,
+    private val notificationManager: NotificationManager,
 ) {
     private val transactionLog = MutableHttpTransaction()
     private val requestLoggedMonitor = Job()
@@ -32,6 +33,7 @@ internal class HttpClientCallLogger(
         requestPayloadSize: Long?,
         requestDate: Instant,
     ) {
+        notificationManager.notify("Request", "Request to $url")
         transactionLog.apply {
             this.url = url
             this.host = host
