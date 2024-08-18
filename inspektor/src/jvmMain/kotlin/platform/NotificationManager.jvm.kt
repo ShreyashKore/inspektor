@@ -1,3 +1,5 @@
+package platform
+
 import utils.log
 import java.awt.Image
 import java.awt.SystemTray
@@ -13,7 +15,7 @@ internal actual fun NotificationManager(): NotificationManager {
 internal class NotificationManagerImpl : NotificationManager {
     override fun notify(title: String, message: String) {
         val os = System.getProperty("os.name") ?: run {
-            log("ShowNotifications") { "Unable to determine OS" }
+            log(NotificationManager.TAG) { "Unable to determine OS" }
             return
         }
 
@@ -34,7 +36,7 @@ internal class NotificationManagerImpl : NotificationManager {
             )
             builder.inheritIO().start()
         } else {
-            log("ShowNotifications") { "Unable to show notifications on this OS" }
+            log(NotificationManager.TAG) { "Unable to show notifications on this OS $os" }
         }
 
     }

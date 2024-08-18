@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		89260E632C71597F00061C08 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89260E622C71597F00061C08 /* AppDelegate.swift */; };
 		89AD435C2C70FC7600D02807 /* Inspektor_SampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89AD435B2C70FC7600D02807 /* Inspektor_SampleApp.swift */; };
 		89AD435E2C70FC7600D02807 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89AD435D2C70FC7600D02807 /* ContentView.swift */; };
 		89AD43602C70FC7700D02807 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 89AD435F2C70FC7700D02807 /* Assets.xcassets */; };
@@ -14,6 +15,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		89260E622C71597F00061C08 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		89AD43582C70FC7600D02807 /* Inspektor Sample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Inspektor Sample.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		89AD435B2C70FC7600D02807 /* Inspektor_SampleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Inspektor_SampleApp.swift; sourceTree = "<group>"; };
 		89AD435D2C70FC7600D02807 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -59,6 +61,7 @@
 				89AD435F2C70FC7700D02807 /* Assets.xcassets */,
 				89AD43612C70FC7700D02807 /* Inspektor_Sample.entitlements */,
 				89AD43622C70FC7700D02807 /* Preview Content */,
+				89260E622C71597F00061C08 /* AppDelegate.swift */,
 			);
 			path = "Inspektor Sample";
 			sourceTree = "<group>";
@@ -164,6 +167,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				89260E632C71597F00061C08 /* AppDelegate.swift in Sources */,
 				89AD435E2C70FC7600D02807 /* ContentView.swift in Sources */,
 				89AD435C2C70FC7600D02807 /* Inspektor_SampleApp.swift in Sources */,
 			);

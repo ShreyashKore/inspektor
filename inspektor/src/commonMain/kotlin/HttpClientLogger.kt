@@ -7,6 +7,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
+import platform.NotificationManager
 import utils.logErr
 
 private const val TAG = "Inspektor HttpClientCallLogger"

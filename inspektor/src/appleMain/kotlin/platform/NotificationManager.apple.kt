@@ -1,48 +1,56 @@
+package platform
+
+import platform.Foundation.NSError
+import platform.UserNotifications.UNAuthorizationOptionAlert
+import platform.UserNotifications.UNAuthorizationOptionBadge
+import platform.UserNotifications.UNAuthorizationOptionSound
 import platform.UserNotifications.UNMutableNotificationContent
 import platform.UserNotifications.UNNotificationRequest
-import platform.UserNotifications.UNTimeIntervalNotificationTrigger
 import platform.UserNotifications.UNUserNotificationCenter
+import utils.logErr
+
 
 internal actual fun NotificationManager(): NotificationManager {
     return NotificationManagerImpl()
 }
 
 internal class NotificationManagerImpl : NotificationManager {
-    private val notificationId: String = "com.inspektor.notification.main"
-    private var created = false
+    private val notificationId: String = "com.gyanoba.inspektor.notification"
 
     override fun notify(title: String, message: String) {
-        val center = UNUserNotificationCenter.currentNotificationCenter()
-        val content = UNMutableNotificationContent().apply {
-            setTitle(title)
-            setBody(message)
-        }
+        val notificationCenter = UNUserNotificationCenter.currentNotificationCenter()
+        try {
+            // Requesting notification permissions
+            notificationCenter.requestAuthorizationWithOptions(options = UNAuthorizationOptionAlert + UNAuthorizationOptionBadge + UNAuthorizationOptionSound) { granted, error ->
+                if (!granted || error != null) throw IllegalStateException(
+                    error?.localizedDescription ?: "Error requesting notification permissions."
+                )
+            }
 
-        if (!created) {
+            val content = UNMutableNotificationContent().apply {
+                setTitle(title)
+                setBody(message)
+            }
+
             // Create a new notification
-            created = true
             val request = UNNotificationRequest.requestWithIdentifier(
                 notificationId,
                 content,
-                UNTimeIntervalNotificationTrigger.triggerWithTimeInterval(1.0, false)
+                null
             )
-            center.addNotificationRequest(request) { error ->
+            notificationCenter.addNotificationRequest(request) { error ->
                 if (error != null) {
-                    println("Error adding notification: $error")
+                    logErr(error.toKotlinThrowable(), NotificationManager.TAG) {
+                        "Error adding notification request: $error"
+                    }
                 }
             }
-        } else {
-            // Update the existing notification
-            val request = UNNotificationRequest.requestWithIdentifier(
-                notificationId,
-                content,
-                UNTimeIntervalNotificationTrigger.triggerWithTimeInterval(1.0, false)
-            )
-            center.addNotificationRequest(request) { error ->
-                if (error != null) {
-                    println("Error updating notification: $error")
-                }
-            }
+        } catch (e: IllegalStateException) {
+            logErr(e, NotificationManager.TAG)
         }
     }
+}
+
+internal fun NSError.toKotlinThrowable(): Throwable {
+    return Throwable(this.localizedDescription)
 }
