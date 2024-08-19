@@ -1,4 +1,6 @@
+import androidx.annotation.VisibleForTesting
 import data.InspektorDataSource
+import data.InspektorDataSourceImpl
 import io.ktor.client.call.HttpClientCall
 import io.ktor.client.plugins.api.ClientPlugin
 import io.ktor.client.plugins.api.ClientPluginBuilder
@@ -35,8 +37,8 @@ import utils.sanitizeHeaders
 import utils.tryReadText
 import utils.typeAndSubType
 
-private val ClientCallLogger = AttributeKey<HttpClientCallLogger>("CallLogger")
-private val DisableLogging = AttributeKey<Unit>("DisableLogging")
+internal val ClientCallLogger = AttributeKey<HttpClientCallLogger>("CallLogger")
+internal val DisableLogging = AttributeKey<Unit>("DisableLogging")
 
 public enum class LogLevel(
     public val info: Boolean = false,
@@ -64,6 +66,12 @@ public class InspektorConfig internal constructor() {
     public var level: LogLevel = LogLevel.BODY
 
     /**
+     * The data source to store the logs.
+     */
+    @VisibleForTesting
+    public var dataSource: InspektorDataSource = InspektorDataSourceImpl.Instance
+
+    /**
      * Allows you to filter log messages for calls matching a [predicate].
      */
     public fun filter(predicate: (HttpRequestBuilder) -> Boolean) {
@@ -86,7 +94,7 @@ public class InspektorConfig internal constructor() {
 public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
     "Inspektor", ::InspektorConfig,
 ) {
-    val inspektorDataSource = InspektorDataSource.Instance
+    val inspektorDataSource = pluginConfig.dataSource
     val level: LogLevel = pluginConfig.level
     if (level == LogLevel.NONE) return@createClientPlugin
 
@@ -130,20 +138,24 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
             callLogger.addRequestHeaders(headers = Json.decodeFromString(requestHeaders))
         }
 
-        val loggedContent = try {
-            val charset = content.contentType?.charset() ?: Charsets.UTF_8
-            val channel = ByteChannel()
-            var requestBody: String? = null
-            GlobalScope.launch(Dispatchers.Unconfined) {
-                requestBody = channel.tryReadText(charset)
-            }.invokeOnCompletion {
-                requestBody?.let { callLogger.addRequestBody(it) }
-                callLogger.closeRequestLog()
+        val loggedContent = if (level.body) {
+            try {
+                val charset = content.contentType?.charset() ?: Charsets.UTF_8
+                val channel = ByteChannel()
+                var requestBody: String? = null
+                GlobalScope.launch(Dispatchers.Unconfined) {
+                    requestBody = channel.tryReadText(charset)
+                }.invokeOnCompletion {
+                    requestBody?.let { callLogger.addRequestBody(it) }
+                }
+                content.observe(channel)
+            } catch (_: Throwable) {
+                null
             }
-            content.observe(channel)
-        } catch (_: Throwable) {
+        } else {
             null
         }
+
 
         try {
             proceedWith(loggedContent ?: request.body)
@@ -151,6 +163,7 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
             callLogger.addRequestException(cause)
             throw cause
         } finally {
+            callLogger.closeRequestLog()
         }
     }
 

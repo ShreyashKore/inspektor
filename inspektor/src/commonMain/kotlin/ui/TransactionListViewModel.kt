@@ -17,8 +17,9 @@ import utils.atLocalEndOfDay
 import utils.atLocalStartOfDay
 
 
-internal class TransactionListViewModel : ViewModel() {
-    private val inspektorDataSource = InspektorDataSource.Instance
+internal class TransactionListViewModel(
+    private val inspektorDataSource: InspektorDataSource,
+) : ViewModel() {
 
     private val _startDate = MutableStateFlow(Clock.System.now().atLocalStartOfDay())
     val startDate = _startDate.asStateFlow()

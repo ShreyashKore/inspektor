@@ -11,4 +11,10 @@ internal actual object DriverFactory {
         InspektorDatabase.Schema.create(driver).await()
         driver
     }
+
+    actual fun createTempDbDriver(): SqlDriver = runBlocking {
+        val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
+        InspektorDatabase.Schema.create(driver).await()
+        driver
+    }
 }

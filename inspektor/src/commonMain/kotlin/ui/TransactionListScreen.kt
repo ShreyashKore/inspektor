@@ -42,6 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gyanoba.inspektor.data.entites.HttpTransaction
+import data.InspektorDataSourceImpl
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
@@ -60,7 +61,7 @@ internal fun TransactionListScreen(
     openTransaction: (HttpTransaction) -> Unit,
 ) {
     val viewModel = viewModel<TransactionListViewModel> {
-        TransactionListViewModel()
+        TransactionListViewModel(InspektorDataSourceImpl.Instance)
     }
     TransactionListScreen(
         viewModel.transactions.collectAsState().value,

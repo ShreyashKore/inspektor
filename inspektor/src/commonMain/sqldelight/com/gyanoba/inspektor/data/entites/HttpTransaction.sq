@@ -5,6 +5,8 @@ import kotlin.collections.Set;
 import kotlin.String;
 import kotlinx.datetime.Instant;
 
+PRAGMA user_version = 1;
+
 CREATE TABLE IF NOT EXISTS HttpTransaction (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     method TEXT,
@@ -41,6 +43,9 @@ CREATE INDEX IF NOT EXISTS HttpTransaction_host ON HttpTransaction(host);
 
 getById:
 SELECT * FROM HttpTransaction WHERE id = ?;
+
+getLast:
+SELECT * FROM HttpTransaction ORDER BY id DESC LIMIT 1;
 
 getAll:
 SELECT * FROM HttpTransaction;

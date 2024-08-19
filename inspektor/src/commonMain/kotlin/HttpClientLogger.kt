@@ -19,6 +19,7 @@ internal class HttpClientCallLogger(
 ) {
     private val transactionLog = MutableHttpTransaction()
     private val requestLoggedMonitor = Job()
+    private val responseLoggedMonitor = Job()
 
     private val requestLogged = atomic(false)
     private val responseLogged = atomic(false)
@@ -110,6 +111,12 @@ internal class HttpClientCallLogger(
             dataSource.updateHttpTransaction(transactionLog.toImmutable())
         } catch (e: Throwable) {
             logErr(e, TAG) { "Failed to log response" }
+        } finally {
+            responseLoggedMonitor.complete()
         }
     }
+
+    suspend fun joinRequestLogged() = requestLoggedMonitor.join()
+
+    suspend fun joinResponseLogged() = responseLoggedMonitor.join()
 }

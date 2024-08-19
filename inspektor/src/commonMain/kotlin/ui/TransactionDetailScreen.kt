@@ -40,6 +40,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gyanoba.inspektor.data.entites.HttpTransaction
 import data.InspektorDataSource
+import data.InspektorDataSourceImpl
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import ui.components.Accordion
@@ -49,7 +50,7 @@ import ui.components.KeyValueView
 @Composable
 internal fun TransactionDetailsScreen(transactionId: Long, onBack: () -> Unit) {
     val viewModel = viewModel {
-        TransactionDetailsViewModel(transactionId)
+        TransactionDetailsViewModel(transactionId, InspektorDataSourceImpl.Instance)
     }
     TransactionDetailsScreen(
         viewModel.transaction.collectAsState().value, onBack
@@ -241,8 +242,10 @@ internal fun EmptyBody() {
     }
 }
 
-internal class TransactionDetailsViewModel(transactionId: Long) : ViewModel() {
-    private val repository = InspektorDataSource.Instance
-    val transaction = repository.getTransaction(transactionId)
+internal class TransactionDetailsViewModel(
+    transactionId: Long,
+    dataSource: InspektorDataSource,
+) : ViewModel() {
+    val transaction = dataSource.getTransaction(transactionId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 }
