@@ -23,7 +23,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gyanoba.inspektor.sample.ui.components.Center
-import data.Api
+import data.JsonPlaceHolderApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -83,7 +83,7 @@ class TodoDetailsViewModel(
     }
 
     fun getTodoDetails(todoId: Int) = viewModelScope.launch {
-        _todos.value = runCatching { Api.getTodo(todoId) }
+        _todos.value = runCatching { JsonPlaceHolderApi.getTodo(todoId) }
     }
 }
 
