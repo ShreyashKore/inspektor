@@ -31,8 +31,11 @@ internal fun Headers.approxByteCount(): Long {
 }
 
 
-internal suspend inline fun ByteReadChannel.tryReadText(charset: Charset): String? = try {
-    readRemaining().readText(charset = charset)
+internal suspend inline fun ByteReadChannel.tryReadText(
+    charset: Charset,
+    max: Int = Int.MAX_VALUE,
+): String? = try {
+    readRemaining().readText(charset = charset, max = max)
 } catch (cause: Throwable) {
     null
 }

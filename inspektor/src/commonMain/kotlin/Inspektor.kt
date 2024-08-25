@@ -65,6 +65,8 @@ public class InspektorConfig internal constructor() {
      */
     public var level: LogLevel = LogLevel.BODY
 
+    public var maxContentLength: Int = 250_000
+
     /**
      * The data source to store the logs.
      */
@@ -144,7 +146,7 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
                 val channel = ByteChannel()
                 var requestBody: String? = null
                 GlobalScope.launch(Dispatchers.Unconfined) {
-                    requestBody = channel.tryReadText(charset)
+                    requestBody = channel.tryReadText(charset, pluginConfig.maxContentLength)
                 }.invokeOnCompletion {
                     requestBody?.let { callLogger.addRequestBody(it) }
                 }
@@ -220,8 +222,9 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
 
         val callLogger = response.call.attributes[ClientCallLogger]
         try {
+            val charset = response.contentType()?.charset() ?: Charsets.UTF_8
             val message =
-                response.content.tryReadText(response.contentType()?.charset() ?: Charsets.UTF_8)
+                response.content.tryReadText(charset, pluginConfig.maxContentLength)
             message?.let { callLogger.addResponseBody(it) }
         } catch (e: Throwable) {
             logErr(e, "Inspektor") { "Failed to read response body" }
