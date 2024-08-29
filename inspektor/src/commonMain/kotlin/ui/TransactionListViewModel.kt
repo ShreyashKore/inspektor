@@ -1,5 +1,7 @@
 package ui
 
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import data.InspektorDataSource
@@ -26,15 +28,27 @@ internal class TransactionListViewModel(
     private val _endDate = MutableStateFlow(Clock.System.now().atLocalEndOfDay())
     val endDate = _endDate.asStateFlow()
 
+    val searchFieldState = TextFieldState()
+    private val searchFlow = snapshotFlow { searchFieldState.text }
+
     val allCount = inspektorDataSource.getAllHttpTransactionsCount().stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(4000), 0
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val transactions = combine(startDate, endDate) { startDate, endDate ->
-        (startDate to endDate)
-    }.flatMapLatest { (startDate, endDate) ->
-        inspektorDataSource.getAllLatestHttpTransactionsForDateRangeFlow(startDate, endDate)
+    val transactions = combine(startDate, endDate, searchFlow) { startDate, endDate, searchTerm ->
+        (startDate to endDate) to searchTerm
+    }.flatMapLatest { (dates, searchTerm) ->
+        val (startDate, endDate) = dates
+        val responseCode = if (searchTerm.isDigitsOnly()) searchTerm else ""
+        val path = if (responseCode.isNotEmpty()) "" else searchTerm
+
+        inspektorDataSource.getAllLatestHttpTransactionsFilteredFlow(
+            startDate,
+            endDate,
+            "$responseCode",
+            "$path"
+        )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(4000), emptyList())
 
 
@@ -48,4 +62,8 @@ internal class TransactionListViewModel(
         _startDate.value = startDate.atLocalStartOfDay()
         _endDate.value = endDate.atLocalEndOfDay()
     }
+}
+
+private fun CharSequence.isDigitsOnly(): Boolean {
+    return all { it.isDigit() }
 }

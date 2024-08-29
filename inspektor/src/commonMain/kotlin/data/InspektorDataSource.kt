@@ -3,6 +3,7 @@ package data
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOne
+import com.gyanoba.inspektor.data.entites.GetAllLatestWithLimit
 import com.gyanoba.inspektor.data.entites.HttpTransaction
 import com.gyanoba.inspektor.db.InspektorDatabase
 import data.db.createDatabase
@@ -26,6 +27,13 @@ public interface InspektorDataSource {
         startDate: Instant,
         endDate: Instant,
     ): Flow<List<HttpTransaction>>
+
+    public fun getAllLatestHttpTransactionsFilteredFlow(
+        startDate: Instant,
+        endDate: Instant,
+        responseCode: String,
+        path: String,
+    ): Flow<List<GetAllLatestWithLimit>>
 
     public fun getAllHttpTransactionsCount(): Flow<Long>
     public suspend fun deleteBefore(timestamp: Instant)
@@ -67,6 +75,24 @@ internal class InspektorDataSourceImpl(
     ) =
         db.httpTransactionQueries.getAllLatestForDateRange(startDate, endDate).asFlow()
             .mapToList(Dispatchers.IO)
+
+    override fun getAllLatestHttpTransactionsFilteredFlow(
+        startDate: Instant,
+        endDate: Instant,
+        responseCode: String,
+        path: String,
+    ): Flow<List<GetAllLatestWithLimit>> {
+        val responseCodeQuery = "$responseCode%"
+        val pathQuery = if (path.isNotEmpty()) "%$path%" else "%"
+        return db.httpTransactionQueries.getAllLatestWithLimit(
+            startDate,
+            endDate,
+            responseCodeQuery,
+            pathQuery
+        )
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+    }
 
 
     override fun getAllHttpTransactionsCount() =

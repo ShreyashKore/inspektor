@@ -12,8 +12,8 @@ internal fun App() {
     NavHost(navController = navController, startDestination = "transactions") {
         composable("transactions") {
             TransactionListScreen(
-                openTransaction = {
-                    navController.navigate("transaction/${it.id}")
+                openTransaction = { id ->
+                    navController.navigate("transaction/${id}")
                 },
             )
         }

@@ -18,6 +18,7 @@ internal class HttpClientCallLogger(
     private val notificationManager: NotificationManager,
 ) {
     private val transactionLog = MutableHttpTransaction()
+    val transaction get() = transactionLog.toImmutable()
     private val requestLoggedMonitor = Job()
     private val responseLoggedMonitor = Job()
 
@@ -35,7 +36,7 @@ internal class HttpClientCallLogger(
         requestPayloadSize: Long?,
         requestDate: Instant,
     ) {
-        notificationManager.notify("Request", "Request to $url")
+        notificationManager.notify("Recording Ktor Activity", "$method $url")
         transactionLog.apply {
             this.url = url
             this.host = host

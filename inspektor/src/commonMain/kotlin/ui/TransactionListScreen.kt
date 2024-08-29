@@ -1,5 +1,7 @@
 package ui
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,17 +15,28 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.clearText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.rounded.Clear
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -39,9 +52,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.gyanoba.inspektor.data.entites.HttpTransaction
+import com.gyanoba.inspektor.data.entites.GetAllLatestWithLimit
 import data.InspektorDataSourceImpl
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -58,13 +72,14 @@ import utils.TimeFormatters
 
 @Composable
 internal fun TransactionListScreen(
-    openTransaction: (HttpTransaction) -> Unit,
+    openTransaction: (Long) -> Unit,
 ) {
     val viewModel = viewModel<TransactionListViewModel> {
         TransactionListViewModel(InspektorDataSourceImpl.Instance)
     }
     TransactionListScreen(
         viewModel.transactions.collectAsState().value,
+        viewModel.searchFieldState,
         openTransaction,
         viewModel.allCount.collectAsState().value,
         viewModel.startDate.collectAsState().value,
@@ -77,8 +92,9 @@ internal fun TransactionListScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun TransactionListScreen(
-    transactions: List<HttpTransaction> = emptyList(),
-    onClickTransaction: (HttpTransaction) -> Unit,
+    transactions: List<GetAllLatestWithLimit> = emptyList(),
+    searchTermState: TextFieldState,
+    onClickTransaction: (Long) -> Unit,
     allCount: Long,
     startDate: Instant,
     endDate: Instant,
@@ -87,6 +103,9 @@ internal fun TransactionListScreen(
 ) {
     var showDateRangePicker by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+
+    var showMenu by remember { mutableStateOf(false) }
+    var showSearch by remember { mutableStateOf(false) }
 
     if (showDateRangePicker) {
         DateRangePickerDialog(
@@ -129,14 +148,57 @@ internal fun TransactionListScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { showDeleteDialog = true }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete")
+
+                    IconButton(onClick = { showSearch = !showSearch }) {
+                        AnimatedContent(
+                            targetState = showSearch,
+                        ) { showSearch ->
+                            if (showSearch) {
+                                Icon(
+                                    Icons.Rounded.Close,
+                                    contentDescription = "Close search"
+                                )
+                            } else {
+                                Icon(
+                                    Icons.Rounded.Search,
+
+                                    contentDescription = "Search"
+                                )
+                            }
+                        }
+                    }
+
+                    Box(modifier = Modifier) {
+                        IconButton(onClick = { showMenu = true }) {
+                            Icon(
+                                Icons.Default.MoreVert,
+                                contentDescription = "More options"
+                            )
+                        }
+                        DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+                            DropdownMenuItem(
+                                text = { Text("Delete") },
+                                onClick = { /* Handle edit! */ },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.Delete,
+                                        contentDescription = null
+                                    )
+                                }
+                            )
+                        }
                     }
                 },
             )
         },
     ) { paddingValues ->
         Column(Modifier.padding(paddingValues)) {
+            AnimatedVisibility(visible = showSearch) {
+                SimpleSearchBar(
+                    searchFieldState = searchTermState,
+                    placeholder = { Text("Search by status code or path") },
+                )
+            }
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -159,7 +221,7 @@ internal fun TransactionListScreen(
                 items(transactions) { transaction ->
                     TransactionItem(
                         transaction = transaction,
-                        onClick = { onClickTransaction(transaction) },
+                        onClick = { onClickTransaction(transaction.id) },
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
@@ -171,7 +233,7 @@ internal fun TransactionListScreen(
 
 @Composable
 internal fun TransactionItem(
-    transaction: HttpTransaction,
+    transaction: GetAllLatestWithLimit,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -292,6 +354,41 @@ internal fun DeleteDialog(
                 Text("Cancel")
             }
         }
+    )
+}
+
+@Composable
+internal fun SimpleSearchBar(
+    searchFieldState: TextFieldState,
+    placeholder: @Composable () -> Unit = { Text("Search") },
+) {
+    OutlinedTextField(
+        searchFieldState.text.toString(),
+        onValueChange = {
+            searchFieldState.edit {
+                replace(0, searchFieldState.text.length, it)
+            }
+        },
+        placeholder = placeholder,
+        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Search),
+        shape = MaterialTheme.shapes.medium.copy(CornerSize(24.dp)),
+        trailingIcon = {
+            if (searchFieldState.text.isNotEmpty()) {
+                IconButton(
+                    onClick = { searchFieldState.clearText() },
+                    modifier = Modifier.size(24.dp),
+                ) {
+                    Icon(
+                        Icons.Rounded.Clear,
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                        contentDescription = "Clear",
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+        },
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
     )
 }
 
