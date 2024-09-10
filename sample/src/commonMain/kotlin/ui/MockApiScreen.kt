@@ -29,7 +29,9 @@ import openInspektor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MockApiScreen() {
+fun MockApiScreen(
+    openTodoListScreen: () -> Unit,
+) {
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -61,6 +63,9 @@ fun MockApiScreen() {
             MethodTypeButtons()
             ResponseTypeButtons()
             StatusTypeButtons()
+            ButtonGroupLayout("Json Placeholer") {
+                Button(onClick = openTodoListScreen) { Text("Todo List Screen") }
+            }
         }
     }
 }

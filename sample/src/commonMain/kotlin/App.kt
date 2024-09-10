@@ -15,14 +15,16 @@ internal fun App() = MaterialTheme {
     val navController = rememberNavController()
     NavHost(navController, startDestination = "mock") {
         composable("mock") {
-            MockApiScreen()
-        }
-        composable("list") {
-            TodoListScreen(
-                onClick = { todo -> navController.navigate("details/" + todo.id) },
+            MockApiScreen(
+                openTodoListScreen = { navController.navigate("todos") },
             )
         }
-        composable("details/{todoId}") { backStackEntry ->
+        composable("todos") {
+            TodoListScreen(
+                onClick = { todo -> navController.navigate("todos/" + todo.id) },
+            )
+        }
+        composable("todos/{todoId}") { backStackEntry ->
             val todoId = backStackEntry.arguments?.getString("todoId")?.toIntOrNull()
             if (todoId != null) {
                 TodoDetailsScreen(

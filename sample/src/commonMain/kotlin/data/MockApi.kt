@@ -96,25 +96,25 @@ object MockApi {
                 )
             )
 
-            "status/success/200" -> respond(
+            "/status/success/200" -> respond(
                 content = "Success",
                 status = HttpStatusCode.OK,
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
             )
 
-            "status/error/400" -> respondError(
+            "/status/error/400" -> respondError(
                 content = "Bad Request",
                 status = HttpStatusCode.BadRequest,
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
             )
 
-            "status/error/404" -> respondError(
+            "/status/error/404" -> respondError(
                 content = "Not Found",
                 status = HttpStatusCode.NotFound,
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
             )
 
-            "status/error/500" -> respondError(
+            "/status/error/500" -> respondError(
                 content = "Internal Server Error",
                 status = HttpStatusCode.InternalServerError,
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
