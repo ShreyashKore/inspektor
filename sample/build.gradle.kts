@@ -49,6 +49,7 @@ kotlin {
             implementation(libs.ktor.serialization.kotlinx.json)
             implementation(libs.multiplatformSettings)
             implementation(libs.ktor.client.logging)
+            implementation(libs.ktor.client.mock)
             implementation(project(":inspektor"))
         }
 

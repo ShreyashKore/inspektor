@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.gyanoba.inspektor.sample.ui.MockApiScreen
 import com.gyanoba.inspektor.sample.ui.TodoDetailsScreen
 import com.gyanoba.inspektor.sample.ui.TodoListScreen
 
@@ -12,13 +13,18 @@ import com.gyanoba.inspektor.sample.ui.TodoListScreen
 @Composable
 internal fun App() = MaterialTheme {
     val navController = rememberNavController()
-    NavHost(navController, startDestination = "list") {
-        composable("list") {
-            TodoListScreen(
-                onClick = { todo -> navController.navigate("details/" + todo.id) },
+    NavHost(navController, startDestination = "mock") {
+        composable("mock") {
+            MockApiScreen(
+                openTodoListScreen = { navController.navigate("todos") },
             )
         }
-        composable("details/{todoId}") { backStackEntry ->
+        composable("todos") {
+            TodoListScreen(
+                onClick = { todo -> navController.navigate("todos/" + todo.id) },
+            )
+        }
+        composable("todos/{todoId}") { backStackEntry ->
             val todoId = backStackEntry.arguments?.getString("todoId")?.toIntOrNull()
             if (todoId != null) {
                 TodoDetailsScreen(

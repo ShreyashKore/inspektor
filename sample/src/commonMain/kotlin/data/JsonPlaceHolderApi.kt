@@ -12,7 +12,7 @@ import io.ktor.client.request.get
 import io.ktor.serialization.kotlinx.json.json
 import models.Todo
 
-object Api {
+object JsonPlaceHolderApi {
     private val client = HttpClient {
         install(ContentNegotiation) {
             json()
