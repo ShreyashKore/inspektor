@@ -65,6 +65,7 @@ import kotlinx.datetime.toLocalDateTime
 import platform.getAppName
 import ui.components.DateRangeButton
 import ui.components.DateRangePickerDialog
+import ui.components.Logo
 import ui.theme.errorColor
 import ui.theme.successColor
 import ui.theme.warningColor
@@ -129,6 +130,7 @@ internal fun TransactionListScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
+                navigationIcon = { Logo() },
                 title = {
                     val appName = remember(Unit) { getAppName() }
                     Column(
