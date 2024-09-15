@@ -1,5 +1,5 @@
 plugins {
-    id("root.publication")
+    alias(libs.plugins.vanniktech).apply(false)
     alias(libs.plugins.androidLibrary).apply(false)
     alias(libs.plugins.kotlinMultiplatform).apply(false)
     alias(libs.plugins.compose).apply(false)

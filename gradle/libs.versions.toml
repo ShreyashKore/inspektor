@@ -4,7 +4,7 @@ android-compileSdk = "34"
 # ---
 agp = "8.2.2"
 kotlin = "2.0.0"
-nexus-publish = "2.0.0"
+publish = "0.29.0"
 androidxPaging3Extensions = "2.0.0"
 atomicfuGradlePlugin = "0.22.0"
 kotlinx-coroutines = "1.9.0-RC"
@@ -27,7 +27,6 @@ androidx-navigation = "2.8.0-alpha02"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
-nexus-publish = { module = "io.github.gradle-nexus.publish-plugin:io.github.gradle-nexus.publish-plugin.gradle.plugin", version.ref = "nexus-publish" }
 
 androidx-paging3-extensions = { module = "app.cash.sqldelight:androidx-paging3-extensions", version.ref = "androidxPaging3Extensions" }
 lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
@@ -66,6 +65,7 @@ multiplatformSettings = { module = "com.russhwolf:multiplatform-settings", versi
 [plugins]
 androidLibrary = { id = "com.android.library", version.ref = "agp" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+vanniktech = { id = "com.vanniktech.maven.publish", version.ref = "publish" }
 
 compose = { id = "org.jetbrains.compose", version.ref = "compose" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }

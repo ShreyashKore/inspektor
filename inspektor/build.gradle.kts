@@ -12,7 +12,7 @@ plugins {
     alias(libs.plugins.kotlinx.serialization)
     alias(libs.plugins.sqlDelight)
     id("kotlinx-atomicfu")
-    id("module.publication")
+    alias(libs.plugins.vanniktech)
 }
 
 group = "com.gyanoba.inspektor"
