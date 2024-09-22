@@ -7,7 +7,7 @@
 
 import SwiftUI
 import UIKit
-import Sample
+import InspektorSample
 
 struct ComposeView: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UIViewController {
