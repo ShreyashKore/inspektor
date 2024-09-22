@@ -1,0 +1,153 @@
+# Copied from coil
+name: CI
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+concurrency:
+  # Limit concurrency to 1 for PRs. 'main' concurrency isn't limited.
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+env:
+  CI: true
+  JAVA_VERSION: 17
+  ORG_GRADLE_IDE_DOWNLOADJAVADOC: false
+  ORG_GRADLE_IDE_DOWNLOADSOURCES: false
+jobs:
+  checks:
+    name: Checks
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Check Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
+      #      - name: Check style
+      #        run: ./gradlew spotlessCheck
+
+      - name: Check lint
+        run: ./gradlew lint
+
+      - name: Check binary compatibility
+        run: ./gradlew apiCheck || { exit_code=$?; printf "*** This PR changes Inspektor's public API. If this change is intentional, run './gradlew apiDump' and commit the new API files. ***"; exit $exit_code; }
+
+  unit-tests:
+    name: Unit tests
+    runs-on: macos-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: ${{ env.JAVA_VERSION }}
+      - uses: gradle/actions/setup-gradle@v4
+        continue-on-error: true
+        timeout-minutes: 5
+        with:
+          cache-overwrite-existing: true
+          gradle-home-cache-cleanup: true
+
+      - name: Remove unused Xcode versions
+        run: |
+          echo "Currently installed Xcode versions:"
+          find /Applications -name "Xcode*" -maxdepth 1 -mindepth 1
+          echo "Removing all except the currently selected Xcode version..."
+          ls -d /Applications/Xcode* | grep -v "$(xcode-select -p | sed 's:/Contents/Developer::')" | xargs -P 3 -I {} sudo rm -rf "{}"
+          echo "Available Xcode versions after removal:"
+          find /Applications -name "Xcode*" -maxdepth 1 -mindepth 1
+
+      - name: Unit tests
+        run: ./gradlew allTests testDebugUnitTest validateDebugScreenshotTest verifyPaparazziDebug verifyRoborazziDebug verifyRoborazziJvm
+
+  instrumentation-tests:
+    name: Instrumentation tests
+    if: never()
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: true
+      matrix:
+        api-level: [ 22, 26, 31 ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: ${{ env.JAVA_VERSION }}
+      - uses: gradle/actions/setup-gradle@v4
+        continue-on-error: true
+        timeout-minutes: 5
+        with:
+          cache-overwrite-existing: true
+          gradle-home-cache-cleanup: true
+
+      # API 30+ emulators only have x86_64 system images.
+      - name: Get AVD info
+        uses: ./.github/actions/get-avd-info
+        id: avd-info
+        with:
+          api-level: ${{ matrix.api-level }}
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Instrumentation tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          arch: ${{ steps.avd-info.outputs.arch }}
+          target: ${{ steps.avd-info.outputs.target }}
+          script: mv .github/debug.keystore ~/.android; ./gradlew connectedDebugAndroidTest
+
+  build-sample:
+    name: Build sample
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: ${{ env.JAVA_VERSION }}
+      - uses: gradle/actions/setup-gradle@v4
+        continue-on-error: true
+        timeout-minutes: 5
+        with:
+          cache-overwrite-existing: true
+          gradle-home-cache-cleanup: true
+
+      - name: Build Compose and View sample
+        run: ./gradlew sample:assembleDebug
+
+      - name: Build iOS app
+        run: xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp -destination 'platform=iOS Simulator,name=iPhone 14,OS=latest'
+
+  deploy-snapshot:
+    name: Deploy snapshot
+    runs-on: macos-latest
+    timeout-minutes: 60
+    if: github.repository == 'Gyanoba/inspektor' && (github.ref == 'refs/heads/main')
+    needs: [ checks, unit-tests, instrumentation-tests, build-sample ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Deploy snapshot
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.SONATYPE_NEXUS_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.SONATYPE_NEXUS_PASSWORD }}
+        run: ./gradlew publishAllPublicationsToMavenCentralRepository
