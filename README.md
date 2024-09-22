@@ -31,13 +31,27 @@ To use Inspektor, install the plugin in your `HttpClient` configuration:
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.api.install
 import io.ktor.client.request.get
+import javax.management.InvalidApplicationException
 
+// For Android and IOS this is enough
 val client = HttpClient {
     install(Inspektor)
 }
 
 suspend fun apiCall() {
     client.get("http://example.com")
+}
+```
+
+For Desktop platforms, you need to specify the APPLICATION_ID before using Inspektor.
+This is used to determine the location to store the database file.
+
+```kotlin
+import data.db.APPLICATION_ID
+
+fun main() {
+    APPLICATION_ID = "com.example.myapp"
+    // ...
 }
 ```
 

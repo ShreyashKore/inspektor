@@ -242,3 +242,9 @@ private inline fun ClientPluginBuilder<InspektorConfig>.shouldNotLog(call: HttpC
 }
 
 public expect fun openInspektor()
+
+@RequiresOptIn(
+    message = "This API is unstable and may be removed in the future.",
+    level = RequiresOptIn.Level.ERROR
+)
+public annotation class UnstableInspektorAPI
