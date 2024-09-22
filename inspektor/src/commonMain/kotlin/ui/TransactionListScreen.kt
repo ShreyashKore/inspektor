@@ -42,6 +42,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,6 +52,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -180,7 +183,10 @@ internal fun TransactionListScreen(
                         DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                             DropdownMenuItem(
                                 text = { Text("Delete") },
-                                onClick = { /* Handle edit! */ },
+                                onClick = {
+                                    showDeleteDialog = true
+                                    showMenu = false
+                                },
                                 leadingIcon = {
                                     Icon(
                                         Icons.Default.Delete,
@@ -364,6 +370,10 @@ internal fun SimpleSearchBar(
     searchFieldState: TextFieldState,
     placeholder: @Composable () -> Unit = { Text("Search") },
 ) {
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
     OutlinedTextField(
         searchFieldState.text.toString(),
         onValueChange = {
@@ -390,7 +400,8 @@ internal fun SimpleSearchBar(
             }
         },
         singleLine = true,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+            .focusRequester(focusRequester),
     )
 }
 

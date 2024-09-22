@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Done
 import androidx.compose.material.icons.rounded.Refresh
@@ -47,20 +48,29 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @Composable
 fun TodoListScreen(
     onClick: (Todo) -> Unit,
+    onBack: () -> Unit,
 ) {
     val viewModel = viewModel { TodoListViewModel() }
     val todos by viewModel.todos.collectAsState()
 
     Scaffold(modifier = Modifier.safeDrawingPadding(), topBar = {
-        CenterAlignedTopAppBar(title = {
-            Text("Sample")
-        }, actions = {
-            IconButton(onClick = {
-                viewModel.getTodos()
-            }) {
-                Icon(Icons.Rounded.Refresh, contentDescription = "Refresh")
-            }
-        })
+        CenterAlignedTopAppBar(
+            title = {
+                Text("Sample")
+            },
+            navigationIcon = {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                }
+            },
+            actions = {
+                IconButton(onClick = {
+                    viewModel.getTodos()
+                }) {
+                    Icon(Icons.Rounded.Refresh, contentDescription = "Refresh")
+                }
+            },
+        )
     }, contentWindowInsets = WindowInsets(top = 60.dp), floatingActionButton = {
         ExtendedFloatingActionButton(onClick = { openInspektor() }) {
             Icon(Icons.Rounded.Check, contentDescription = null)
@@ -138,5 +148,5 @@ fun TodoCard(todo: Todo, onClick: (Todo) -> Unit) {
 @Preview
 @Composable
 private fun PreviewTodoListScreen() = MaterialTheme {
-    TodoListScreen({})
+    TodoListScreen({}, {})
 }

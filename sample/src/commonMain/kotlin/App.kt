@@ -2,6 +2,7 @@ package com.gyanoba.inspektor.sample
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -22,6 +23,7 @@ internal fun App() = MaterialTheme {
         composable("todos") {
             TodoListScreen(
                 onClick = { todo -> navController.navigate("todos/" + todo.id) },
+                onBack = { navController.popBackStack() },
             )
         }
         composable("todos/{todoId}") { backStackEntry ->
@@ -31,6 +33,10 @@ internal fun App() = MaterialTheme {
                     todoId = todoId,
                     onBack = { navController.popBackStack() },
                 )
+            } else {
+                LaunchedEffect(Unit) {
+                    navController.popBackStack()
+                }
             }
         }
     }

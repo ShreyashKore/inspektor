@@ -6,11 +6,7 @@ public actual fun openInspektor() {
     val context = ContextInitializer.appContext
     val intent = Intent().apply {
         setClass(context, MainActivity::class.java)
-        setFlags(
-            Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT or
-                    Intent.FLAG_ACTIVITY_MULTIPLE_TASK or
-                    Intent.FLAG_ACTIVITY_NEW_TASK
-        )
+        setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
     context.startActivity(intent)
 }
