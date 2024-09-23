@@ -1,9 +1,10 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 plugins {
-    alias(libs.plugins.multiplatform)
-    alias(libs.plugins.compose)
     alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlinMultiplatform)
+    alias(libs.plugins.compose)
+    alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlinx.serialization)
 }
 
@@ -21,7 +22,7 @@ kotlin {
         iosSimulatorArm64()
     ).forEach {
         it.binaries.framework {
-            baseName = "inspektor"
+            baseName = "InspektorSample"
             isStatic = true
         }
     }
@@ -39,14 +40,16 @@ kotlin {
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
             implementation(libs.kotlinx.coroutines.core)
-            implementation(libs.moko.mvvm)
+            implementation(libs.lifecycle.viewmodel.compose)
+            implementation(libs.androidx.navigation.compose)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.datetime)
-            implementation(libs.kermit)
             implementation(libs.ktor.core)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
-
+            implementation(libs.multiplatformSettings)
+            implementation(libs.ktor.client.logging)
+            implementation(libs.ktor.client.mock)
             implementation(project(":inspektor"))
         }
 
@@ -109,12 +112,17 @@ android {
 
 compose.desktop {
     application {
-        mainClass = "com.gyanoba.inspektor.sample.MainKt"
-
+        mainClass = "MainKt"
+        buildTypes.release {
+            proguard {
+                configurationFiles.from("compose-desktop.pro")
+            }
+        }
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "com.gyanoba.inspektor.sample"
             packageVersion = "1.0.0"
+            modules("java.sql")
         }
     }
 }

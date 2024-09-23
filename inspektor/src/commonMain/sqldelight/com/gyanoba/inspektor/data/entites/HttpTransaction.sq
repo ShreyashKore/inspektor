@@ -1,11 +1,16 @@
 import kotlin.Boolean;
+import kotlin.collections.List;
+import kotlin.collections.Map;
+import kotlin.collections.Set;
+import kotlin.String;
 import kotlinx.datetime.Instant;
 
-CREATE TABLE HttpTransaction (
+PRAGMA user_version = 1;
+
+CREATE TABLE IF NOT EXISTS HttpTransaction (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    method TEXT NOT NULL,
-    statusCode INTEGER,
-    requestDate INTEGER AS Instant NOT NULL,
+    method TEXT,
+    requestDate INTEGER AS Instant,
     responseDate INTEGER AS Instant,
     tookMs INTEGER,
     protocol TEXT,
@@ -17,7 +22,7 @@ CREATE TABLE HttpTransaction (
     responseCipherSuite TEXT DEFAULT NULL,
     requestPayloadSize INTEGER,
     requestContentType TEXT,
-    requestHeaders TEXT,
+    requestHeaders TEXT AS Set<Map.Entry<String, List<String>>>,
     requestHeadersSize INTEGER,
     requestBody TEXT,
     isRequestBodyEncoded INTEGER AS Boolean DEFAULT 0,
@@ -26,19 +31,23 @@ CREATE TABLE HttpTransaction (
     error TEXT,
     responsePayloadSize INTEGER,
     responseContentType TEXT,
-    responseHeaders TEXT,
+    responseHeaders TEXT AS Set<Map.Entry<String, List<String>>>,
     responseHeadersSize INTEGER,
     responseBody TEXT,
     isResponseBodyEncoded INTEGER AS Boolean DEFAULT 0
 );
 
-CREATE INDEX HttpTransaction_method ON HttpTransaction(method);
-CREATE INDEX HttpTransaction_statusCode ON HttpTransaction(statusCode);
-CREATE INDEX HttpTransaction_host ON HttpTransaction(host);
+CREATE INDEX IF NOT EXISTS HttpTransaction_method ON HttpTransaction(method);
+CREATE INDEX IF NOT EXISTS HttpTransaction_requestDate ON HttpTransaction(requestDate);
+CREATE INDEX IF NOT EXISTS HttpTransaction_responseDate ON HttpTransaction(responseDate);
+CREATE INDEX IF NOT EXISTS HttpTransaction_host ON HttpTransaction(host);
 
 
 getById:
 SELECT * FROM HttpTransaction WHERE id = ?;
+
+getLast:
+SELECT * FROM HttpTransaction ORDER BY id DESC LIMIT 1;
 
 getAll:
 SELECT * FROM HttpTransaction;
@@ -52,10 +61,46 @@ SELECT COUNT(*) FROM HttpTransaction;
 getAllLatestForDateRange:
 SELECT * FROM HttpTransaction WHERE requestDate BETWEEN :startDate AND :endDate ORDER BY requestDate DESC;
 
+getAllLatestWithLimit:
+SELECT id, requestDate, tookMs, protocol, method, host, path, scheme, responseCode,
+requestPayloadSize, responsePayloadSize, error FROM HttpTransaction WHERE requestDate BETWEEN :startDate AND :endDate AND
+(responseCode LIKE :codeQuery AND path LIKE :pathQuery) ORDER BY requestDate DESC;
+
 insert:
 INSERT INTO HttpTransaction(
    method,
-   statusCode,
+   requestDate,
+   responseDate,
+   tookMs,
+   protocol,
+   url,
+   host,
+   path,
+   scheme,
+   responseTlsVersion,
+   responseCipherSuite,
+   requestPayloadSize,
+   requestContentType,
+   requestHeaders,
+   requestHeadersSize,
+   requestBody,
+   isRequestBodyEncoded,
+   responseCode,
+   responseMessage,
+   error,
+   responsePayloadSize,
+   responseContentType,
+   responseHeaders,
+   responseHeadersSize,
+   responseBody,
+   isResponseBodyEncoded
+)
+VALUES ?;
+
+insertOrReplace:
+INSERT OR REPLACE INTO HttpTransaction(
+   id,
+   method,
    requestDate,
    responseDate,
    tookMs,
@@ -96,11 +141,15 @@ DELETE FROM HttpTransaction WHERE requestDate < ?;
 update:
 UPDATE HttpTransaction
 SET responseCode = ?,
+    responseDate = ?,
+    tookMs = ?,
     responseMessage = ?,
     responsePayloadSize = ?,
     responseContentType = ?,
     responseHeaders = ?,
     responseHeadersSize = ?,
+    responseTlsVersion = ?,
+    responseCipherSuite = ?,
     responseBody = ?,
     isResponseBodyEncoded = ?
 WHERE id = :id;

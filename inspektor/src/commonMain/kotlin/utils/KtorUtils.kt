@@ -1,9 +1,11 @@
 package utils
 
+import io.ktor.http.ContentType
 import io.ktor.http.Headers
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.charsets.Charset
 import io.ktor.utils.io.core.readText
+import io.ktor.utils.io.readRemaining
 
 /**
  * Returns the number of bytes required to encode these headers using HTTP/1.1. This is also the
@@ -29,8 +31,13 @@ internal fun Headers.approxByteCount(): Long {
 }
 
 
-internal suspend inline fun ByteReadChannel.tryReadText(charset: Charset): String? = try {
-    readRemaining().readText(charset = charset)
+internal suspend inline fun ByteReadChannel.tryReadText(
+    charset: Charset,
+    max: Int = Int.MAX_VALUE,
+): String? = try {
+    readRemaining().readText(charset = charset, max = max)
 } catch (cause: Throwable) {
     null
 }
+
+internal val ContentType.typeAndSubType get() = "$contentType/$contentSubtype"

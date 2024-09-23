@@ -1,11 +1,10 @@
 package utils
 
-private val kermit = co.touchlab.kermit.Logger
 
-internal fun log(message: () -> Any?) =
-    kermit.d(tag = "HttpTransaction") { message().toString() }
+internal fun log(tag: String, message: () -> Any?) =
+    println("$tag ::: ${message().toString()}")
 
-internal fun logErr(error: Throwable?, message: () -> Any?) =
-    kermit.e(error, "HttpTransaction") { message().toString() }
+internal fun logErr(error: Throwable?, tag: String, message: (() -> Any?)? = null) =
+    println("$tag ::: ❌ ${message?.toString().orEmpty()}\t${error?.message}")
 
 

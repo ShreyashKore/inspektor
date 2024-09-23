@@ -1,13 +1,8 @@
-rootProject.name = "inspektor"
-include(":inspektor")
-include(":sample")
-includeBuild("convention-plugins")
-
 pluginManagement {
     repositories {
         google()
-        gradlePluginPortal()
         mavenCentral()
+        gradlePluginPortal()
     }
 }
 
@@ -17,3 +12,7 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
+
+rootProject.name = "inspektor"
+include(":inspektor")
+include(":sample")

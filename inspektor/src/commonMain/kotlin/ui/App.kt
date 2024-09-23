@@ -1,37 +1,29 @@
 package ui
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import com.gyanoba.inspektor.data.entites.HttpTransaction
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 
 @Composable
 internal fun App() {
-    var selectedTransaction by remember { mutableStateOf<HttpTransaction?>(null) }
+    val navController = rememberNavController()
 
-    AnimatedContent(
-        targetState = selectedTransaction,
-        modifier = Modifier.fillMaxSize()
-    ) { transaction ->
-        when (transaction) {
-            null -> {
-                TransactionListScreen(
-                    openTransaction = {
-                        selectedTransaction = it
-                    },
-                )
-            }
-
-            else -> {
+    NavHost(navController = navController, startDestination = "transactions") {
+        composable("transactions") {
+            TransactionListScreen(
+                openTransaction = { id ->
+                    navController.navigate("transaction/${id}")
+                },
+            )
+        }
+        composable("transaction/{id}") { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("id")?.toLongOrNull()
+            if (id != null) {
                 TransactionDetailsScreen(
-                    transaction.id,
+                    id,
                     onBack = {
-                        selectedTransaction = null
+                        navController.popBackStack()
                     },
                 )
             }

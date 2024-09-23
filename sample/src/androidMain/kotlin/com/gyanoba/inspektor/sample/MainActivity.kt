@@ -1,6 +1,5 @@
 package com.gyanoba.inspektor.sample
 
-import App
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge

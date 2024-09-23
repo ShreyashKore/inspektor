@@ -13,3 +13,5 @@ xcuserdata/
 Pods/
 *.jks
 *yarn.lock
+.kotlin
+inspektor/*.db

@@ -1,2 +1,0 @@
-public actual fun openInspektor() {
-}
