@@ -1,0 +1,383 @@
+public final class InspektorConfig {
+	public static final field $stable I
+	public final fun filter (Lkotlin/jvm/functions/Function1;)V
+	public final fun getDataSource ()Ldata/InspektorDataSource;
+	public final fun getLevel ()LLogLevel;
+	public final fun getMaxContentLength ()I
+	public final fun sanitizeHeader (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun sanitizeHeader$default (LInspektorConfig;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public final fun setDataSource (Ldata/InspektorDataSource;)V
+	public final fun setLevel (LLogLevel;)V
+	public final fun setMaxContentLength (I)V
+}
+
+public final class InspektorKt {
+	public static final fun getInspektor ()Lio/ktor/client/plugins/api/ClientPlugin;
+}
+
+public final class Inspektor_androidKt {
+	public static final fun openInspektor ()V
+}
+
+public final class LogLevel : java/lang/Enum {
+	public static final field BODY LLogLevel;
+	public static final field HEADERS LLogLevel;
+	public static final field INFO LLogLevel;
+	public static final field NONE LLogLevel;
+	public final fun getBody ()Z
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getHeaders ()Z
+	public final fun getInfo ()Z
+	public static fun valueOf (Ljava/lang/String;)LLogLevel;
+	public static fun values ()[LLogLevel;
+}
+
+public abstract interface annotation class UnstableInspektorAPI : java/lang/annotation/Annotation {
+}
+
+public final class com/gyanoba/inspektor/ComposableSingletons$MainActivityKt {
+	public static final field INSTANCE Lcom/gyanoba/inspektor/ComposableSingletons$MainActivityKt;
+	public static field lambda-1 Lkotlin/jvm/functions/Function2;
+	public fun <init> ()V
+	public final fun getLambda-1$inspektor_release ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/gyanoba/inspektor/MainActivity : androidx/activity/ComponentActivity {
+	public static final field $stable I
+	public fun <init> ()V
+}
+
+public final class com/gyanoba/inspektor/data/entites/GetAllLatestWithLimit {
+	public static final field $stable I
+	public fun <init> (JLkotlinx/datetime/Instant;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/String;)V
+	public final fun component1 ()J
+	public final fun component10 ()Ljava/lang/Long;
+	public final fun component11 ()Ljava/lang/Long;
+	public final fun component12 ()Ljava/lang/String;
+	public final fun component2 ()Lkotlinx/datetime/Instant;
+	public final fun component3 ()Ljava/lang/Long;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun component8 ()Ljava/lang/String;
+	public final fun component9 ()Ljava/lang/Long;
+	public final fun copy (JLkotlinx/datetime/Instant;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/String;)Lcom/gyanoba/inspektor/data/entites/GetAllLatestWithLimit;
+	public static synthetic fun copy$default (Lcom/gyanoba/inspektor/data/entites/GetAllLatestWithLimit;JLkotlinx/datetime/Instant;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/String;ILjava/lang/Object;)Lcom/gyanoba/inspektor/data/entites/GetAllLatestWithLimit;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Ljava/lang/String;
+	public final fun getHost ()Ljava/lang/String;
+	public final fun getId ()J
+	public final fun getMethod ()Ljava/lang/String;
+	public final fun getPath ()Ljava/lang/String;
+	public final fun getProtocol ()Ljava/lang/String;
+	public final fun getRequestDate ()Lkotlinx/datetime/Instant;
+	public final fun getRequestPayloadSize ()Ljava/lang/Long;
+	public final fun getResponseCode ()Ljava/lang/Long;
+	public final fun getResponsePayloadSize ()Ljava/lang/Long;
+	public final fun getScheme ()Ljava/lang/String;
+	public final fun getTookMs ()Ljava/lang/Long;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/gyanoba/inspektor/data/entites/HttpTransaction {
+	public static final field $stable I
+	public fun <init> (JLjava/lang/String;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;Ljava/util/Set;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;Ljava/util/Set;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/Boolean;)V
+	public final fun component1 ()J
+	public final fun component10 ()Ljava/lang/String;
+	public final fun component11 ()Ljava/lang/String;
+	public final fun component12 ()Ljava/lang/String;
+	public final fun component13 ()Ljava/lang/Long;
+	public final fun component14 ()Ljava/lang/String;
+	public final fun component15 ()Ljava/util/Set;
+	public final fun component16 ()Ljava/lang/Long;
+	public final fun component17 ()Ljava/lang/String;
+	public final fun component18 ()Ljava/lang/Boolean;
+	public final fun component19 ()Ljava/lang/Long;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component20 ()Ljava/lang/String;
+	public final fun component21 ()Ljava/lang/String;
+	public final fun component22 ()Ljava/lang/Long;
+	public final fun component23 ()Ljava/lang/String;
+	public final fun component24 ()Ljava/util/Set;
+	public final fun component25 ()Ljava/lang/Long;
+	public final fun component26 ()Ljava/lang/String;
+	public final fun component27 ()Ljava/lang/Boolean;
+	public final fun component3 ()Lkotlinx/datetime/Instant;
+	public final fun component4 ()Lkotlinx/datetime/Instant;
+	public final fun component5 ()Ljava/lang/Long;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun component8 ()Ljava/lang/String;
+	public final fun component9 ()Ljava/lang/String;
+	public final fun copy (JLjava/lang/String;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;Ljava/util/Set;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;Ljava/util/Set;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/Boolean;)Lcom/gyanoba/inspektor/data/entites/HttpTransaction;
+	public static synthetic fun copy$default (Lcom/gyanoba/inspektor/data/entites/HttpTransaction;JLjava/lang/String;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;Ljava/util/Set;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;Ljava/util/Set;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/Boolean;ILjava/lang/Object;)Lcom/gyanoba/inspektor/data/entites/HttpTransaction;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Ljava/lang/String;
+	public final fun getHost ()Ljava/lang/String;
+	public final fun getId ()J
+	public final fun getMethod ()Ljava/lang/String;
+	public final fun getPath ()Ljava/lang/String;
+	public final fun getProtocol ()Ljava/lang/String;
+	public final fun getRequestBody ()Ljava/lang/String;
+	public final fun getRequestContentType ()Ljava/lang/String;
+	public final fun getRequestDate ()Lkotlinx/datetime/Instant;
+	public final fun getRequestHeaders ()Ljava/util/Set;
+	public final fun getRequestHeadersSize ()Ljava/lang/Long;
+	public final fun getRequestPayloadSize ()Ljava/lang/Long;
+	public final fun getResponseBody ()Ljava/lang/String;
+	public final fun getResponseCipherSuite ()Ljava/lang/String;
+	public final fun getResponseCode ()Ljava/lang/Long;
+	public final fun getResponseContentType ()Ljava/lang/String;
+	public final fun getResponseDate ()Lkotlinx/datetime/Instant;
+	public final fun getResponseHeaders ()Ljava/util/Set;
+	public final fun getResponseHeadersSize ()Ljava/lang/Long;
+	public final fun getResponseMessage ()Ljava/lang/String;
+	public final fun getResponsePayloadSize ()Ljava/lang/Long;
+	public final fun getResponseTlsVersion ()Ljava/lang/String;
+	public final fun getScheme ()Ljava/lang/String;
+	public final fun getTookMs ()Ljava/lang/Long;
+	public final fun getUrl ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isRequestBodyEncoded ()Ljava/lang/Boolean;
+	public final fun isResponseBodyEncoded ()Ljava/lang/Boolean;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/gyanoba/inspektor/data/entites/HttpTransaction$Adapter {
+	public static final field $stable I
+	public fun <init> (Lapp/cash/sqldelight/ColumnAdapter;Lapp/cash/sqldelight/ColumnAdapter;Lapp/cash/sqldelight/ColumnAdapter;Lapp/cash/sqldelight/ColumnAdapter;)V
+	public final fun getRequestDateAdapter ()Lapp/cash/sqldelight/ColumnAdapter;
+	public final fun getRequestHeadersAdapter ()Lapp/cash/sqldelight/ColumnAdapter;
+	public final fun getResponseDateAdapter ()Lapp/cash/sqldelight/ColumnAdapter;
+	public final fun getResponseHeadersAdapter ()Lapp/cash/sqldelight/ColumnAdapter;
+}
+
+public final class com/gyanoba/inspektor/data/entites/HttpTransactionQueries : app/cash/sqldelight/TransacterImpl {
+	public static final field $stable I
+	public fun <init> (Lapp/cash/sqldelight/db/SqlDriver;Lcom/gyanoba/inspektor/data/entites/HttpTransaction$Adapter;)V
+	public final fun delete (J)V
+	public final fun deleteAll ()V
+	public final fun deleteBefore (Lkotlinx/datetime/Instant;)V
+	public final fun getAll ()Lapp/cash/sqldelight/Query;
+	public final fun getAll (Lkotlin/jvm/functions/FunctionN;)Lapp/cash/sqldelight/Query;
+	public final fun getAllCount ()Lapp/cash/sqldelight/Query;
+	public final fun getAllLatest ()Lapp/cash/sqldelight/Query;
+	public final fun getAllLatest (Lkotlin/jvm/functions/FunctionN;)Lapp/cash/sqldelight/Query;
+	public final fun getAllLatestForDateRange (Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;)Lapp/cash/sqldelight/Query;
+	public final fun getAllLatestForDateRange (Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Lkotlin/jvm/functions/FunctionN;)Lapp/cash/sqldelight/Query;
+	public final fun getAllLatestWithLimit (Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/lang/String;Ljava/lang/String;)Lapp/cash/sqldelight/Query;
+	public final fun getAllLatestWithLimit (Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function12;)Lapp/cash/sqldelight/Query;
+	public final fun getById (J)Lapp/cash/sqldelight/Query;
+	public final fun getById (JLkotlin/jvm/functions/FunctionN;)Lapp/cash/sqldelight/Query;
+	public final fun getLast ()Lapp/cash/sqldelight/Query;
+	public final fun getLast (Lkotlin/jvm/functions/FunctionN;)Lapp/cash/sqldelight/Query;
+	public final fun insert (Lcom/gyanoba/inspektor/data/entites/HttpTransaction;)V
+	public final fun insertOrReplace (Lcom/gyanoba/inspektor/data/entites/HttpTransaction;)V
+	public final fun lastInsertRowId ()Lapp/cash/sqldelight/ExecutableQuery;
+	public final fun update (Ljava/lang/Long;Lkotlinx/datetime/Instant;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;Ljava/util/Set;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;J)V
+}
+
+public abstract interface class com/gyanoba/inspektor/db/InspektorDatabase : app/cash/sqldelight/Transacter {
+	public static final field Companion Lcom/gyanoba/inspektor/db/InspektorDatabase$Companion;
+	public abstract fun getHttpTransactionQueries ()Lcom/gyanoba/inspektor/data/entites/HttpTransactionQueries;
+}
+
+public final class com/gyanoba/inspektor/db/InspektorDatabase$Companion {
+	public final fun getSchema ()Lapp/cash/sqldelight/db/SqlSchema;
+	public final fun invoke (Lapp/cash/sqldelight/db/SqlDriver;Lcom/gyanoba/inspektor/data/entites/HttpTransaction$Adapter;)Lcom/gyanoba/inspektor/db/InspektorDatabase;
+}
+
+public final class com/gyanoba/inspektor/utils/ContextInitializer : androidx/startup/Initializer {
+	public static final field $stable I
+	public static final field Companion Lcom/gyanoba/inspektor/utils/ContextInitializer$Companion;
+	public fun <init> ()V
+	public fun create (Landroid/content/Context;)Landroid/content/Context;
+	public synthetic fun create (Landroid/content/Context;)Ljava/lang/Object;
+	public fun dependencies ()Ljava/util/List;
+}
+
+public final class com/gyanoba/inspektor/utils/ContextInitializer$Companion {
+	public final fun getAppContext ()Landroid/content/Context;
+}
+
+public abstract interface class data/InspektorDataSource {
+	public abstract fun deleteBefore (Lkotlinx/datetime/Instant;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getAllHttpTransactionsCount ()Lkotlinx/coroutines/flow/Flow;
+	public abstract fun getAllLatestHttpTransactionsFilteredFlow (Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/lang/String;Ljava/lang/String;)Lkotlinx/coroutines/flow/Flow;
+	public abstract fun getAllLatestHttpTransactionsForDateRange (Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getAllLatestHttpTransactionsForDateRangeFlow (Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;)Lkotlinx/coroutines/flow/Flow;
+	public abstract fun getTransaction (J)Lkotlinx/coroutines/flow/Flow;
+	public abstract fun insertHttpTransaction (Lcom/gyanoba/inspektor/data/entites/HttpTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun updateHttpTransaction (Lcom/gyanoba/inspektor/data/entites/HttpTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class data/MutableHttpTransaction {
+	public static final field $stable I
+	public fun <init> ()V
+	public fun <init> (JLjava/lang/String;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;Ljava/util/Set;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;Ljava/util/Set;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/Boolean;)V
+	public synthetic fun <init> (JLjava/lang/String;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;Ljava/util/Set;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;Ljava/util/Set;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/Boolean;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()J
+	public final fun component10 ()Ljava/lang/String;
+	public final fun component11 ()Ljava/lang/String;
+	public final fun component12 ()Ljava/lang/String;
+	public final fun component13 ()Ljava/lang/Long;
+	public final fun component14 ()Ljava/lang/String;
+	public final fun component15 ()Ljava/util/Set;
+	public final fun component16 ()Ljava/lang/Long;
+	public final fun component17 ()Ljava/lang/String;
+	public final fun component18 ()Ljava/lang/Boolean;
+	public final fun component19 ()Ljava/lang/Long;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component20 ()Ljava/lang/String;
+	public final fun component21 ()Ljava/lang/String;
+	public final fun component22 ()Ljava/lang/Long;
+	public final fun component23 ()Ljava/lang/String;
+	public final fun component24 ()Ljava/util/Set;
+	public final fun component25 ()Ljava/lang/Long;
+	public final fun component26 ()Ljava/lang/String;
+	public final fun component27 ()Ljava/lang/Boolean;
+	public final fun component3 ()Lkotlinx/datetime/Instant;
+	public final fun component4 ()Lkotlinx/datetime/Instant;
+	public final fun component5 ()Ljava/lang/Long;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun component8 ()Ljava/lang/String;
+	public final fun component9 ()Ljava/lang/String;
+	public final fun copy (JLjava/lang/String;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;Ljava/util/Set;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;Ljava/util/Set;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/Boolean;)Ldata/MutableHttpTransaction;
+	public static synthetic fun copy$default (Ldata/MutableHttpTransaction;JLjava/lang/String;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;Ljava/util/Set;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;Ljava/util/Set;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/Boolean;ILjava/lang/Object;)Ldata/MutableHttpTransaction;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Ljava/lang/String;
+	public final fun getHost ()Ljava/lang/String;
+	public final fun getId ()J
+	public final fun getMethod ()Ljava/lang/String;
+	public final fun getPath ()Ljava/lang/String;
+	public final fun getProtocol ()Ljava/lang/String;
+	public final fun getRequestBody ()Ljava/lang/String;
+	public final fun getRequestContentType ()Ljava/lang/String;
+	public final fun getRequestDate ()Lkotlinx/datetime/Instant;
+	public final fun getRequestHeaders ()Ljava/util/Set;
+	public final fun getRequestHeadersSize ()Ljava/lang/Long;
+	public final fun getRequestPayloadSize ()Ljava/lang/Long;
+	public final fun getResponseBody ()Ljava/lang/String;
+	public final fun getResponseCipherSuite ()Ljava/lang/String;
+	public final fun getResponseCode ()Ljava/lang/Long;
+	public final fun getResponseContentType ()Ljava/lang/String;
+	public final fun getResponseDate ()Lkotlinx/datetime/Instant;
+	public final fun getResponseHeaders ()Ljava/util/Set;
+	public final fun getResponseHeadersSize ()Ljava/lang/Long;
+	public final fun getResponseMessage ()Ljava/lang/String;
+	public final fun getResponsePayloadSize ()Ljava/lang/Long;
+	public final fun getResponseTlsVersion ()Ljava/lang/String;
+	public final fun getScheme ()Ljava/lang/String;
+	public final fun getTookMs ()Ljava/lang/Long;
+	public final fun getUrl ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isRequestBodyEncoded ()Ljava/lang/Boolean;
+	public final fun isResponseBodyEncoded ()Ljava/lang/Boolean;
+	public final fun setError (Ljava/lang/String;)V
+	public final fun setHost (Ljava/lang/String;)V
+	public final fun setId (J)V
+	public final fun setMethod (Ljava/lang/String;)V
+	public final fun setPath (Ljava/lang/String;)V
+	public final fun setProtocol (Ljava/lang/String;)V
+	public final fun setRequestBody (Ljava/lang/String;)V
+	public final fun setRequestBodyEncoded (Ljava/lang/Boolean;)V
+	public final fun setRequestContentType (Ljava/lang/String;)V
+	public final fun setRequestDate (Lkotlinx/datetime/Instant;)V
+	public final fun setRequestHeaders (Ljava/util/Set;)V
+	public final fun setRequestHeadersSize (Ljava/lang/Long;)V
+	public final fun setRequestPayloadSize (Ljava/lang/Long;)V
+	public final fun setResponseBody (Ljava/lang/String;)V
+	public final fun setResponseBodyEncoded (Ljava/lang/Boolean;)V
+	public final fun setResponseCipherSuite (Ljava/lang/String;)V
+	public final fun setResponseCode (Ljava/lang/Long;)V
+	public final fun setResponseContentType (Ljava/lang/String;)V
+	public final fun setResponseDate (Lkotlinx/datetime/Instant;)V
+	public final fun setResponseHeaders (Ljava/util/Set;)V
+	public final fun setResponseHeadersSize (Ljava/lang/Long;)V
+	public final fun setResponseMessage (Ljava/lang/String;)V
+	public final fun setResponsePayloadSize (Ljava/lang/Long;)V
+	public final fun setResponseTlsVersion (Ljava/lang/String;)V
+	public final fun setScheme (Ljava/lang/String;)V
+	public final fun setTookMs (Ljava/lang/Long;)V
+	public final fun setUrl (Ljava/lang/String;)V
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class data/db/Db_androidKt {
+	public static final fun setApplicationId (Ljava/lang/String;)V
+}
+
+public final class ui/ComposableSingletons$TransactionDetailScreenKt {
+	public static final field INSTANCE Lui/ComposableSingletons$TransactionDetailScreenKt;
+	public static field lambda-1 Lkotlin/jvm/functions/Function2;
+	public static field lambda-2 Lkotlin/jvm/functions/Function2;
+	public static field lambda-3 Lkotlin/jvm/functions/Function2;
+	public static field lambda-4 Lkotlin/jvm/functions/Function2;
+	public fun <init> ()V
+	public final fun getLambda-1$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda-2$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda-3$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda-4$inspektor_release ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class ui/ComposableSingletons$TransactionListScreenKt {
+	public static final field INSTANCE Lui/ComposableSingletons$TransactionListScreenKt;
+	public static field lambda-1 Lkotlin/jvm/functions/Function2;
+	public static field lambda-10 Lkotlin/jvm/functions/Function2;
+	public static field lambda-11 Lkotlin/jvm/functions/Function2;
+	public static field lambda-12 Lkotlin/jvm/functions/Function2;
+	public static field lambda-13 Lkotlin/jvm/functions/Function2;
+	public static field lambda-2 Lkotlin/jvm/functions/Function2;
+	public static field lambda-3 Lkotlin/jvm/functions/Function4;
+	public static field lambda-4 Lkotlin/jvm/functions/Function2;
+	public static field lambda-5 Lkotlin/jvm/functions/Function2;
+	public static field lambda-6 Lkotlin/jvm/functions/Function2;
+	public static field lambda-7 Lkotlin/jvm/functions/Function2;
+	public static field lambda-8 Lkotlin/jvm/functions/Function3;
+	public static field lambda-9 Lkotlin/jvm/functions/Function3;
+	public fun <init> ()V
+	public final fun getLambda-1$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda-10$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda-11$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda-12$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda-13$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda-2$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda-3$inspektor_release ()Lkotlin/jvm/functions/Function4;
+	public final fun getLambda-4$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda-5$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda-6$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda-7$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda-8$inspektor_release ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda-9$inspektor_release ()Lkotlin/jvm/functions/Function3;
+}
+
+public final class ui/components/ComposableSingletons$CodeBlockKt {
+	public static final field INSTANCE Lui/components/ComposableSingletons$CodeBlockKt;
+	public static field lambda-1 Lkotlin/jvm/functions/Function2;
+	public static field lambda-2 Lkotlin/jvm/functions/Function4;
+	public fun <init> ()V
+	public final fun getLambda-1$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda-2$inspektor_release ()Lkotlin/jvm/functions/Function4;
+}
+
+public final class ui/components/ComposableSingletons$DateTimePickerDialogKt {
+	public static final field INSTANCE Lui/components/ComposableSingletons$DateTimePickerDialogKt;
+	public static field lambda-1 Lkotlin/jvm/functions/Function3;
+	public static field lambda-2 Lkotlin/jvm/functions/Function3;
+	public fun <init> ()V
+	public final fun getLambda-1$inspektor_release ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda-2$inspektor_release ()Lkotlin/jvm/functions/Function3;
+}
+
+public final class ui/components/ComposableSingletons$SearchableTextKt {
+	public static final field INSTANCE Lui/components/ComposableSingletons$SearchableTextKt;
+	public static field lambda-1 Lkotlin/jvm/functions/Function2;
+	public static field lambda-2 Lkotlin/jvm/functions/Function3;
+	public fun <init> ()V
+	public final fun getLambda-1$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda-2$inspektor_release ()Lkotlin/jvm/functions/Function3;
+}
+
