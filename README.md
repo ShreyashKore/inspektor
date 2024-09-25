@@ -43,14 +43,15 @@ suspend fun apiCall() {
 }
 ```
 
-For Desktop platforms, you need to specify the APPLICATION_ID before using Inspektor.
+For Desktop platforms, you need to specify the APPLICATION_ID using `setApplicationId` before using
+Inspektor.
 This is used to determine the location to store the database file.
 
 ```kotlin
-import data.db.APPLICATION_ID
+import data.db.setApplicationId
 
 fun main() {
-    APPLICATION_ID = "com.example.myapp"
+    setApplicationId("com.example.myapp")
     // ...
 }
 ```

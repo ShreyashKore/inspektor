@@ -1,3 +1,4 @@
+import data.db.setApplicationId
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -12,6 +13,11 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 
 class MaxContentLengthTest {
+
+    init {
+        @OptIn(UnstableInspektorAPI::class)
+        setApplicationId("com.test.inspektor")
+    }
 
     @Test
     fun `test maxContentLength is respected by request`() = runBlocking {

@@ -4,6 +4,7 @@ import data.InspektorDataSourceImpl
 import data.adapters.instantAdapter
 import data.db.DriverFactory
 import data.db.adapters.setMapEntryAdapter
+import data.db.setApplicationId
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
@@ -23,6 +24,11 @@ import kotlin.test.assertEquals
 
 class KtorMultipartTest {
     private val db = createTestDb()
+
+    init {
+        @OptIn(UnstableInspektorAPI::class)
+        setApplicationId("com.test.inspektor")
+    }
 
     private fun createTestDb(): InspektorDatabase {
         val driver = DriverFactory.createTempDbDriver()

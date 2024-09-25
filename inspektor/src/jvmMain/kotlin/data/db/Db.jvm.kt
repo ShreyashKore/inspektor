@@ -26,7 +26,6 @@ internal actual object DriverFactory {
 }
 
 
-@OptIn(UnstableInspektorAPI::class)
 private fun getDatabasePath(): String {
     require(APPLICATION_ID != null) {
         "Application ID must be provided for the desktop platforms"
@@ -36,11 +35,15 @@ private fun getDatabasePath(): String {
     return dbPath
 }
 
+@UnstableInspektorAPI
+public actual fun setApplicationId(applicationId: String) {
+    APPLICATION_ID = applicationId
+}
+
 /**
  * Application ID is used to resolve the folder in which database will be stored.
  */
-@UnstableInspektorAPI
-public var APPLICATION_ID: String? = null
+private var APPLICATION_ID: String? = null
     set(value) {
         if (field != null && field != value) {
             log("Inspektor") {

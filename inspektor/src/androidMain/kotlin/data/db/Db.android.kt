@@ -1,5 +1,6 @@
 package data.db
 
+import UnstableInspektorAPI
 import android.annotation.SuppressLint
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
@@ -16,4 +17,9 @@ internal actual object DriverFactory {
         )
 
     actual fun createTempDbDriver(): SqlDriver = TODO()
+}
+
+@UnstableInspektorAPI
+public actual fun setApplicationId(applicationId: String) {
+    // No-op
 }

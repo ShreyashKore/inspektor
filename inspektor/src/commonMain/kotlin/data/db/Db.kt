@@ -1,5 +1,6 @@
 package data.db
 
+import UnstableInspektorAPI
 import app.cash.sqldelight.db.SqlDriver
 import com.gyanoba.inspektor.data.entites.HttpTransaction
 import com.gyanoba.inspektor.db.InspektorDatabase
@@ -25,3 +26,6 @@ internal fun createDatabase(): InspektorDatabase {
         )
     )
 }
+
+@UnstableInspektorAPI
+public expect fun setApplicationId(applicationId: String)
