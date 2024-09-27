@@ -13,6 +13,8 @@ Inspektor is an HTTP inspection library for Ktor. It allows you to view HTTP req
 including basic information, headers, and bodies. Please note that this library is not stable, and
 the API may change. Users are not advised to use it in production projects.
 
+![Screenshots](images/screenshots.png)
+
 ## Installation
 
 Add the following dependency to your `build.gradle.kts` file:
