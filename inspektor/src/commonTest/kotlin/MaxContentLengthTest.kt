@@ -1,4 +1,8 @@
-import data.db.setApplicationId
+import com.gyanoba.inspektor.ClientCallLogger
+import com.gyanoba.inspektor.Inspektor
+import com.gyanoba.inspektor.LogLevel
+import com.gyanoba.inspektor.UnstableInspektorAPI
+import com.gyanoba.inspektor.data.setApplicationId
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond

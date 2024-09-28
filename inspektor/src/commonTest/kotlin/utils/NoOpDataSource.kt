@@ -2,7 +2,7 @@ package utils
 
 import com.gyanoba.inspektor.data.GetAllLatestWithLimit
 import com.gyanoba.inspektor.data.HttpTransaction
-import data.InspektorDataSource
+import com.gyanoba.inspektor.data.InspektorDataSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.datetime.Instant

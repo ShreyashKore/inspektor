@@ -49,7 +49,7 @@ android {
     namespace = "com.gyanoba.inspektor.data"
     compileSdk = 34
     defaultConfig {
-        minSdk = 26
+        minSdk = 24
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
