@@ -15,7 +15,11 @@ internal actual object DriverFactory {
             DB_NAME,
         )
 
-    actual fun createTempDbDriver(): SqlDriver = TODO()
+    actual fun createTempDbDriver(): SqlDriver = AndroidSqliteDriver(
+        InspektorDatabase.Schema,
+        ContextInitializer.appContext,
+        null,
+    )
 }
 
 @UnstableInspektorAPI
