@@ -1,5 +1,7 @@
 package utils
 
+import com.gyanoba.inspektor.utils.HeaderSanitizer
+import com.gyanoba.inspektor.utils.sanitizeHeaders
 import io.ktor.http.headersOf
 import kotlin.test.Test
 import kotlin.test.assertEquals

@@ -2,8 +2,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
+import com.gyanoba.inspektor.UnstableInspektorAPI
+import com.gyanoba.inspektor.data.setApplicationId
 import com.gyanoba.inspektor.sample.App
-import data.db.setApplicationId
 import java.awt.Dimension
 
 @OptIn(UnstableInspektorAPI::class)

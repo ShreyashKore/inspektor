@@ -1,7 +1,7 @@
 package com.gyanoba.inspektor.sample.data
 
-import Inspektor
-import LogLevel
+import com.gyanoba.inspektor.Inspektor
+import com.gyanoba.inspektor.LogLevel
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.mock.MockEngine

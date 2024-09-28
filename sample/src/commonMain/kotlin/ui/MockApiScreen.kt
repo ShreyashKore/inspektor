@@ -26,8 +26,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.gyanoba.inspektor.openInspektor
 import com.gyanoba.inspektor.sample.data.MockApi
-import openInspektor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

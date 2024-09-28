@@ -16,7 +16,7 @@ plugins {
 }
 
 group = "com.gyanoba.inspektor"
-version = "0.1.0"
+version = "0.2.0"
 
 kotlin {
     explicitApiWarning()
@@ -70,6 +70,7 @@ kotlin {
                 implementation(libs.ktor.core)
                 implementation(libs.multiplatformSettings)
                 implementation(libs.ktor.client.logging)
+                implementation(project(":data"))
             }
         }
         val commonTest by getting {
@@ -126,14 +127,6 @@ android {
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()
-    }
-}
-
-sqldelight {
-    databases {
-        create("InspektorDatabase") {
-            packageName.set("com.gyanoba.inspektor.db")
-        }
     }
 }
 

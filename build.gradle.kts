@@ -11,7 +11,7 @@ plugins {
 }
 
 apiValidation {
-    ignoredProjects.add("sample")
+    ignoredProjects.addAll(listOf("sample", "data"))
 }
 
 buildscript {
