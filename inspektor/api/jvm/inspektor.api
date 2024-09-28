@@ -42,6 +42,65 @@ public final class LogLevel : java/lang/Enum {
 public abstract interface annotation class UnstableInspektorAPI : java/lang/annotation/Annotation {
 }
 
+public final class com/gyanoba/inspektor/ComposableSingletons$Inspektor_jvmKt {
+	public static final field INSTANCE Lcom/gyanoba/inspektor/ComposableSingletons$Inspektor_jvmKt;
+	public static field lambda-1 Lkotlin/jvm/functions/Function2;
+	public fun <init> ()V
+	public final fun getLambda-1$inspektor ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/gyanoba/inspektor/InspektorConfig {
+	public static final field $stable I
+	public final fun filter (Lkotlin/jvm/functions/Function1;)V
+	public final fun getDataSource ()Lcom/gyanoba/inspektor/data/InspektorDataSource;
+	public final fun getLevel ()Lcom/gyanoba/inspektor/LogLevel;
+	public final fun getMaxContentLength ()I
+	public final fun sanitizeHeader (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun sanitizeHeader$default (Lcom/gyanoba/inspektor/InspektorConfig;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public final fun setDataSource (Lcom/gyanoba/inspektor/data/InspektorDataSource;)V
+	public final fun setLevel (Lcom/gyanoba/inspektor/LogLevel;)V
+	public final fun setMaxContentLength (I)V
+}
+
+public final class com/gyanoba/inspektor/InspektorKt {
+	public static final fun getInspektor ()Lio/ktor/client/plugins/api/ClientPlugin;
+}
+
+public final class com/gyanoba/inspektor/Inspektor_jvmKt {
+	public static final fun openInspektor ()V
+}
+
+public final class com/gyanoba/inspektor/LogLevel : java/lang/Enum {
+	public static final field BODY Lcom/gyanoba/inspektor/LogLevel;
+	public static final field HEADERS Lcom/gyanoba/inspektor/LogLevel;
+	public static final field INFO Lcom/gyanoba/inspektor/LogLevel;
+	public static final field NONE Lcom/gyanoba/inspektor/LogLevel;
+	public final fun getBody ()Z
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getHeaders ()Z
+	public final fun getInfo ()Z
+	public static fun valueOf (Ljava/lang/String;)Lcom/gyanoba/inspektor/LogLevel;
+	public static fun values ()[Lcom/gyanoba/inspektor/LogLevel;
+}
+
+public abstract interface annotation class com/gyanoba/inspektor/UnstableInspektorAPI : java/lang/annotation/Annotation {
+}
+
+public final class com/gyanoba/inspektor/data/Db_jvmKt {
+	public static final fun setApplicationId (Ljava/lang/String;)V
+}
+
+public abstract interface class com/gyanoba/inspektor/data/InspektorDataSource {
+	public abstract fun deleteBefore (Lkotlinx/datetime/Instant;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getAllHttpTransactionsCount ()Lkotlinx/coroutines/flow/Flow;
+	public abstract fun getAllLatestHttpTransactionsFilteredFlow (Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/lang/String;Ljava/lang/String;)Lkotlinx/coroutines/flow/Flow;
+	public abstract fun getAllLatestHttpTransactionsForDateRange (Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getAllLatestHttpTransactionsForDateRangeFlow (Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;)Lkotlinx/coroutines/flow/Flow;
+	public abstract fun getTransaction (J)Lkotlinx/coroutines/flow/Flow;
+	public abstract fun insertHttpTransaction (Lcom/gyanoba/inspektor/data/HttpTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun updateHttpTransaction (Lcom/gyanoba/inspektor/data/HttpTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
 public final class com/gyanoba/inspektor/data/entites/GetAllLatestWithLimit {
 	public static final field $stable I
 	public fun <init> (JLkotlinx/datetime/Instant;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/String;)V
@@ -184,6 +243,81 @@ public final class com/gyanoba/inspektor/db/InspektorDatabase$Companion {
 	public final fun invoke (Lapp/cash/sqldelight/db/SqlDriver;Lcom/gyanoba/inspektor/data/entites/HttpTransaction$Adapter;)Lcom/gyanoba/inspektor/db/InspektorDatabase;
 }
 
+public final class com/gyanoba/inspektor/platform/NotificationManager_jvmKt {
+	public static final fun composeDesktopResourcesPath ()Ljava/lang/String;
+}
+
+public final class com/gyanoba/inspektor/ui/ComposableSingletons$TransactionDetailScreenKt {
+	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/ComposableSingletons$TransactionDetailScreenKt;
+	public static field lambda-1 Lkotlin/jvm/functions/Function2;
+	public static field lambda-2 Lkotlin/jvm/functions/Function2;
+	public static field lambda-3 Lkotlin/jvm/functions/Function2;
+	public static field lambda-4 Lkotlin/jvm/functions/Function2;
+	public fun <init> ()V
+	public final fun getLambda-1$inspektor ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda-2$inspektor ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda-3$inspektor ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda-4$inspektor ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/gyanoba/inspektor/ui/ComposableSingletons$TransactionListScreenKt {
+	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/ComposableSingletons$TransactionListScreenKt;
+	public static field lambda-1 Lkotlin/jvm/functions/Function2;
+	public static field lambda-10 Lkotlin/jvm/functions/Function2;
+	public static field lambda-11 Lkotlin/jvm/functions/Function2;
+	public static field lambda-12 Lkotlin/jvm/functions/Function2;
+	public static field lambda-13 Lkotlin/jvm/functions/Function2;
+	public static field lambda-2 Lkotlin/jvm/functions/Function2;
+	public static field lambda-3 Lkotlin/jvm/functions/Function4;
+	public static field lambda-4 Lkotlin/jvm/functions/Function2;
+	public static field lambda-5 Lkotlin/jvm/functions/Function2;
+	public static field lambda-6 Lkotlin/jvm/functions/Function2;
+	public static field lambda-7 Lkotlin/jvm/functions/Function2;
+	public static field lambda-8 Lkotlin/jvm/functions/Function3;
+	public static field lambda-9 Lkotlin/jvm/functions/Function3;
+	public fun <init> ()V
+	public final fun getLambda-1$inspektor ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda-10$inspektor ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda-11$inspektor ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda-12$inspektor ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda-13$inspektor ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda-2$inspektor ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda-3$inspektor ()Lkotlin/jvm/functions/Function4;
+	public final fun getLambda-4$inspektor ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda-5$inspektor ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda-6$inspektor ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda-7$inspektor ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda-8$inspektor ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda-9$inspektor ()Lkotlin/jvm/functions/Function3;
+}
+
+public final class com/gyanoba/inspektor/ui/components/ComposableSingletons$CodeBlockKt {
+	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/components/ComposableSingletons$CodeBlockKt;
+	public static field lambda-1 Lkotlin/jvm/functions/Function2;
+	public static field lambda-2 Lkotlin/jvm/functions/Function4;
+	public fun <init> ()V
+	public final fun getLambda-1$inspektor ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda-2$inspektor ()Lkotlin/jvm/functions/Function4;
+}
+
+public final class com/gyanoba/inspektor/ui/components/ComposableSingletons$DateTimePickerDialogKt {
+	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/components/ComposableSingletons$DateTimePickerDialogKt;
+	public static field lambda-1 Lkotlin/jvm/functions/Function3;
+	public static field lambda-2 Lkotlin/jvm/functions/Function3;
+	public fun <init> ()V
+	public final fun getLambda-1$inspektor ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda-2$inspektor ()Lkotlin/jvm/functions/Function3;
+}
+
+public final class com/gyanoba/inspektor/ui/components/ComposableSingletons$SearchableTextKt {
+	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/components/ComposableSingletons$SearchableTextKt;
+	public static field lambda-1 Lkotlin/jvm/functions/Function2;
+	public static field lambda-2 Lkotlin/jvm/functions/Function3;
+	public fun <init> ()V
+	public final fun getLambda-1$inspektor ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda-2$inspektor ()Lkotlin/jvm/functions/Function3;
+}
+
 public abstract interface class data/InspektorDataSource {
 	public abstract fun deleteBefore (Lkotlinx/datetime/Instant;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getAllHttpTransactionsCount ()Lkotlinx/coroutines/flow/Flow;
@@ -191,8 +325,8 @@ public abstract interface class data/InspektorDataSource {
 	public abstract fun getAllLatestHttpTransactionsForDateRange (Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getAllLatestHttpTransactionsForDateRangeFlow (Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;)Lkotlinx/coroutines/flow/Flow;
 	public abstract fun getTransaction (J)Lkotlinx/coroutines/flow/Flow;
-	public abstract fun insertHttpTransaction (Lcom/gyanoba/inspektor/data/entites/HttpTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun updateHttpTransaction (Lcom/gyanoba/inspektor/data/entites/HttpTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun insertHttpTransaction (Lcom/gyanoba/inspektor/data/HttpTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun updateHttpTransaction (Lcom/gyanoba/inspektor/data/HttpTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class data/MutableHttpTransaction {
