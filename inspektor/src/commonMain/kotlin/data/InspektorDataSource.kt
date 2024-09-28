@@ -3,9 +3,9 @@ package data
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOne
-import com.gyanoba.inspektor.data.entites.GetAllLatestWithLimit
-import com.gyanoba.inspektor.data.entites.HttpTransaction
-import com.gyanoba.inspektor.db.InspektorDatabase
+import com.gyanoba.inspektor.data.GetAllLatestWithLimit
+import com.gyanoba.inspektor.data.HttpTransaction
+import com.gyanoba.inspektor.data.InspektorDatabase
 import data.db.createDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO

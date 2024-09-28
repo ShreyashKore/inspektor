@@ -38,7 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.gyanoba.inspektor.data.entites.HttpTransaction
+import com.gyanoba.inspektor.data.HttpTransaction
 import data.InspektorDataSource
 import data.InspektorDataSourceImpl
 import kotlinx.coroutines.flow.SharingStarted
@@ -218,7 +218,7 @@ internal fun RequestBodyView(transaction: HttpTransaction) {
         return
     }
     CodeBlock(
-        AnnotatedString(transaction.requestBody), Modifier.fillMaxWidth()
+        AnnotatedString(transaction.requestBody!!), Modifier.fillMaxWidth()
     )
 }
 
@@ -230,7 +230,7 @@ internal fun ResponseBodyView(transaction: HttpTransaction) {
         return
     }
     CodeBlock(
-        AnnotatedString(transaction.responseBody),
+        AnnotatedString(transaction.responseBody!!),
         Modifier.fillMaxWidth(),
     )
 }

@@ -3,7 +3,7 @@ package data.db
 import UnstableInspektorAPI
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.native.NativeSqliteDriver
-import com.gyanoba.inspektor.db.InspektorDatabase
+import com.gyanoba.inspektor.data.InspektorDatabase
 
 internal actual object DriverFactory {
     actual fun createDbDriver(): SqlDriver =

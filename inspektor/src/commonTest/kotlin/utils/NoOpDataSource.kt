@@ -1,7 +1,7 @@
 package utils
 
-import com.gyanoba.inspektor.data.entites.GetAllLatestWithLimit
-import com.gyanoba.inspektor.data.entites.HttpTransaction
+import com.gyanoba.inspektor.data.GetAllLatestWithLimit
+import com.gyanoba.inspektor.data.HttpTransaction
 import data.InspektorDataSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf

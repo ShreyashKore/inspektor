@@ -1,5 +1,5 @@
-import com.gyanoba.inspektor.data.entites.HttpTransaction
-import com.gyanoba.inspektor.db.InspektorDatabase
+import com.gyanoba.inspektor.data.HttpTransaction
+import com.gyanoba.inspektor.data.InspektorDatabase
 import data.InspektorDataSourceImpl
 import data.adapters.instantAdapter
 import data.db.DriverFactory

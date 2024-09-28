@@ -3,7 +3,7 @@ package data.db
 import UnstableInspektorAPI
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
-import com.gyanoba.inspektor.db.InspektorDatabase
+import com.gyanoba.inspektor.data.InspektorDatabase
 import kotlinx.coroutines.runBlocking
 import platform.getAppDataDir
 import utils.log

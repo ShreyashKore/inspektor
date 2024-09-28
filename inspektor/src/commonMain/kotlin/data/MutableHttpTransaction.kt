@@ -1,6 +1,6 @@
 package data
 
-import com.gyanoba.inspektor.data.entites.HttpTransaction
+import com.gyanoba.inspektor.data.HttpTransaction
 import kotlinx.datetime.Instant
 
 public data class MutableHttpTransaction(
