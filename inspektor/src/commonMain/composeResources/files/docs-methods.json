@@ -1,0 +1,47 @@
+{
+  "connect": {
+    "mdnSlug": "Web/HTTP/Methods/CONNECT",
+    "name": "CONNECT",
+    "summary": "The HTTP CONNECT method starts two-way communications with the requested resource."
+  },
+  "delete": {
+    "mdnSlug": "Web/HTTP/Methods/DELETE",
+    "name": "DELETE",
+    "summary": "The HTTP DELETE request method deletes the specified resource."
+  },
+  "get": {
+    "mdnSlug": "Web/HTTP/Methods/GET",
+    "name": "GET",
+    "summary": "The HTTP GET method requests a representation of the specified resource."
+  },
+  "head": {
+    "mdnSlug": "Web/HTTP/Methods/HEAD",
+    "name": "HEAD",
+    "summary": "The HTTP HEAD method requests the headers that would be returned if the HEAD request's URL was instead requested with the HTTP GET method."
+  },
+  "options": {
+    "mdnSlug": "Web/HTTP/Methods/OPTIONS",
+    "name": "OPTIONS",
+    "summary": "The HTTP OPTIONS method requests permitted communication options for a given URL or server."
+  },
+  "patch": {
+    "mdnSlug": "Web/HTTP/Methods/PATCH",
+    "name": "PATCH",
+    "summary": "The HTTP PATCH request method applies partial modifications to a resource."
+  },
+  "post": {
+    "mdnSlug": "Web/HTTP/Methods/POST",
+    "name": "POST",
+    "summary": "The HTTP POST method sends data to the server."
+  },
+  "put": {
+    "mdnSlug": "Web/HTTP/Methods/PUT",
+    "name": "PUT",
+    "summary": "The HTTP PUT request method creates a new resource or replaces a representation of the target resource with the request payload."
+  },
+  "trace": {
+    "mdnSlug": "Web/HTTP/Methods/TRACE",
+    "name": "TRACE",
+    "summary": "The HTTP TRACE method performs a message loop-back test along the path to the target resource, providing a useful debugging mechanism."
+  }
+}
