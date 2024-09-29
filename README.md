@@ -25,7 +25,7 @@ Add the following dependency to your `build.gradle.kts` file:
 
 ```kotlin
 dependencies {
-    implementation("com.gyanoba:inspektor:latest-version")
+  implementation("com.gyanoba.inspektor:inspektor:latest-version")
 }
 ```
 

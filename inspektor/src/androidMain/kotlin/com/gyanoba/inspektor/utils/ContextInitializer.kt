@@ -3,7 +3,7 @@ package com.gyanoba.inspektor.utils
 import android.content.Context
 import androidx.startup.Initializer
 
-class ContextInitializer : Initializer<Context> {
+internal class ContextInitializer : Initializer<Context> {
     companion object {
         private var _appContext: Context? = null
         val appContext: Context get() = _appContext!!
