@@ -2,14 +2,20 @@ package com.gyanoba.inspektor.ui.components
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -27,19 +33,35 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.dp
 import com.gyanoba.inspektor.inspektor.generated.resources.Res
+import com.gyanoba.inspektor.inspektor.generated.resources.format_indent_increase
 import com.gyanoba.inspektor.inspektor.generated.resources.round_content_copy
 import com.gyanoba.inspektor.inspektor.generated.resources.round_done
 import com.gyanoba.inspektor.inspektor.generated.resources.wrap_text
+import com.sebastianneubauer.jsontree.JsonTree
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
+internal enum class Format {
+    Json, Unknown;
+    companion object {
+        fun parse(contentType: String?): Format {
+            return when (contentType?.lowercase()) {
+                "application/json" -> Json
+                else -> Unknown
+            }
+        }
+    }
+}
+
 @Composable
 internal fun CodeBlock(
     code: AnnotatedString,
     modifier: Modifier = Modifier,
+    format: Format = Format.Unknown,
 ) {
     val clipboardManager = LocalClipboardManager.current
 
@@ -48,6 +70,7 @@ internal fun CodeBlock(
         SearchableTextState(initialText = code, scope)
     }
 
+    var formatted by remember { mutableStateOf(false) }
     var showSearch by remember { mutableStateOf(false) }
     var softWrap by remember { mutableStateOf(false) }
 
@@ -55,6 +78,30 @@ internal fun CodeBlock(
         Row(
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            if (format != Format.Unknown) {
+                IconToggleButton(
+                    checked = formatted,
+                    onCheckedChange = { formatted = it },
+                ) {
+                    Icon(
+                        painterResource(Res.drawable.format_indent_increase),
+                        contentDescription = "Format"
+                    )
+                }
+            }
+            AnimatedVisibility(
+                !formatted
+            ) {
+                IconToggleButton(
+                    checked = softWrap,
+                    onCheckedChange = { softWrap = it },
+                ) {
+                    Icon(
+                        painterResource(Res.drawable.wrap_text),
+                        contentDescription = "Wrap Text"
+                    )
+                }
+            }
             Spacer(Modifier.weight(1f))
             CopyButton(
                 onClick = {
@@ -62,52 +109,64 @@ internal fun CodeBlock(
                 },
                 contentDescription = "Copy All"
             )
-            IconToggleButton(
-                checked = softWrap,
-                onCheckedChange = { softWrap = it },
-            ) {
-                Icon(
-                    painterResource(Res.drawable.wrap_text),
-                    contentDescription = "Wrap Text"
-                )
-            }
-            IconToggleButton(
-                checked = showSearch,
-                onCheckedChange = { showSearch = it },
-            ) {
-                AnimatedContent(
-                    targetState = showSearch,
-                ) { showingSearch ->
-                    if (showingSearch) {
-                        Icon(
-                            Icons.Rounded.Close,
-                            contentDescription = "Close"
-                        )
-                    } else {
-                        Icon(
-                            Icons.Rounded.Search,
-                            contentDescription = "Search"
-                        )
+            AnimatedVisibility(!formatted) {
+                IconToggleButton(
+                    checked = showSearch,
+                    onCheckedChange = { showSearch = it },
+                ) {
+                    AnimatedContent(
+                        targetState = showSearch,
+                    ) { showingSearch ->
+                        if (showingSearch) {
+                            Icon(
+                                Icons.Rounded.Close,
+                                contentDescription = "Close"
+                            )
+                        } else {
+                            Icon(
+                                Icons.Rounded.Search,
+                                contentDescription = "Search"
+                            )
+                        }
                     }
                 }
             }
-
         }
         AnimatedVisibility(showSearch) {
             SearchTextToolbar(
-                searchableTextState = searchableTextState
+                searchableTextState = searchableTextState,
+                modifier = Modifier
+                    .background(
+                        MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f),
+                        RoundedCornerShape(16.dp)
+                    ).fillMaxWidth(),
             )
+        }
+        AnimatedContent(
+            formatted,
+            transitionSpec = { fadeIn() togetherWith fadeOut() },
+        ) {
+            if (it)
+                JsonTree(
+                    json = code.text,
+                    onLoading = {
+                        CircularProgressIndicator()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
+                )
+            else
+                SelectionContainer {
+                    SearchableText(
+                        searchState = searchableTextState,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
+                        modifier = Modifier.fillMaxWidth(),
+                        softWrap = softWrap,
+                        showLineNumbers = true
+                    )
+                }
         }
 
-        SelectionContainer {
-            SearchableText(
-                searchState = searchableTextState,
-                style = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
-                modifier = Modifier.fillMaxWidth(),
-                softWrap = softWrap,
-                showLineNumbers = true
-            )
-        }
     }
 }
 

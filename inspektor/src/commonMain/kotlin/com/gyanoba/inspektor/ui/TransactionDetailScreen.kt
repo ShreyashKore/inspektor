@@ -34,6 +34,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -41,11 +45,17 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gyanoba.inspektor.data.HttpTransaction
 import com.gyanoba.inspektor.data.InspektorDataSource
 import com.gyanoba.inspektor.data.InspektorDataSourceImpl
+import com.gyanoba.inspektor.inspektor.generated.resources.Res
 import com.gyanoba.inspektor.ui.components.Accordion
 import com.gyanoba.inspektor.ui.components.CodeBlock
+import com.gyanoba.inspektor.ui.components.ExpandableKeyValue
+import com.gyanoba.inspektor.ui.components.Format
 import com.gyanoba.inspektor.ui.components.KeyValueView
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
 @Composable
 internal fun TransactionDetailsScreen(transactionId: Long, onBack: () -> Unit) {
@@ -118,12 +128,20 @@ internal fun TransactionDetailsScreen(
                 Tab(
                     selected = selectedTabIndex == 1,
                     onClick = { selectedTabIndex = 1 },
-                    text = { Text("Request") },
+                    text = {
+                        Text(
+                            "Request" + transaction.requestPayloadSize?.let { " ($it)" }.orEmpty()
+                        )
+                    },
                 )
                 Tab(
                     selected = selectedTabIndex == 2,
                     onClick = { selectedTabIndex = 2 },
-                    text = { Text("Response") },
+                    text = {
+                        Text(
+                            "Response" + transaction.responsePayloadSize?.let { " ($it)" }.orEmpty()
+                        )
+                    },
                 )
             }
 
@@ -163,15 +181,42 @@ internal fun HeadersView(transaction: HttpTransaction) {
             }
         }
         val requestHeaders = transaction.requestHeaders ?: emptySet()
-        SimpleAccordion(title = "Request Headers (${requestHeaders.size})") {
+        SimpleAccordion(
+            title = "Request Headers (${requestHeaders.size})",
+            initialExpanded = true
+        ) {
             requestHeaders.forEach {
-                KeyValueView(it.key, it.value.joinToString("; "))
+                ExpandableKeyValue(
+                    key = it.key,
+                    value = it.value.joinToString("; "),
+                    content = headersInfo[it.key.lowercase()]?.let {
+                        {
+                            KeyInfoAndLink(
+                                it.summary,
+                                "https://developer.mozilla.org/en-US/docs/${it.mdnSlug}"
+                            )
+                        }
+                    }
+                )
             }
         }
         val responseHeaders = transaction.responseHeaders ?: emptySet()
-        SimpleAccordion(title = "Response Headers (${responseHeaders.size})") {
+        SimpleAccordion(
+            title = "Response Headers (${responseHeaders.size})",
+            initialExpanded = true
+        ) {
             responseHeaders.forEach {
-                KeyValueView(it.key, it.value.joinToString("; "))
+                ExpandableKeyValue(
+                    it.key, it.value.joinToString("; "),
+                    content = headersInfo[it.key.lowercase()]?.let {
+                        {
+                            KeyInfoAndLink(
+                                it.summary,
+                                "https://developer.mozilla.org/en-US/docs/${it.mdnSlug}"
+                            )
+                        }
+                    }
+                )
             }
         }
     }
@@ -218,7 +263,9 @@ internal fun RequestBodyView(transaction: HttpTransaction) {
         return
     }
     CodeBlock(
-        AnnotatedString(transaction.requestBody!!), Modifier.fillMaxWidth()
+        AnnotatedString(transaction.requestBody!!),
+        Modifier.fillMaxWidth(),
+        format = Format.parse(transaction.requestContentType),
     )
 }
 
@@ -232,6 +279,7 @@ internal fun ResponseBodyView(transaction: HttpTransaction) {
     CodeBlock(
         AnnotatedString(transaction.responseBody!!),
         Modifier.fillMaxWidth(),
+        format = Format.parse(transaction.responseContentType),
     )
 }
 
@@ -249,3 +297,42 @@ internal class TransactionDetailsViewModel(
     val transaction = dataSource.getTransaction(transactionId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 }
+
+@Composable
+internal fun KeyInfoAndLink(
+    info: String,
+    link: String,
+    modifier: Modifier = Modifier.padding(vertical = 4.dp),
+) = Column(modifier = modifier) {
+    Text(
+        text = info,
+        style = MaterialTheme.typography.bodySmall,
+    )
+    Text(
+        text = buildAnnotatedString {
+            append(" ")
+            withLink(LinkAnnotation.Url(link)) {
+                append("More info ↗")
+            }
+        },
+        style = MaterialTheme.typography.bodySmall.copy(
+            color = MaterialTheme.colorScheme.primary,
+            textDecoration = TextDecoration.Underline
+        ),
+        modifier = Modifier,
+    )
+}
+
+internal val headersInfo: Map<String, HeaderDoc> by lazy {
+    runBlocking {
+        val string = Res.readBytes("files/docs-headers.json").decodeToString()
+        Json.decodeFromString<Map<String, HeaderDoc>>(string)
+    }
+}
+
+@Serializable
+internal data class HeaderDoc(
+    val mdnSlug: String,
+    val name: String,
+    val summary: String,
+)

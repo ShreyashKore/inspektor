@@ -70,6 +70,7 @@ kotlin {
                 implementation(libs.ktor.core)
                 implementation(libs.multiplatformSettings)
                 implementation(libs.ktor.client.logging)
+                implementation(libs.jsontree)
                 implementation(project(":data"))
             }
         }
