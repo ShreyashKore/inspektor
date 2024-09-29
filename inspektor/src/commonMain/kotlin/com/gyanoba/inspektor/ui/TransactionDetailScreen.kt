@@ -128,12 +128,20 @@ internal fun TransactionDetailsScreen(
                 Tab(
                     selected = selectedTabIndex == 1,
                     onClick = { selectedTabIndex = 1 },
-                    text = { Text("Request") },
+                    text = {
+                        Text(
+                            "Request" + transaction.requestPayloadSize?.let { " ($it)" }.orEmpty()
+                        )
+                    },
                 )
                 Tab(
                     selected = selectedTabIndex == 2,
                     onClick = { selectedTabIndex = 2 },
-                    text = { Text("Response") },
+                    text = {
+                        Text(
+                            "Response" + transaction.responsePayloadSize?.let { " ($it)" }.orEmpty()
+                        )
+                    },
                 )
             }
 
