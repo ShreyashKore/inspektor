@@ -23,7 +23,7 @@ sqlDelightCoroutinesExtensions = "2.0.2"
 multiplatformSettings = "1.1.1"
 startupRuntime = "1.2.0"
 lifecycle = "2.8.2"
-androidx-navigation = "2.8.0-alpha02"
+androidx-navigation = "2.8.0-alpha10"
 jsontree = "2.3.0"
 
 
