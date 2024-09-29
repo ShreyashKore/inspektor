@@ -3,9 +3,6 @@
   "extends": [
     "config:recommended"
   ],
-  "kotlin": {
-    "enabled": true
-  },
   "packageRules": [
     {
       "matchUpdateTypes": [
