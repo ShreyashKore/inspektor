@@ -49,6 +49,7 @@ import com.gyanoba.inspektor.inspektor.generated.resources.Res
 import com.gyanoba.inspektor.ui.components.Accordion
 import com.gyanoba.inspektor.ui.components.CodeBlock
 import com.gyanoba.inspektor.ui.components.ExpandableKeyValue
+import com.gyanoba.inspektor.ui.components.Format
 import com.gyanoba.inspektor.ui.components.KeyValueView
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
@@ -254,7 +255,9 @@ internal fun RequestBodyView(transaction: HttpTransaction) {
         return
     }
     CodeBlock(
-        AnnotatedString(transaction.requestBody!!), Modifier.fillMaxWidth()
+        AnnotatedString(transaction.requestBody!!),
+        Modifier.fillMaxWidth(),
+        format = Format.parse(transaction.requestContentType),
     )
 }
 
@@ -268,6 +271,7 @@ internal fun ResponseBodyView(transaction: HttpTransaction) {
     CodeBlock(
         AnnotatedString(transaction.responseBody!!),
         Modifier.fillMaxWidth(),
+        format = Format.parse(transaction.responseContentType),
     )
 }
 
