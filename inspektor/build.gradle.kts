@@ -107,7 +107,7 @@ kotlin {
         val appleMain by creating {
             dependsOn(commonMain)
             dependencies {
-                implementation("co.touchlab:stately-common:2.0.6")
+                implementation("co.touchlab:stately-common:2.1.0")
                 implementation("co.touchlab:stately-iso-collections:2.0.6")
                 implementation(libs.ktor.client.darwin)
                 implementation(libs.sqlDelight.driver.native)
