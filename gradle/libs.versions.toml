@@ -3,7 +3,7 @@ android-minSdk = "24"
 android-compileSdk = "34"
 
 # dependencies versions
-agp = "8.6.1"
+agp = "8.7.0"
 kotlin = "2.0.20"
 publish = "0.29.0"
 androidxPaging3Extensions = "2.0.2"
