@@ -3,13 +3,15 @@
   "extends": [
     "config:recommended"
   ],
+  "schedule": ["every 2 weeks on monday"],
   "packageRules": [
     {
       "matchUpdateTypes": [
         "minor",
         "patch"
       ],
-      "automerge": true
+      "automergeType": "branch",
+      "requiredStatusChecks": [ "publish" ]
     }
   ]
 }
