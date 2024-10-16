@@ -18,8 +18,10 @@ internal data class MutableHttpTransaction(
     var requestPayloadSize: Long? = null,
     var requestContentType: String? = null,
     var requestHeaders: Set<Map.Entry<String, List<String>>>? = null,
+    var replacedRequestHeaders: Set<Map.Entry<String, List<String>>>? = null,
     var requestHeadersSize: Long? = null,
     var requestBody: String? = null,
+    var replacedRequestBody: String? = null,
     var isRequestBodyEncoded: Boolean? = null,
     var responseCode: Long? = null,
     var responseMessage: String? = null,
@@ -27,8 +29,10 @@ internal data class MutableHttpTransaction(
     var responsePayloadSize: Long? = null,
     var responseContentType: String? = null,
     var responseHeaders: Set<Map.Entry<String, List<String>>>? = null,
+    var replacedResponseHeaders: Set<Map.Entry<String, List<String>>>? = null,
     var responseHeadersSize: Long? = null,
     var responseBody: String? = null,
+    var replacedResponseBody: String? = null,
     var isResponseBodyEncoded: Boolean? = null,
 )
 

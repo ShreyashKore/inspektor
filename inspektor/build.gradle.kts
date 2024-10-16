@@ -71,6 +71,8 @@ kotlin {
                 implementation(libs.multiplatformSettings)
                 implementation(libs.ktor.client.logging)
                 implementation(libs.jsontree)
+                implementation(libs.kstore)
+                implementation(libs.kstore.file)
                 implementation(project(":data"))
             }
         }
