@@ -4,8 +4,10 @@ import androidx.annotation.VisibleForTesting
 import com.gyanoba.inspektor.data.FixedRequestAction
 import com.gyanoba.inspektor.data.FixedResponseAction
 import com.gyanoba.inspektor.data.HostMatcher
+import com.gyanoba.inspektor.data.HttpRequest
 import com.gyanoba.inspektor.data.InspektorDataSource
 import com.gyanoba.inspektor.data.InspektorDataSourceImpl
+import com.gyanoba.inspektor.data.Matcher
 import com.gyanoba.inspektor.data.OverrideRepository
 import com.gyanoba.inspektor.data.OverrideRepositoryImpl
 import com.gyanoba.inspektor.data.PathMatcher
@@ -33,6 +35,7 @@ import io.ktor.client.plugins.observer.ResponseObserver
 import io.ktor.client.plugins.observer.wrap
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.content
 import io.ktor.client.statement.request
 import io.ktor.client.utils.buildHeaders
@@ -93,6 +96,9 @@ public class InspektorConfig internal constructor() {
     @VisibleForTesting
     public var dataSource: InspektorDataSource = InspektorDataSourceImpl.Instance
 
+    /**
+     * The data source to store overrides.
+     */
     @VisibleForTesting
     public var overrideRepository: OverrideRepository = OverrideRepositoryImpl.Instance
 
@@ -144,13 +150,10 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
         val override = run {
             val allOverrides = pluginConfig.overrideRepository.all
             allOverrides.firstOrNull {
-                it.action.request && it.matchers.all { matcher ->
-                    when (matcher) {
-                        is UrlMatcher -> matcher.url == request.url.toString()
-                        is UrlRegexMatcher -> Regex(matcher.url).matches(request.url.toString())
-                        is HostMatcher -> matcher.host == request.url.host
-                        is PathMatcher -> matcher.path == request.url.encodedPath
-                    }
+                it.action.request && (it.type is HttpRequest && it.type.method.name.equals(
+                    request.method.value, true
+                )) && it.matchers.all { matcher ->
+                    matcher.matches(request)
                 }
             }
         }
@@ -271,13 +274,10 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
             val override = run {
                 val allOverrides = pluginConfig.overrideRepository.all
                 allOverrides.firstOrNull {
-                    it.action.response && it.matchers.all { matcher ->
-                        when (matcher) {
-                            is UrlMatcher -> matcher.url == request.url.toString()
-                            is UrlRegexMatcher -> Regex(matcher.url).matches(request.url.toString())
-                            is HostMatcher -> matcher.host == request.url.host
-                            is PathMatcher -> matcher.path == request.url.encodedPath
-                        }
+                    it.action.response && (it.type is HttpRequest && it.type.method.name.equals(
+                        request.method.value, true
+                    )) && it.matchers.all { matcher ->
+                        matcher.matches(response)
                     }
                 }
             }
@@ -379,6 +379,25 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
 
 private inline fun ClientPluginBuilder<InspektorConfig>.shouldNotLog(attributes: Attributes): Boolean {
     return pluginConfig.level == LogLevel.NONE && attributes.contains(DisableLogging)
+}
+
+internal fun Matcher.matches(request: HttpRequestBuilder): Boolean {
+    return when (this) {
+        is UrlMatcher -> url == request.url.toString()
+        is HostMatcher -> host == request.url.host
+        is PathMatcher -> path == request.url.encodedPath
+        is UrlRegexMatcher -> Regex(url).matches(request.url.toString())
+    }
+}
+
+internal fun Matcher.matches(response: HttpResponse): Boolean {
+    val request = response.request
+    return when (this) {
+        is UrlMatcher -> url == request.url.toString()
+        is HostMatcher -> host == request.url.host
+        is PathMatcher -> path == request.url.encodedPath
+        is UrlRegexMatcher -> Regex(url).matches(request.url.toString())
+    }
 }
 
 public expect fun openInspektor()
