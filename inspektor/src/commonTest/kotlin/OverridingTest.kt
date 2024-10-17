@@ -66,6 +66,10 @@ class OverridingTest : TestBase() {
             "request" to ("Overridden-Request" to transaction.requestBody),
             "response headers" to ("Overridden Response-Header" to transaction.responseHeaders?.firstOrNull { it.key == "Custom" }?.value?.first()),
             "response" to ("Overridden-Response" to transaction.responseBody),
+            "replaced request headers" to ("Request-Header" to transaction.replacedRequestHeaders?.firstOrNull { it.key == "Custom" }?.value?.first()),
+            "replaced request" to ("Request" to transaction.replacedRequestBody),
+            "replaced response headers" to ("Response-Header" to transaction.replacedResponseHeaders?.firstOrNull { it.key == "Custom" }?.value?.first()),
+            "replaced response" to ("Response" to transaction.replacedResponseBody),
         ).forEach {
             assertEquals(it.value.first, it.value.second, "${it.key} are not equal")
         }

@@ -5,7 +5,7 @@ import kotlin.collections.Set;
 import kotlin.String;
 import kotlinx.datetime.Instant;
 
-PRAGMA user_version = 1;
+PRAGMA user_version = 2;
 
 CREATE TABLE IF NOT EXISTS HttpTransaction (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -23,8 +23,10 @@ CREATE TABLE IF NOT EXISTS HttpTransaction (
     requestPayloadSize INTEGER,
     requestContentType TEXT,
     requestHeaders TEXT AS Set<Map.Entry<String, List<String>>>,
+    replacedRequestHeaders TEXT AS Set<Map.Entry<String, List<String>>>,
     requestHeadersSize INTEGER,
     requestBody TEXT,
+    replacedRequestBody TEXT,
     isRequestBodyEncoded INTEGER AS Boolean DEFAULT 0,
     responseCode INTEGER,
     responseMessage TEXT,
@@ -32,8 +34,10 @@ CREATE TABLE IF NOT EXISTS HttpTransaction (
     responsePayloadSize INTEGER,
     responseContentType TEXT,
     responseHeaders TEXT AS Set<Map.Entry<String, List<String>>>,
+    replacedResponseHeaders TEXT AS Set<Map.Entry<String, List<String>>>,
     responseHeadersSize INTEGER,
     responseBody TEXT,
+    replacedResponseBody TEXT,
     isResponseBodyEncoded INTEGER AS Boolean DEFAULT 0
 );
 
@@ -82,8 +86,10 @@ INSERT INTO HttpTransaction(
    requestPayloadSize,
    requestContentType,
    requestHeaders,
+   replacedRequestHeaders,
    requestHeadersSize,
    requestBody,
+   replacedRequestBody,
    isRequestBodyEncoded,
    responseCode,
    responseMessage,
@@ -91,8 +97,10 @@ INSERT INTO HttpTransaction(
    responsePayloadSize,
    responseContentType,
    responseHeaders,
+   replacedResponseHeaders,
    responseHeadersSize,
    responseBody,
+   replacedResponseBody,
    isResponseBodyEncoded
 )
 VALUES ?;
@@ -114,8 +122,10 @@ INSERT OR REPLACE INTO HttpTransaction(
    requestPayloadSize,
    requestContentType,
    requestHeaders,
+   replacedRequestHeaders,
    requestHeadersSize,
    requestBody,
+   replacedRequestBody,
    isRequestBodyEncoded,
    responseCode,
    responseMessage,
@@ -123,8 +133,10 @@ INSERT OR REPLACE INTO HttpTransaction(
    responsePayloadSize,
    responseContentType,
    responseHeaders,
+   replacedResponseHeaders,
    responseHeadersSize,
    responseBody,
+   replacedResponseBody,
    isResponseBodyEncoded
 )
 VALUES ?;
@@ -147,10 +159,12 @@ SET responseCode = ?,
     responsePayloadSize = ?,
     responseContentType = ?,
     responseHeaders = ?,
+    replacedResponseHeaders = ?,
     responseHeadersSize = ?,
     responseTlsVersion = ?,
     responseCipherSuite = ?,
     responseBody = ?,
+    replacedResponseBody = ?,
     isResponseBodyEncoded = ?
 WHERE id = :id;
 

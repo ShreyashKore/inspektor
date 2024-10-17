@@ -292,7 +292,9 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
                         val replacedHeaders = mutableMapOf<String, List<String>>()
 
                         val newBody: ByteReadChannel? = override.action.body?.let { newBodyString ->
-                            replacedBody = (request.content as? TextContent)?.text?.run {
+                            replacedBody = response.content.tryReadText(
+                                response.charset() ?: Charsets.UTF_8, pluginConfig.maxContentLength
+                            )?.run {
                                 substring(0..minOf(lastIndex, pluginConfig.maxContentLength))
                             }
                             ByteReadChannel(newBodyString)

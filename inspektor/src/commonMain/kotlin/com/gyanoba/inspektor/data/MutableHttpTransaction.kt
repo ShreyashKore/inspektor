@@ -52,8 +52,10 @@ internal fun MutableHttpTransaction.toImmutable() = HttpTransaction(
     requestPayloadSize = requestPayloadSize,
     requestContentType = requestContentType,
     requestHeaders = requestHeaders,
+    replacedRequestHeaders = replacedRequestHeaders,
     requestHeadersSize = requestHeadersSize,
     requestBody = requestBody,
+    replacedRequestBody = replacedRequestBody,
     isRequestBodyEncoded = isRequestBodyEncoded,
     responseCode = responseCode,
     responseMessage = responseMessage,
@@ -61,8 +63,10 @@ internal fun MutableHttpTransaction.toImmutable() = HttpTransaction(
     responsePayloadSize = responsePayloadSize,
     responseContentType = responseContentType,
     responseHeaders = responseHeaders,
+    replacedResponseHeaders = replacedResponseHeaders,
     responseHeadersSize = responseHeadersSize,
     responseBody = responseBody,
+    replacedResponseBody = replacedResponseBody,
     isResponseBodyEncoded = isResponseBodyEncoded,
 )
 
