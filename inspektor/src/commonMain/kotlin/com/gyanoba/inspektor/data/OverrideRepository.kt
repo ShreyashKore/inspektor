@@ -21,6 +21,8 @@ public interface OverrideRepository {
 
     public suspend fun remove(override: Override)
 
+    public suspend fun update(override: Override)
+
     public val updates: Flow<List<Override>>
 
     public val all: List<Override>
@@ -34,6 +36,11 @@ internal class OverrideRepositoryImpl(
     override suspend fun add(override: Override) = store.plus(override)
 
     override suspend fun remove(override: Override) = store.minus(override)
+
+    override suspend fun update(override: Override) {
+        store.minus(override)
+        store.plus(override)
+    }
 
     override val updates: StateFlow<List<Override>> get() = store.updatesOrEmpty.stateIn(
         MainScope(),
