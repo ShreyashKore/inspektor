@@ -64,6 +64,7 @@ import com.gyanoba.inspektor.platform.getAppName
 import com.gyanoba.inspektor.ui.components.DateRangeButton
 import com.gyanoba.inspektor.ui.components.DateRangePickerDialog
 import com.gyanoba.inspektor.ui.components.Logo
+import com.gyanoba.inspektor.ui.components.SimpleSearchBar
 import com.gyanoba.inspektor.ui.theme.errorColor
 import com.gyanoba.inspektor.ui.theme.successColor
 import com.gyanoba.inspektor.ui.theme.warningColor
@@ -365,43 +366,8 @@ internal fun DeleteDialog(
     )
 }
 
-@Composable
-internal fun SimpleSearchBar(
-    searchFieldState: TextFieldState,
-    placeholder: @Composable () -> Unit = { Text("Search") },
-) {
-    val focusRequester = remember { FocusRequester() }
-    LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
-    }
-    OutlinedTextField(
-        searchFieldState.text.toString(),
-        onValueChange = {
-            searchFieldState.edit {
-                replace(0, searchFieldState.text.length, it)
-            }
-        },
-        placeholder = placeholder,
-        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Search),
-        shape = MaterialTheme.shapes.medium.copy(CornerSize(24.dp)),
-        trailingIcon = {
-            if (searchFieldState.text.isNotEmpty()) {
-                IconButton(
-                    onClick = { searchFieldState.clearText() },
-                    modifier = Modifier.size(24.dp),
-                ) {
-                    Icon(
-                        Icons.Rounded.Clear,
-                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                        contentDescription = "Clear",
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-            }
-        },
-        singleLine = true,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
-            .focusRequester(focusRequester),
-    )
-}
+@OptIn(ExperimentalMaterial3Api::class)
+internal val DatePickerState.selectedDateInstant: Instant?
+    get() = selectedDateMillis?.let { Instant.fromEpochMilliseconds(it) }
+
 

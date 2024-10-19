@@ -5,11 +5,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.DockedSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
@@ -17,7 +17,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,6 +31,7 @@ import com.gyanoba.inspektor.data.OverrideRepositoryImpl
 import com.gyanoba.inspektor.data.PathMatcher
 import com.gyanoba.inspektor.data.UrlMatcher
 import com.gyanoba.inspektor.data.UrlRegexMatcher
+import com.gyanoba.inspektor.ui.components.SimpleSearchBar
 
 @Composable
 internal fun OverridesListScreen(
@@ -42,7 +42,7 @@ internal fun OverridesListScreen(
 
     OverridesListScreen(
         overrides = viewModel.visibleOverrides.value,
-        onSearch = viewModel::search,
+        searchFieldState = viewModel.searchFieldState,
         deleteOverride = viewModel::deleteOverride,
         openAddOverrideScreen = openAddOverrideScreen,
         toggleEnableDisableOverride = viewModel::toggleEnableDisable,
@@ -54,31 +54,26 @@ internal fun OverridesListScreen(
 @Composable
 internal fun OverridesListScreen(
     overrides: List<Override>,
-    onSearch: (String) -> Unit,
+    searchFieldState: TextFieldState,
     deleteOverride: (Override) -> Unit,
     openAddOverrideScreen: () -> Unit,
     toggleEnableDisableOverride: (Override) -> Unit,
 ) {
-    Scaffold(topBar = {
-        CenterAlignedTopAppBar(title = { Text("Overrides") })
-    }, floatingActionButton = {
-        FloatingActionButton(
-            onClick = openAddOverrideScreen,
-        ) { Text("Add") }
-    }, content = {
-        DockedSearchBar(
-            inputField = {
-                SearchBarDefaults.InputField(
-                    query = "",
-                    onQueryChange = onSearch,
-                    onSearch = onSearch,
-                    expanded = false,
-                    onExpandedChange = {},
-                )
-            },
-            expanded = false,
-            onExpandedChange = { },
-        ) { }
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(title = { Text("Overrides") })
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = openAddOverrideScreen,
+            ) { Text("Add") }
+        },
+    ) {
+        SimpleSearchBar(
+            searchFieldState = searchFieldState,
+            placeholder = { Text("Search Overrides") },
+            modifier = Modifier.padding(16.dp),
+        )
 
         LazyColumn {
             items(overrides) { override ->
@@ -90,7 +85,7 @@ internal fun OverridesListScreen(
                 HorizontalDivider()
             }
         }
-    })
+    }
 }
 
 @Composable
