@@ -66,24 +66,29 @@ internal fun OverridesListScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = openAddOverrideScreen,
-            ) { Text("Add") }
+            ) { Text("Add Override") }
         },
     ) {
-        SimpleSearchBar(
-            searchFieldState = searchFieldState,
-            placeholder = { Text("Search Overrides") },
-            modifier = Modifier.padding(16.dp),
-        )
+        Column(
+            modifier = Modifier.padding(it)
+        ) {
+            SimpleSearchBar(
+                searchFieldState = searchFieldState,
+                placeholder = { Text("Search Overrides") },
+                modifier = Modifier.padding(16.dp),
+            )
 
-        LazyColumn {
-            items(overrides) { override ->
-                OverrideRow(
-                    override = override,
-                    deleteOverride = { deleteOverride(override) },
-                    toggleEnableDisable = { toggleEnableDisableOverride(override) },
-                )
-                HorizontalDivider()
+            LazyColumn {
+                items(overrides) { override ->
+                    OverrideRow(
+                        override = override,
+                        deleteOverride = { deleteOverride(override) },
+                        toggleEnableDisable = { toggleEnableDisableOverride(override) },
+                    )
+                    HorizontalDivider()
+                }
             }
+
         }
     }
 }

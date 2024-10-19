@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.gyanoba.inspektor.ui.overriding.OverridesListScreen
 
 @Composable
 internal fun App() {
@@ -15,6 +16,9 @@ internal fun App() {
                 openTransaction = { id ->
                     navController.navigate("transaction/${id}")
                 },
+                openOverridesScreen = {
+                    navController.navigate("overrides")
+                }
             )
         }
         composable("transaction/{id}") { backStackEntry ->
@@ -27,6 +31,14 @@ internal fun App() {
                     },
                 )
             }
+        }
+
+        composable("overrides") {
+            OverridesListScreen(
+                openAddOverrideScreen = {
+                    navController.navigate("add-override")
+                }
+            )
         }
     }
 }

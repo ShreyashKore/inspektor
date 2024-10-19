@@ -21,6 +21,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.rounded.Clear
@@ -78,6 +79,7 @@ import kotlinx.datetime.toLocalDateTime
 @Composable
 internal fun TransactionListScreen(
     openTransaction: (Long) -> Unit,
+    openOverridesScreen: () -> Unit,
 ) {
     val viewModel = viewModel<TransactionListViewModel> {
         TransactionListViewModel(InspektorDataSourceImpl.Instance)
@@ -86,6 +88,7 @@ internal fun TransactionListScreen(
         viewModel.transactions.collectAsState().value,
         viewModel.searchFieldState,
         openTransaction,
+        openOverridesScreen,
         viewModel.allCount.collectAsState().value,
         viewModel.startDate.collectAsState().value,
         viewModel.endDate.collectAsState().value,
@@ -100,6 +103,7 @@ internal fun TransactionListScreen(
     transactions: List<GetAllLatestWithLimit> = emptyList(),
     searchTermState: TextFieldState,
     onClickTransaction: (Long) -> Unit,
+    openOverridesScreen: () -> Unit,
     allCount: Long,
     startDate: Instant,
     endDate: Instant,
@@ -154,7 +158,6 @@ internal fun TransactionListScreen(
                     }
                 },
                 actions = {
-
                     IconButton(onClick = { showSearch = !showSearch }) {
                         AnimatedContent(
                             targetState = showSearch,
@@ -191,6 +194,19 @@ internal fun TransactionListScreen(
                                 leadingIcon = {
                                     Icon(
                                         Icons.Default.Delete,
+                                        contentDescription = null
+                                    )
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Overrides") },
+                                onClick = {
+                                    openOverridesScreen()
+                                    showMenu = false
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.Edit,
                                         contentDescription = null
                                     )
                                 }
