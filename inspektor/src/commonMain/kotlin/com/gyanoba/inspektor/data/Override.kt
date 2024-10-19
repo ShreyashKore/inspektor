@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 public data class Override(
+    val id: Long,
     val type: RequestType,
     val matchers: List<Matcher>,
     val action: OverrideAction,
@@ -20,7 +21,12 @@ public sealed interface RequestType
 internal data class HttpRequest(val method: HttpMethod) : RequestType
 
 internal enum class HttpMethod {
-    Get, Post, Put, Delete, Patch, Head, Options, Trace, Connect, Custom, Any,
+    Get, Post, Put, Delete, Patch, Head, Options, Trace, Connect, Custom, Any;
+    companion object {
+        val currentlySupported = listOf(
+            Get, Post, Put, Delete, Patch
+        )
+    }
 }
 
 @Serializable

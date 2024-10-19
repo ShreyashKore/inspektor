@@ -25,6 +25,7 @@ class OverridingTest : TestBase() {
         store.reset()
         store.plus(
             Override(
+                id = 0,
                 type = HttpRequest(HttpMethod.Post),
                 matchers = listOf(HostMatcher("localhost"), PathMatcher("/text")),
                 action = FixedRequestAction(
@@ -33,6 +34,7 @@ class OverridingTest : TestBase() {
                 ),
             ),
             Override(
+                id = 1,
                 type = HttpRequest(HttpMethod.Post),
                 matchers = listOf(HostMatcher("localhost"), PathMatcher("/text")),
                 action = FixedResponseAction(

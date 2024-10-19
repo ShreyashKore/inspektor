@@ -37,9 +37,10 @@ internal class OverrideRepositoryImpl(
 
     override suspend fun remove(override: Override) = store.minus(override)
 
-    override suspend fun update(override: Override) {
-        store.minus(override)
-        store.plus(override)
+    override suspend fun update(override: Override) = store.update { overrideList ->
+        overrideList?.map {
+            if (it.id == override.id) override else it
+        }
     }
 
     override val updates: StateFlow<List<Override>> get() = store.updatesOrEmpty.stateIn(
