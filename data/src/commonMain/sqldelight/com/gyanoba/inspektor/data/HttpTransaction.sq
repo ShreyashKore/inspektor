@@ -23,10 +23,8 @@ CREATE TABLE IF NOT EXISTS HttpTransaction (
     requestPayloadSize INTEGER,
     requestContentType TEXT,
     requestHeaders TEXT AS Set<Map.Entry<String, List<String>>>,
-    replacedRequestHeaders TEXT AS Set<Map.Entry<String, List<String>>>,
     requestHeadersSize INTEGER,
     requestBody TEXT,
-    replacedRequestBody TEXT,
     isRequestBodyEncoded INTEGER AS Boolean DEFAULT 0,
     responseCode INTEGER,
     responseMessage TEXT,
@@ -34,11 +32,14 @@ CREATE TABLE IF NOT EXISTS HttpTransaction (
     responsePayloadSize INTEGER,
     responseContentType TEXT,
     responseHeaders TEXT AS Set<Map.Entry<String, List<String>>>,
-    replacedResponseHeaders TEXT AS Set<Map.Entry<String, List<String>>>,
     responseHeadersSize INTEGER,
     responseBody TEXT,
-    replacedResponseBody TEXT,
-    isResponseBodyEncoded INTEGER AS Boolean DEFAULT 0
+    isResponseBodyEncoded INTEGER AS Boolean DEFAULT 0,
+    replacedRequestHeaders TEXT AS Set<Map.Entry<String, List<String>>>,
+    replacedRequestBody TEXT,
+    replacedResponseCode INTEGER,
+    replacedResponseHeaders TEXT AS Set<Map.Entry<String, List<String>>>,
+    replacedResponseBody TEXT
 );
 
 CREATE INDEX IF NOT EXISTS HttpTransaction_method ON HttpTransaction(method);
