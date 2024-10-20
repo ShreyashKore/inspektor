@@ -36,6 +36,7 @@ import com.gyanoba.inspektor.data.FixedResponseAction
 import com.gyanoba.inspektor.data.HostMatcher
 import com.gyanoba.inspektor.data.NoAction
 import com.gyanoba.inspektor.data.Override
+import com.gyanoba.inspektor.data.OverrideAction
 import com.gyanoba.inspektor.data.OverrideRepositoryImpl
 import com.gyanoba.inspektor.data.PathMatcher
 import com.gyanoba.inspektor.data.UrlMatcher
@@ -96,7 +97,7 @@ internal fun OverridesListScreen(
             SimpleSearchBar(
                 searchFieldState = searchFieldState,
                 placeholder = { Text("Search Overrides") },
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier.padding(8.dp),
             )
 
             LazyColumn {
@@ -122,10 +123,10 @@ internal fun OverrideRow(
     toggleEnableDisable: (Boolean) -> Unit,
 ) {
     Card(
-        modifier = Modifier.padding(16.dp)
+        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
         Row(
-            Modifier.fillMaxSize().padding(8.dp),
+            Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(
@@ -137,7 +138,7 @@ internal fun OverrideRow(
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 )
                 Text(
-                    override.name ?: "--Unnamed--",
+                    override.name.takeIf { it.isNullOrBlank().not() } ?: "[Unnamed]",
                     style = MaterialTheme.typography.titleMedium,
                 )
             }
@@ -151,47 +152,56 @@ internal fun OverrideRow(
         }
 
         Column(
-            modifier = Modifier.padding(8.dp)
-
+            modifier = Modifier.padding(horizontal = 12.dp),
         ) {
 
             Text(
-                override.matchers.joinToString("\n", prefix = "- ") { matcher ->
-                    when (matcher) {
-                        is PathMatcher -> "Path: ${matcher.path}".take(30)
-                        is HostMatcher -> "Host: ${matcher.host}".take(30)
-                        is UrlMatcher -> "Url: ${matcher.url}".take(30)
-                        is UrlRegexMatcher -> "Url Regex: ${matcher.url}".take(30)
-                    }
-                },
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                when (override.action) {
-                    is FixedRequestAction -> "Fixed Request"
-                    is FixedResponseAction -> "Fixed Response"
-                    is NoAction -> "No Action"
-                },
+                "Matchers (${override.matchers.size})",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
             )
-            Text(
-                when (val action = override.action) {
-                    is FixedRequestAction ->
-                        "Headers: ${action.headers}".take(30) + "\n" +
-                                "Body: ${action.body}".take(60)
-
-                    is FixedResponseAction ->
-                        "Status: ${action.statusCode}".take(30) + "\n" +
-                                "Headers: ${action.headers}".take(30) + "\n" +
-                                "Body: ${action.body}".take(60)
-
-                    NoAction -> ""
+            override.matchers.take(3).map { matcher ->
+                when (matcher) {
+                    is PathMatcher -> SecondaryText("Path: ${matcher.path}")
+                    is HostMatcher -> SecondaryText("Host: ${matcher.host}")
+                    is UrlMatcher -> SecondaryText("Url: ${matcher.url}")
+                    is UrlRegexMatcher -> SecondaryText("Url Regex: ${matcher.url}")
                 }
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                override.action.type.label,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
             )
-
+            override.action.prettyPrintList().map {
+                SecondaryText(it)
+            }
+            Spacer(Modifier.height(8.dp))
         }
 
     }
 }
 
+@Composable
+private fun SecondaryText(text: String) = Text(
+    text,
+    style = MaterialTheme.typography.bodySmall,
+    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+    maxLines = 1,
+)
+
+internal fun OverrideAction.prettyPrintList(): List<String> = when (this) {
+    is FixedRequestAction -> buildList {
+        if (headers.isNotEmpty()) add("Headers: ${headers.prettyPrint()}")
+        if (!body.isNullOrBlank()) add("Body: $body")
+    }
+    is FixedResponseAction -> buildList {
+        if (statusCode != null) add("Status: $statusCode")
+        if (headers.isNotEmpty()) add("Headers: ${headers.prettyPrint()}")
+        if (!body.isNullOrBlank()) add("Body: $body")
+    }
+    NoAction -> emptyList()
+}
+
+internal fun Map<String, List<String>>.prettyPrint(): String = entries.joinToString { "${it.key} : ${it.value.joinToString(";") { it }}" }

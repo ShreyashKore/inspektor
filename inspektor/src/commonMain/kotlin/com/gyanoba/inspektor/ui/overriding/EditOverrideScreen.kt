@@ -35,9 +35,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -75,13 +78,24 @@ internal fun EditOverrideScreen(
         val override = OverrideRepositoryImpl.Instance.all.firstOrNull { it.id == id }
         EditOverrideViewModel(OverrideRepositoryImpl.Instance, override ?: Override.New)
     }
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(viewModel) {
+        viewModel.events.collect { event ->
+            when (event) {
+                EditOverrideViewModel.Event.OverrideSaved -> onBack()
+                is EditOverrideViewModel.Event.Error -> snackbarHostState.showSnackbar("Error: ${event.message}")
+            }
+        }
+    }
     EditOverrideScreen(
+        id = viewModel.override.id,
         name = viewModel.name,
         type = viewModel.type,
         matchers = viewModel.matchers,
         action = viewModel.action,
-        actionType = viewModel.actionType,
-        enabled = viewModel.enabled,
+        matchersError = viewModel.matchersError,
+        actionError = viewModel.actionError,
+        snackbarHostState = snackbarHostState,
         updateName = viewModel::updateName,
         updateHttpMethod = viewModel::updateHttpMethod,
         addMatcher = viewModel::addMatcher,
@@ -96,12 +110,14 @@ internal fun EditOverrideScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun EditOverrideScreen(
+    id: Long,
     name: String,
     type: RequestType,
     matchers: List<Matcher>,
     action: OverrideAction,
-    actionType: OverrideAction.Type,
-    enabled: Boolean,
+    matchersError: String?,
+    actionError: String?,
+    snackbarHostState: SnackbarHostState,
     updateName: (String) -> Unit,
     updateHttpMethod: (HttpMethod) -> Unit,
     addMatcher: (Matcher) -> Unit,
@@ -112,6 +128,7 @@ internal fun EditOverrideScreen(
     onBack: () -> Unit,
 ) = BoxWithConstraints {
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
                 navigationIcon = {
@@ -120,7 +137,7 @@ internal fun EditOverrideScreen(
                     }
                 },
                 title = {
-                    Text("Add Override")
+                    Text(if (id == 0L) "Add Override" else "Edit Override")
                 },
             )
         },
@@ -146,6 +163,7 @@ internal fun EditOverrideScreen(
                         addMatcher = addMatcher,
                         removeMatcher = removeMatcher,
                         onUpdateMethod = updateHttpMethod,
+                        matchersError = matchersError,
                         modifier = Modifier.padding(4.dp)
                     )
 
@@ -155,6 +173,7 @@ internal fun EditOverrideScreen(
                         action = action,
                         updateOverrideActionType = updateOverrideActionType,
                         updateOverrideAction = updateOverrideAction,
+                        error = actionError,
                         modifier = Modifier.padding(4.dp)
                     )
                 }
@@ -208,6 +227,7 @@ internal fun EditOverrideScreen(
                         action = action,
                         updateOverrideAction = updateOverrideAction,
                         updateOverrideActionType = updateOverrideActionType,
+                        error = actionError,
                         modifier = Modifier.padding(8.dp).fillMaxHeight().weight(1f)
                     )
                 }
@@ -223,6 +243,7 @@ internal fun MatchersSection(
     addMatcher: (Matcher) -> Unit,
     removeMatcher: (Matcher) -> Unit,
     onUpdateMethod: (HttpMethod) -> Unit,
+    matchersError: String? = null,
     modifier: Modifier = Modifier
 ) = Column(
     modifier.fillMaxWidth().background(
@@ -241,6 +262,13 @@ internal fun MatchersSection(
         )
     }
     HorizontalDivider(Modifier.padding(vertical = 8.dp))
+    if (matchersError != null) {
+        Text(
+            matchersError,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.error
+        )
+    }
     matchers.forEach { matcher ->
         MatcherItem(matcher = matcher, onClickRemove = { removeMatcher(matcher) })
     }
@@ -254,6 +282,7 @@ internal fun OverrideActionSection(
     action: OverrideAction,
     updateOverrideActionType: (OverrideAction.Type) -> Unit,
     updateOverrideAction: (OverrideAction) -> Unit,
+    error: String? = null,
     modifier: Modifier = Modifier,
 ) = Column(
     modifier.fillMaxWidth().background(
@@ -274,6 +303,15 @@ internal fun OverrideActionSection(
             onActionSelected = updateOverrideActionType,
         )
     }
+    HorizontalDivider(Modifier.padding(vertical = 8.dp))
+
+    if (error != null) {
+        Text(
+            error,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.error
+        )
+    }
 
     Spacer(modifier = Modifier.height(8.dp))
 
@@ -290,14 +328,15 @@ internal fun OverrideActionSection(
         )
         Spacer(modifier = Modifier.height(8.dp))
     }
-    HorizontalDivider(Modifier.padding(vertical = 8.dp))
     Text(
         "Headers",
         style = MaterialTheme.typography.titleSmall,
     )
     Spacer(modifier = Modifier.height(8.dp))
     action.headersOrEmpty.forEach {
-        Row {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Text(
                 it.key, Modifier.weight(.3f),
                 style = MaterialTheme.typography.labelMedium,

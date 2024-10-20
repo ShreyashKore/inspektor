@@ -16,6 +16,7 @@ import com.gyanoba.inspektor.data.OverrideAction
 import com.gyanoba.inspektor.data.OverrideRepository
 import com.gyanoba.inspektor.data.bodyOrEmpty
 import com.gyanoba.inspektor.data.headersOrEmpty
+import com.gyanoba.inspektor.utils.logErr
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -26,6 +27,11 @@ internal class EditOverrideViewModel(
     val override: Override,
 ) : ViewModel() {
 
+    interface Event {
+        object OverrideSaved : Event
+        data class Error(val message: String) : Event
+    }
+
     var name by mutableStateOf(override.name ?: "")
         private set
     var type by mutableStateOf(override.type)
@@ -34,12 +40,14 @@ internal class EditOverrideViewModel(
         private set
     var action by mutableStateOf(override.action)
         private set
-    var actionType by mutableStateOf(override.action.type)
-        private set
-    var enabled by mutableStateOf(override.enabled)
-        private set
 
-    private val _events = MutableStateFlow<Any?>(null)
+    var matchersError: String? by mutableStateOf(null)
+        private set
+    var actionError: String? by mutableStateOf(null)
+        private set
+    private var isSaving: Boolean = false
+
+    private val _events = MutableStateFlow<Event?>(null)
     val events = _events.asStateFlow()
 
     fun updateOverrideAction(action: OverrideAction) {
@@ -63,11 +71,9 @@ internal class EditOverrideViewModel(
     }
 
     fun updateOverrideActionType(type: OverrideAction.Type) {
-        actionType = type
         action = when (type) {
             OverrideAction.Type.FixedRequest -> FixedRequestAction(
-                headers = action.headersOrEmpty,
-                body = action.bodyOrEmpty
+                headers = action.headersOrEmpty, body = action.bodyOrEmpty
             )
 
             OverrideAction.Type.FixedResponse -> FixedResponseAction(
@@ -81,26 +87,55 @@ internal class EditOverrideViewModel(
     }
 
     fun saveOverride() = viewModelScope.launch {
-        if (override.id != 0L) {
-            repository.update(override.copy(
-                name = name,
-                type = type,
-                matchers = matchers,
-                action = action,
-                enabled = enabled
-            ))
-        } else {
-            val newOverride = Override(
-                id = 0L,
-                type = type,
-                matchers = matchers,
-                action = action,
-                name = name,
-                enabled = enabled
+        if (!validate()) return@launch
+        if (isSaving) return@launch
+        try {
+            isSaving = true
+            _events.emit(null)
+            val override = override.copy(
+                name = name, type = type,
+                matchers = matchers, action = action,
             )
-            repository.add(newOverride)
-            _events.emit(Any())
+            if (override.id != 0L) {
+                repository.update(override)
+            } else {
+                repository.add(override)
+            }
+            _events.emit(Event.OverrideSaved)
+        } catch (e: Exception) {
+            _events.emit(Event.Error(e.message ?: "Unknown error"))
+            logErr(e, "EditOverrideViewModel") { "Error saving override" }
+        } finally {
+            isSaving = false
         }
+    }
+
+    private fun validate(): Boolean {
+        var valid = true
+        matchersError = null
+        actionError = null
+        if (matchers.isEmpty()) {
+            matchersError = "At least one matcher is required"
+            valid = false
+        }
+        when (val action = action) {
+            is FixedRequestAction -> {
+                if (action.headers.isEmpty() && action.body.isNullOrEmpty()) {
+                    actionError = "Headers and body both cannot be empty"
+                    valid = false
+                }
+            }
+
+            is FixedResponseAction -> {
+                if (action.headers.isEmpty() && action.body.isNullOrEmpty() && action.statusCode == null) {
+                    actionError = "Headers, body and status code all cannot be empty"
+                    valid = false
+                }
+            }
+
+            NoAction -> {}
+        }
+        return valid
     }
 }
 
