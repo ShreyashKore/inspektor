@@ -26,10 +26,7 @@ internal actual object DriverFactory {
 
 
 private fun getDatabasePath(): String {
-    require(APPLICATION_ID != null) {
-        "Application ID must be provided for the desktop platforms"
-    }
-    val dbPath = Paths.get(getAppDataDir(APPLICATION_ID!!), DB_NAME).toString()
+    val dbPath = Paths.get(getAppDataDir(), DB_NAME).toString()
     File(dbPath).parentFile.mkdirs()
     return dbPath
 }
@@ -42,7 +39,7 @@ public actual fun setApplicationId(applicationId: String) {
 /**
  * Application ID is used to resolve the folder in which database will be stored.
  */
-private var APPLICATION_ID: String? = null
+internal var APPLICATION_ID: String? = null
     set(value) {
         if (field != null && field != value) {
             log("Inspektor") {

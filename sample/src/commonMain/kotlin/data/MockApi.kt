@@ -26,6 +26,7 @@ import io.ktor.http.contentType
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
 import models.Todo
 
 object MockApi {
@@ -128,14 +129,18 @@ object MockApi {
 
     private val client = HttpClient(mockEngine) {
         install(ContentNegotiation) {
-            json()
-        }
-        install(Logging) {
-            logger = Logger.SIMPLE
-            level = io.ktor.client.plugins.logging.LogLevel.BODY
+            json(Json {
+                isLenient = true
+                ignoreUnknownKeys = true
+            })
         }
         install(Inspektor) {
             level = LogLevel.BODY
+        }
+
+        install(Logging) {
+            logger = Logger.SIMPLE
+            level = io.ktor.client.plugins.logging.LogLevel.BODY
         }
     }
 

@@ -27,6 +27,16 @@ internal class HttpClientCallLogger(
     private val requestLogged = atomic(false)
     private val responseLogged = atomic(false)
 
+    fun addOriginalRequest(
+        headers: Set<Map.Entry<String, List<String>>>,
+        body: String?,
+    ) {
+        transactionLog.apply {
+            this.replacedRequestHeaders = headers
+            this.replacedRequestBody = body
+        }
+    }
+
     fun addRequestInfo(
         url: String,
         host: String?,
@@ -62,6 +72,16 @@ internal class HttpClientCallLogger(
 
     fun addRequestException(exception: Throwable) {
         transactionLog.error = exception.toString()
+    }
+
+    fun addOriginalResponse(
+        headers: Set<Map.Entry<String, List<String>>>,
+        body: String?,
+    ) {
+        transactionLog.apply {
+            this.replacedResponseHeaders = headers
+            this.replacedResponseBody = body
+        }
     }
 
     fun addResponseInfo(
