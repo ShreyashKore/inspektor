@@ -24,16 +24,12 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -48,9 +44,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.gyanoba.inspektor.data.FixedRequestAction
 import com.gyanoba.inspektor.data.FixedResponseAction
 import com.gyanoba.inspektor.data.HostMatcher
 import com.gyanoba.inspektor.data.HttpMethod
@@ -67,6 +63,7 @@ import com.gyanoba.inspektor.data.UrlRegexMatcher
 import com.gyanoba.inspektor.data.bodyOrEmpty
 import com.gyanoba.inspektor.data.copy
 import com.gyanoba.inspektor.data.headersOrEmpty
+import com.gyanoba.inspektor.ui.components.SimpleDropdown
 
 
 @Composable
@@ -148,7 +145,7 @@ internal fun EditOverrideScreen(
                     Modifier.padding(it).weight(1f).verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     TextField(
                         value = name,
                         onValueChange = updateName,
@@ -164,7 +161,7 @@ internal fun EditOverrideScreen(
                         removeMatcher = removeMatcher,
                         onUpdateMethod = updateHttpMethod,
                         matchersError = matchersError,
-                        modifier = Modifier.padding(4.dp)
+                        modifier = Modifier.padding(8.dp)
                     )
 
                     Spacer(modifier = Modifier.height(4.dp))
@@ -174,7 +171,7 @@ internal fun EditOverrideScreen(
                         updateOverrideActionType = updateOverrideActionType,
                         updateOverrideAction = updateOverrideAction,
                         error = actionError,
-                        modifier = Modifier.padding(4.dp)
+                        modifier = Modifier.padding(8.dp)
                     )
                 }
 
@@ -190,7 +187,7 @@ internal fun EditOverrideScreen(
                 Modifier.fillMaxSize().padding(it),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 Box(Modifier.widthIn(max = 600.dp)) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -215,6 +212,7 @@ internal fun EditOverrideScreen(
                     MatchersSection(
                         type = type,
                         matchers = matchers,
+                        matchersError = matchersError,
                         addMatcher = addMatcher,
                         removeMatcher = removeMatcher,
                         onUpdateMethod = updateHttpMethod,
@@ -246,9 +244,10 @@ internal fun MatchersSection(
     matchersError: String? = null,
     modifier: Modifier = Modifier
 ) = Column(
-    modifier.fillMaxWidth().background(
-        MaterialTheme.colorScheme.secondaryContainer
-    ).clip(RoundedCornerShape(12.dp)).padding(16.dp)
+    modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+        .background(
+            MaterialTheme.colorScheme.secondaryContainer
+        ).padding(8.dp)
 ) {
     Row(
         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -285,9 +284,10 @@ internal fun OverrideActionSection(
     error: String? = null,
     modifier: Modifier = Modifier,
 ) = Column(
-    modifier.fillMaxWidth().background(
-        MaterialTheme.colorScheme.secondaryContainer
-    ).clip(RoundedCornerShape(12.dp)).padding(16.dp).animateContentSize(),
+    modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+        .background(
+            MaterialTheme.colorScheme.secondaryContainer
+        ).padding(8.dp).animateContentSize(),
     horizontalAlignment = Alignment.CenterHorizontally,
 ) {
     Row(
@@ -316,6 +316,15 @@ internal fun OverrideActionSection(
     Spacer(modifier = Modifier.height(8.dp))
 
     if (action is NoAction) {
+        Text(
+            "Select an action to perform after matching the request.",
+            style = MaterialTheme.typography.titleMedium,
+            textAlign = TextAlign.Center,
+        )
+        Text(
+            "You can choose to override Request or Response.",
+            textAlign = TextAlign.Center,
+        )
         return@Column
     }
 
@@ -377,26 +386,14 @@ internal fun OverrideActionSection(
 @Composable
 internal fun HttpMethodDropdown(
     selectedMethod: HttpMethod, onMethodSelected: (HttpMethod) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
+) = SimpleDropdown(
+    items = HttpMethod.currentlySupported,
+    selectedItem = selectedMethod,
+    onItemSelected = onMethodSelected,
+    itemAsString = { "HTTP ${it.name}" },
+    modifier = Modifier.widthIn(max = 160.dp),
+)
 
-    Box {
-        OutlinedButton(onClick = { expanded = true }, Modifier.widthIn(min = 200.dp)) {
-            Text("HTTP ${selectedMethod.name}")
-        }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            HttpMethod.currentlySupported.forEach { method ->
-                DropdownMenuItem(
-                    onClick = {
-                        onMethodSelected(method)
-                        expanded = false
-                    },
-                    text = { Text("HTTP ${method.name}") },
-                )
-            }
-        }
-    }
-}
 
 @Composable
 internal fun MatcherItem(
@@ -440,7 +437,6 @@ internal fun NewMatcher(onAddMatcher: (Matcher) -> Unit) = Row(
 ) {
     var matcherType by remember { mutableStateOf<String?>(null) }
     var matcherValue by remember { mutableStateOf("") }
-    var showDropdown by remember { mutableStateOf(false) }
 
     fun validateAndAddMatcher() {
         if (matcherType == null) return
@@ -459,30 +455,13 @@ internal fun NewMatcher(onAddMatcher: (Matcher) -> Unit) = Row(
     Column(
         Modifier.weight(1f).padding(8.dp)
     ) {
-        Box {
-            OutlinedButton(
-                onClick = { showDropdown = true },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(matcherLabels[matcherType] ?: "Matcher Type")
-            }
-
-            DropdownMenu(
-                expanded = showDropdown,
-                onDismissRequest = { showDropdown = false },
-                modifier = Modifier,
-            ) {
-                matcherLabels.forEach { (matcher, name) ->
-                    DropdownMenuItem(onClick = {
-                        matcherType = matcher
-                        showDropdown = false
-                    }, text = {
-                        Text(name)
-                    })
-                }
-            }
-        }
-
+        SimpleDropdown(
+            items = matcherLabels.keys.toList(),
+            selectedItem = matcherType,
+            onItemSelected = { matcherType = it },
+            itemAsString = { matcherLabels[it] ?: "Matcher Type" },
+            modifier = Modifier.fillMaxWidth(),
+        )
         Spacer(modifier = Modifier.height(8.dp))
         TextField(
             value = matcherValue, onValueChange = { matcherValue = it },
@@ -547,69 +526,14 @@ internal data class NewHeader(val name: String, val value: String)
 @Composable
 internal fun OverrideActionDropdown(
     actionType: OverrideAction.Type, onActionSelected: (OverrideAction.Type) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-    Box {
-        OutlinedButton(onClick = { expanded = true }) {
-            Text(actionType.label)
-        }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            OverrideAction.Type.entries.forEach { type ->
-                DropdownMenuItem(
-                    onClick = { onActionSelected(type) },
-                    text = { Text(type.label) },
-                )
-            }
-        }
-    }
-}
+) = SimpleDropdown(
+    items = OverrideAction.Type.entries,
+    selectedItem = actionType,
+    onItemSelected = onActionSelected,
+    itemAsString = { it.label },
+    modifier = Modifier.widthIn(max = 160.dp),
+)
 
-@Composable
-internal fun OverrideItem(override: Override) {
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text("Name: ${override.name ?: "Unnamed"}")
-            Text("Type: ${(override.type as? HttpRequest)?.method?.name ?: "Unknown"}")
-            Text("Matchers:")
-            override.matchers.forEach { matcher ->
-                Text(
-                    "  ${
-                        when (matcher) {
-                            is UrlMatcher -> "URL: ${matcher.url}"
-                            is UrlRegexMatcher -> "URL Regex: ${matcher.url}"
-                            is HostMatcher -> "Host: ${matcher.host}"
-                            is PathMatcher -> "Path: ${matcher.path}"
-                        }
-                    }"
-                )
-            }
-            Text(
-                "Override Action: ${
-                    when (override.action) {
-                        is FixedRequestAction -> "Fixed Request"
-                        is FixedResponseAction -> "Fixed Response"
-                        NoAction -> "None"
-                    }
-                }"
-            )
-            when (val action = override.action) {
-                is FixedRequestAction -> {
-                    Text("Body: ${action.body ?: "None"}")
-                }
-
-                is FixedResponseAction -> {
-                    Text("Status Code: ${action.statusCode ?: "Not set"}")
-                    Text("Body: ${action.body ?: "None"}")
-                }
-
-                NoAction -> Text("None")
-            }
-            Text("Enabled: ${override.enabled}")
-        }
-    }
-}
 
 internal val Matcher.name: String
     get() = when (this) {
