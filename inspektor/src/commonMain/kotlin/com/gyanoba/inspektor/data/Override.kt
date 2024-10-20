@@ -11,7 +11,11 @@ public data class Override(
     val action: OverrideAction,
     val name: String? = null,
     val enabled: Boolean = true,
-)
+) {
+    public companion object {
+        public val New: Override = Override(0, HttpRequest(HttpMethod.Get), emptyList(), NoAction)
+    }
+}
 
 @Serializable
 public sealed interface RequestType
@@ -64,7 +68,11 @@ internal data class PathMatcher(
 ) : Matcher
 
 @Serializable
-public sealed interface OverrideAction
+public sealed interface OverrideAction {
+    public enum class Type {
+        FixedRequest, FixedResponse, None
+    }
+}
 
 
 internal val OverrideAction.request: Boolean
@@ -75,16 +83,46 @@ internal val OverrideAction.response: Boolean
 
 
 @Serializable
-@SerialName("fixedRequest")
+@SerialName("FixedRequest")
 internal data class FixedRequestAction(
     val headers: Map<String, List<String>> = emptyMap(),
     val body: String? = null,
 ) : OverrideAction
 
 @Serializable
-@SerialName("fixedResponse")
+@SerialName("FixedResponse")
 internal data class FixedResponseAction(
     val statusCode: Int? = null,
     val headers: Map<String, List<String>> = emptyMap(),
     val body: String? = null,
 ) : OverrideAction
+
+@Serializable
+@SerialName("NoAction")
+internal data object NoAction: OverrideAction
+
+
+internal fun OverrideAction.copy(
+    headers: Map<String, List<String>> = this.headersOrEmpty,
+    body: String? = this.bodyOrEmpty,
+    statusCode: Int? = (this as? FixedResponseAction)?.statusCode,
+): OverrideAction = when (this) {
+    is FixedRequestAction -> FixedRequestAction(headers, body)
+    is FixedResponseAction -> FixedResponseAction(statusCode, headers, body)
+    is NoAction -> NoAction
+}
+
+
+internal val OverrideAction.headersOrEmpty: Map<String, List<String>>
+    get() = when (this) {
+        is FixedRequestAction -> headers
+        is FixedResponseAction -> headers
+        NoAction -> emptyMap()
+    }
+
+internal val OverrideAction.bodyOrEmpty: String
+    get() = when (this) {
+        is FixedRequestAction -> body
+        is FixedResponseAction -> body
+        NoAction -> null
+    } ?: ""

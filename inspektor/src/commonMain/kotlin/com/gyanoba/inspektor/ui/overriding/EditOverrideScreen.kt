@@ -1,6 +1,6 @@
 package com.gyanoba.inspektor.ui.overriding
 
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,7 +38,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,12 +53,17 @@ import com.gyanoba.inspektor.data.HostMatcher
 import com.gyanoba.inspektor.data.HttpMethod
 import com.gyanoba.inspektor.data.HttpRequest
 import com.gyanoba.inspektor.data.Matcher
+import com.gyanoba.inspektor.data.NoAction
 import com.gyanoba.inspektor.data.Override
 import com.gyanoba.inspektor.data.OverrideAction
 import com.gyanoba.inspektor.data.OverrideRepositoryImpl
 import com.gyanoba.inspektor.data.PathMatcher
+import com.gyanoba.inspektor.data.RequestType
 import com.gyanoba.inspektor.data.UrlMatcher
 import com.gyanoba.inspektor.data.UrlRegexMatcher
+import com.gyanoba.inspektor.data.bodyOrEmpty
+import com.gyanoba.inspektor.data.copy
+import com.gyanoba.inspektor.data.headersOrEmpty
 
 
 @Composable
@@ -68,14 +72,21 @@ internal fun EditOverrideScreen(
     onBack: () -> Unit,
 ) {
     val viewModel = viewModel<EditOverrideViewModel> {
-        EditOverrideViewModel(OverrideRepositoryImpl.Instance, id)
+        val override = OverrideRepositoryImpl.Instance.all.firstOrNull { it.id == id }
+        EditOverrideViewModel(OverrideRepositoryImpl.Instance, override ?: Override.New)
     }
     EditOverrideScreen(
-        currentOverride = viewModel.currentOverride.collectAsState().value,
+        name = viewModel.name,
+        type = viewModel.type,
+        matchers = viewModel.matchers,
+        action = viewModel.action,
+        actionType = viewModel.actionType,
+        enabled = viewModel.enabled,
         updateName = viewModel::updateName,
         updateHttpMethod = viewModel::updateHttpMethod,
         addMatcher = viewModel::addMatcher,
         removeMatcher = viewModel::removeMatcher,
+        updateOverrideActionType = viewModel::updateOverrideActionType,
         updateOverrideAction = viewModel::updateOverrideAction,
         saveOverride = viewModel::saveOverride,
         onBack = onBack,
@@ -85,11 +96,17 @@ internal fun EditOverrideScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun EditOverrideScreen(
-    currentOverride: Override,
+    name: String,
+    type: RequestType,
+    matchers: List<Matcher>,
+    action: OverrideAction,
+    actionType: OverrideAction.Type,
+    enabled: Boolean,
     updateName: (String) -> Unit,
     updateHttpMethod: (HttpMethod) -> Unit,
     addMatcher: (Matcher) -> Unit,
     removeMatcher: (Matcher) -> Unit,
+    updateOverrideActionType: (OverrideAction.Type) -> Unit,
     updateOverrideAction: (OverrideAction) -> Unit,
     saveOverride: () -> Unit,
     onBack: () -> Unit,
@@ -116,7 +133,7 @@ internal fun EditOverrideScreen(
                 ) {
                     Spacer(modifier = Modifier.height(16.dp))
                     TextField(
-                        value = currentOverride.name ?: "",
+                        value = name,
                         onValueChange = updateName,
                         label = { Text("Override Name") },
                     )
@@ -124,7 +141,8 @@ internal fun EditOverrideScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     MatchersSection(
-                        currentOverride = currentOverride,
+                        type = type,
+                        matchers = matchers,
                         addMatcher = addMatcher,
                         removeMatcher = removeMatcher,
                         onUpdateMethod = updateHttpMethod,
@@ -134,7 +152,8 @@ internal fun EditOverrideScreen(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     OverrideActionSection(
-                        currentOverride = currentOverride,
+                        action = action,
+                        updateOverrideActionType = updateOverrideActionType,
                         updateOverrideAction = updateOverrideAction,
                         modifier = Modifier.padding(4.dp)
                     )
@@ -159,7 +178,7 @@ internal fun EditOverrideScreen(
                         horizontalArrangement = Arrangement.Center,
                     ) {
                         TextField(
-                            value = currentOverride.name ?: "",
+                            value = name,
                             onValueChange = updateName,
                             label = { Text("Override Name") },
                             modifier = Modifier.weight(1f).widthIn(max = 300.dp)
@@ -175,7 +194,8 @@ internal fun EditOverrideScreen(
                     Modifier.weight(1f)
                 ) {
                     MatchersSection(
-                        currentOverride = currentOverride,
+                        type = type,
+                        matchers = matchers,
                         addMatcher = addMatcher,
                         removeMatcher = removeMatcher,
                         onUpdateMethod = updateHttpMethod,
@@ -185,8 +205,9 @@ internal fun EditOverrideScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     OverrideActionSection(
-                        currentOverride = currentOverride,
+                        action = action,
                         updateOverrideAction = updateOverrideAction,
+                        updateOverrideActionType = updateOverrideActionType,
                         modifier = Modifier.padding(8.dp).fillMaxHeight().weight(1f)
                     )
                 }
@@ -197,7 +218,8 @@ internal fun EditOverrideScreen(
 
 @Composable
 internal fun MatchersSection(
-    currentOverride: Override,
+    type: RequestType,
+    matchers: List<Matcher>,
     addMatcher: (Matcher) -> Unit,
     removeMatcher: (Matcher) -> Unit,
     onUpdateMethod: (HttpMethod) -> Unit,
@@ -214,12 +236,12 @@ internal fun MatchersSection(
         Text("Matchers", style = MaterialTheme.typography.headlineSmall)
         Spacer(Modifier.weight(1f))
         HttpMethodDropdown(
-            selectedMethod = (currentOverride.type as? HttpRequest)?.method ?: HttpMethod.Get,
+            selectedMethod = (type as? HttpRequest)?.method ?: HttpMethod.Get,
             onMethodSelected = onUpdateMethod
         )
     }
     HorizontalDivider(Modifier.padding(vertical = 8.dp))
-    currentOverride.matchers.forEach { matcher ->
+    matchers.forEach { matcher ->
         MatcherItem(matcher = matcher, onClickRemove = { removeMatcher(matcher) })
     }
     Spacer(modifier = Modifier.height(8.dp))
@@ -229,41 +251,16 @@ internal fun MatchersSection(
 
 @Composable
 internal fun OverrideActionSection(
-    currentOverride: Override,
+    action: OverrideAction,
+    updateOverrideActionType: (OverrideAction.Type) -> Unit,
     updateOverrideAction: (OverrideAction) -> Unit,
     modifier: Modifier = Modifier,
 ) = Column(
     modifier.fillMaxWidth().background(
         MaterialTheme.colorScheme.secondaryContainer
-    ).clip(RoundedCornerShape(12.dp)).padding(16.dp),
+    ).clip(RoundedCornerShape(12.dp)).padding(16.dp).animateContentSize(),
     horizontalAlignment = Alignment.CenterHorizontally,
 ) {
-    val selectedAction = currentOverride.action
-    var actionType by remember { mutableStateOf(if (selectedAction is FixedRequestAction) "Fixed Request" else "Fixed Response") }
-    var statusCode by remember {
-        mutableStateOf(
-            (selectedAction as? FixedResponseAction)?.statusCode?.toString() ?: ""
-        )
-    }
-    var body by remember {
-        mutableStateOf(
-            when (selectedAction) {
-                is FixedRequestAction -> selectedAction.body
-                is FixedResponseAction -> selectedAction.body
-            } ?: ""
-        )
-    }
-
-    var headers by remember {
-        mutableStateOf(
-            when (selectedAction) {
-                is FixedRequestAction -> selectedAction.headers
-                is FixedResponseAction -> selectedAction.headers
-            }
-        )
-    }
-
-
     Row(
         Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
     ) {
@@ -273,19 +270,21 @@ internal fun OverrideActionSection(
         )
         Spacer(Modifier.weight(1f))
         OverrideActionDropdown(
-            actionType = actionType,
-            onActionSelected = {
-                actionType = it
-            },
+            actionType = action.type,
+            onActionSelected = updateOverrideActionType,
         )
     }
 
     Spacer(modifier = Modifier.height(8.dp))
 
-    AnimatedVisibility(actionType == "FixedResponse") {
+    if (action is NoAction) {
+        return@Column
+    }
+
+    if (action is FixedResponseAction) {
         TextField(
-            value = statusCode,
-            onValueChange = { statusCode = it },
+            value = "${action.statusCode ?: ""}",
+            onValueChange = { updateOverrideAction(action.copy(statusCode = it.toIntOrNull())) },
             label = { Text("Status Code") },
             modifier = Modifier.fillMaxWidth(),
         )
@@ -297,7 +296,7 @@ internal fun OverrideActionSection(
         style = MaterialTheme.typography.titleSmall,
     )
     Spacer(modifier = Modifier.height(8.dp))
-    headers.forEach {
+    action.headersOrEmpty.forEach {
         Row {
             Text(
                 it.key, Modifier.weight(.3f),
@@ -308,7 +307,9 @@ internal fun OverrideActionSection(
             Text(it.value.joinToString(";"), Modifier.weight(1f))
             IconButton(
                 onClick = {
-                    headers = headers - it.key
+                    val headers = action.headersOrEmpty.toMutableMap()
+                    headers.remove(it.key)
+                    updateOverrideAction(action.copy(headers = headers))
                 }
             ) {
                 Icon(Icons.Default.Clear, contentDescription = "Remove Header")
@@ -317,36 +318,20 @@ internal fun OverrideActionSection(
     }
     NewHeader(
         onAddHeader = {
-            headers = headers + (it.name to headers[it.name].orEmpty() + listOf(it.value))
+            val headers = action.headersOrEmpty.toMutableMap()
+            headers[it.name] = it.value.split(";")
+            updateOverrideAction(action.copy(headers = headers))
         },
     )
     Spacer(modifier = Modifier.height(8.dp))
     TextField(
-        value = body,
-        onValueChange = { body = it },
+        value = action.bodyOrEmpty,
+        onValueChange = {
+            updateOverrideAction(action.copy(body = it))
+        },
         label = { Text("Body") },
         modifier = Modifier.fillMaxWidth().heightIn(min = 300.dp),
     )
-    Spacer(modifier = Modifier.height(8.dp))
-    Button(onClick = {
-        val action = if (actionType == "FixedRequest") {
-            FixedRequestAction(
-                headers = headers,
-                body = body,
-            )
-        } else {
-            FixedResponseAction(
-                statusCode = statusCode.toIntOrNull(),
-                headers = headers,
-                body = body,
-            )
-        }
-        updateOverrideAction(action)
-    }) {
-        Text("Set Override Action")
-    }
-    Spacer(modifier = Modifier.height(16.dp))
-
 }
 
 
@@ -522,28 +507,20 @@ internal data class NewHeader(val name: String, val value: String)
 
 @Composable
 internal fun OverrideActionDropdown(
-    actionType: String, onActionSelected: (String) -> Unit
+    actionType: OverrideAction.Type, onActionSelected: (OverrideAction.Type) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
     Box {
-        OutlinedButton(
-            onClick = { expanded = true },
-        ) {
-            Text(
-                when (actionType) {
-                    "FixedRequest" -> "Fixed Request"
-                    "FixedResponse" -> "Fixed Response"
-                    else -> "Override Action"
-                }
-            )
+        OutlinedButton(onClick = { expanded = true }) {
+            Text(actionType.label)
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            DropdownMenuItem(onClick = { onActionSelected("FixedRequest") }, text = {
-                Text("Fixed Request")
-            })
-            DropdownMenuItem(onClick = { onActionSelected("FixedResponse") }, text = {
-                Text("Fixed Response")
-            })
+            OverrideAction.Type.entries.forEach { type ->
+                DropdownMenuItem(
+                    onClick = { onActionSelected(type) },
+                    text = { Text(type.label) },
+                )
+            }
         }
     }
 }
@@ -574,6 +551,7 @@ internal fun OverrideItem(override: Override) {
                     when (override.action) {
                         is FixedRequestAction -> "Fixed Request"
                         is FixedResponseAction -> "Fixed Response"
+                        NoAction -> "None"
                     }
                 }"
             )
@@ -586,6 +564,8 @@ internal fun OverrideItem(override: Override) {
                     Text("Status Code: ${action.statusCode ?: "Not set"}")
                     Text("Body: ${action.body ?: "None"}")
                 }
+
+                NoAction -> Text("None")
             }
             Text("Enabled: ${override.enabled}")
         }
@@ -620,3 +600,10 @@ internal val matcherToValueLabel = mapOf(
     "HostMatcher" to "Host",
     "PathMatcher" to "Path",
 )
+
+internal val OverrideAction.Type.label: String
+    get() = when (this) {
+        OverrideAction.Type.FixedRequest -> "Fixed Request"
+        OverrideAction.Type.FixedResponse -> "Fixed Response"
+        OverrideAction.Type.None -> "None"
+    }
