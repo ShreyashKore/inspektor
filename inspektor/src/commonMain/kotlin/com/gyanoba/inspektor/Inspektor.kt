@@ -1,20 +1,17 @@
 package com.gyanoba.inspektor
 
 import androidx.annotation.VisibleForTesting
-import com.gyanoba.inspektor.data.FixedRequestAction
-import com.gyanoba.inspektor.data.FixedResponseAction
 import com.gyanoba.inspektor.data.HostMatcher
 import com.gyanoba.inspektor.data.HttpRequest
 import com.gyanoba.inspektor.data.InspektorDataSource
 import com.gyanoba.inspektor.data.InspektorDataSourceImpl
 import com.gyanoba.inspektor.data.Matcher
+import com.gyanoba.inspektor.data.OverrideAction
 import com.gyanoba.inspektor.data.OverrideRepository
 import com.gyanoba.inspektor.data.OverrideRepositoryImpl
 import com.gyanoba.inspektor.data.PathMatcher
 import com.gyanoba.inspektor.data.UrlMatcher
 import com.gyanoba.inspektor.data.UrlRegexMatcher
-import com.gyanoba.inspektor.data.request
-import com.gyanoba.inspektor.data.response
 import com.gyanoba.inspektor.platform.NotificationManager
 import com.gyanoba.inspektor.utils.HeaderSanitizer
 import com.gyanoba.inspektor.utils.ReceiveStateHook
@@ -159,10 +156,10 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
         }
 
         override?.let {
-            when (override.action) {
-                is FixedRequestAction -> {
+            when (override.action.type) {
+                OverrideAction.Type.FixedRequest, OverrideAction.Type.FixedRequestResponse -> {
                     var replacedBody: String? = null
-                    override.action.body?.let { newBody ->
+                    override.action.requestBody?.takeIf { it.isNotEmpty() }?.let { newBody ->
                         replacedBody = (request.body as? TextContent)?.text?.run {
                             substring(0..minOf(lastIndex, pluginConfig.maxContentLength))
                         }
@@ -174,7 +171,7 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
                     }
 
                     val replacedHeaders = mutableMapOf<String, List<String>>()
-                    override.action.headers.takeIf { it.isNotEmpty() }?.let { newHeaders ->
+                    override.action.requestHeaders.takeIf { it.isNotEmpty() }?.let { newHeaders ->
                         request.apply {
                             newHeaders.forEach { newHeader ->
                                 if (headers.contains(newHeader.key)) {
@@ -286,12 +283,12 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
             if (override == null) {
                 proceed()
             } else {
-                when (override.action) {
-                    is FixedResponseAction -> {
+                when (override.action.type) {
+                    OverrideAction.Type.FixedResponse, OverrideAction.Type.FixedRequestResponse -> {
                         var replacedBody: String? = null
                         val replacedHeaders = mutableMapOf<String, List<String>>()
 
-                        val newBody: ByteReadChannel? = override.action.body?.let { newBodyString ->
+                        val newBody: ByteReadChannel? = override.action.responseBody?.takeIf { it.isNotEmpty() }?.let { newBodyString ->
                             replacedBody = response.content.tryReadText(
                                 response.charset() ?: Charsets.UTF_8, pluginConfig.maxContentLength
                             )?.run {
@@ -301,7 +298,7 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
                         }
 
                         val newHeaders =
-                            override.action.headers.takeIf { it.isNotEmpty() }?.let { newHeaders ->
+                            override.action.responseHeaders.takeIf { it.isNotEmpty() }?.let { newHeaders ->
                                 val originalHeaders = response.headers
                                 newHeaders.forEach { newHeader ->
                                     if (originalHeaders.contains(newHeader.key)) {

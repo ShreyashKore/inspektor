@@ -31,10 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.gyanoba.inspektor.data.FixedRequestAction
-import com.gyanoba.inspektor.data.FixedResponseAction
 import com.gyanoba.inspektor.data.HostMatcher
-import com.gyanoba.inspektor.data.NoAction
 import com.gyanoba.inspektor.data.Override
 import com.gyanoba.inspektor.data.OverrideAction
 import com.gyanoba.inspektor.data.OverrideRepositoryImpl
@@ -191,17 +188,27 @@ private fun SecondaryText(text: String) = Text(
     maxLines = 1,
 )
 
-internal fun OverrideAction.prettyPrintList(): List<String> = when (this) {
-    is FixedRequestAction -> buildList {
-        if (headers.isNotEmpty()) add("Headers: ${headers.prettyPrint()}")
-        if (!body.isNullOrBlank()) add("Body: $body")
+internal fun OverrideAction.prettyPrintList(): List<String> = when (this.type) {
+    OverrideAction.Type.FixedRequest -> buildList {
+        if (requestHeaders.isNotEmpty()) add("Headers: ${requestHeaders.prettyPrint()}")
+        if (!requestBody.isNullOrBlank()) add("Body: $requestBody")
     }
-    is FixedResponseAction -> buildList {
+
+    OverrideAction.Type.FixedResponse -> buildList {
         if (statusCode != null) add("Status: $statusCode")
-        if (headers.isNotEmpty()) add("Headers: ${headers.prettyPrint()}")
-        if (!body.isNullOrBlank()) add("Body: $body")
+        if (responseHeaders.isNotEmpty()) add("Headers: ${responseHeaders.prettyPrint()}")
+        if (!responseBody.isNullOrBlank()) add("Body: $responseBody")
     }
-    NoAction -> emptyList()
+
+    OverrideAction.Type.None -> emptyList()
+    OverrideAction.Type.FixedRequestResponse -> buildList {
+        if (requestHeaders.isNotEmpty()) add("Request Headers: ${requestHeaders.prettyPrint()}")
+        if (!requestBody.isNullOrBlank()) add("Request Body: $requestBody")
+        if (statusCode != null) add("Status: $statusCode")
+        if (responseHeaders.isNotEmpty()) add("Response Headers: ${responseHeaders.prettyPrint()}")
+        if (!responseBody.isNullOrBlank()) add("Response Body: $responseBody")
+    }
 }
 
-internal fun Map<String, List<String>>.prettyPrint(): String = entries.joinToString { "${it.key} : ${it.value.joinToString(";") { it }}" }
+internal fun Map<String, List<String>>.prettyPrint(): String =
+    entries.joinToString { "${it.key} : ${it.value.joinToString(";") { it }}" }

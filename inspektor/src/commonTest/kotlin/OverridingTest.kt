@@ -1,11 +1,10 @@
 import com.gyanoba.inspektor.ClientCallLogger
 import com.gyanoba.inspektor.LogLevel
-import com.gyanoba.inspektor.data.FixedRequestAction
-import com.gyanoba.inspektor.data.FixedResponseAction
 import com.gyanoba.inspektor.data.HostMatcher
 import com.gyanoba.inspektor.data.HttpMethod
 import com.gyanoba.inspektor.data.HttpRequest
 import com.gyanoba.inspektor.data.Override
+import com.gyanoba.inspektor.data.OverrideAction
 import com.gyanoba.inspektor.data.PathMatcher
 import io.github.xxfast.kstore.extensions.plus
 import io.ktor.client.engine.mock.respond
@@ -28,18 +27,20 @@ class OverridingTest : TestBase() {
                 id = 0,
                 type = HttpRequest(HttpMethod.Post),
                 matchers = listOf(HostMatcher("localhost"), PathMatcher("/text")),
-                action = FixedRequestAction(
-                    headers = mutableMapOf("Custom" to listOf("Overridden Request-Header")),
-                    body = "Overridden-Request",
+                action = OverrideAction(
+                    type = OverrideAction.Type.FixedRequest,
+                    requestHeaders = mutableMapOf("Custom" to listOf("Overridden Request-Header")),
+                    requestBody = "Overridden-Request",
                 ),
             ),
             Override(
                 id = 1,
                 type = HttpRequest(HttpMethod.Post),
                 matchers = listOf(HostMatcher("localhost"), PathMatcher("/text")),
-                action = FixedResponseAction(
-                    headers = mutableMapOf("Custom" to listOf("Overridden Response-Header")),
-                    body = "Overridden-Response",
+                action = OverrideAction(
+                    type = OverrideAction.Type.FixedResponse,
+                    responseHeaders = mutableMapOf("Custom" to listOf("Overridden Response-Header")),
+                    responseBody = "Overridden-Response",
                 ),
             ),
         )

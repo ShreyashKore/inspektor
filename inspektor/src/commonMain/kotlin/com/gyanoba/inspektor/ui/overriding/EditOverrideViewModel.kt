@@ -5,17 +5,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.gyanoba.inspektor.data.FixedRequestAction
-import com.gyanoba.inspektor.data.FixedResponseAction
 import com.gyanoba.inspektor.data.HttpMethod
 import com.gyanoba.inspektor.data.HttpRequest
 import com.gyanoba.inspektor.data.Matcher
-import com.gyanoba.inspektor.data.NoAction
 import com.gyanoba.inspektor.data.Override
 import com.gyanoba.inspektor.data.OverrideAction
 import com.gyanoba.inspektor.data.OverrideRepository
-import com.gyanoba.inspektor.data.bodyOrEmpty
-import com.gyanoba.inspektor.data.headersOrEmpty
 import com.gyanoba.inspektor.utils.logErr
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -72,17 +67,29 @@ internal class EditOverrideViewModel(
 
     fun updateOverrideActionType(type: OverrideAction.Type) {
         action = when (type) {
-            OverrideAction.Type.FixedRequest -> FixedRequestAction(
-                headers = action.headersOrEmpty, body = action.bodyOrEmpty
+            OverrideAction.Type.FixedRequest -> OverrideAction(
+                type = type,
+                requestHeaders = action.requestHeaders,
+                requestBody = action.requestBody,
             )
 
-            OverrideAction.Type.FixedResponse -> FixedResponseAction(
-                headers = action.headersOrEmpty,
-                body = action.bodyOrEmpty,
-                statusCode = (action as? FixedResponseAction)?.statusCode
+            OverrideAction.Type.FixedResponse -> OverrideAction(
+                type = type,
+                statusCode = action.statusCode,
+                responseHeaders = action.responseHeaders,
+                responseBody = action.responseBody
             )
 
-            OverrideAction.Type.None -> NoAction
+            OverrideAction.Type.FixedRequestResponse -> OverrideAction(
+                type = type,
+                requestHeaders = action.requestHeaders,
+                requestBody = action.requestBody,
+                statusCode = action.statusCode,
+                responseHeaders = action.responseHeaders,
+                responseBody = action.responseBody
+            )
+
+            OverrideAction.Type.None -> OverrideAction(type = type)
         }
     }
 
@@ -118,30 +125,34 @@ internal class EditOverrideViewModel(
             matchersError = "At least one matcher is required"
             valid = false
         }
-        when (val action = action) {
-            is FixedRequestAction -> {
-                if (action.headers.isEmpty() && action.body.isNullOrEmpty()) {
+        val action = action
+        when (action.type) {
+            OverrideAction.Type.FixedRequest -> {
+                if (action.requestHeaders.isEmpty() && action.requestBody.isNullOrEmpty()) {
                     actionError = "Headers and body both cannot be empty"
                     valid = false
                 }
             }
 
-            is FixedResponseAction -> {
-                if (action.headers.isEmpty() && action.body.isNullOrEmpty() && action.statusCode == null) {
+            OverrideAction.Type.FixedResponse -> {
+                if (action.responseHeaders.isEmpty() && action.responseBody.isNullOrEmpty() && action.statusCode == null) {
                     actionError = "Headers, body and status code all cannot be empty"
                     valid = false
                 }
             }
 
-            NoAction -> {}
+            OverrideAction.Type.None -> {
+                // No validation needed
+            }
+
+            OverrideAction.Type.FixedRequestResponse -> {
+                if (action.requestHeaders.isEmpty() && action.requestBody.isNullOrEmpty() && action.responseHeaders.isEmpty() && action.responseBody.isNullOrEmpty() && action.statusCode == null) {
+                    actionError =
+                        "Request headers, request body, response headers, response body and status code all cannot be empty"
+                    valid = false
+                }
+            }
         }
         return valid
     }
 }
-
-internal val OverrideAction.type: OverrideAction.Type
-    get() = when (this) {
-        is FixedRequestAction -> OverrideAction.Type.FixedRequest
-        is FixedResponseAction -> OverrideAction.Type.FixedResponse
-        NoAction -> OverrideAction.Type.None
-    }

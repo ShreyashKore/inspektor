@@ -1,5 +1,8 @@
 package com.gyanoba.inspektor.data
 
+import com.gyanoba.inspektor.data.OverrideAction.Type.FixedRequest
+import com.gyanoba.inspektor.data.OverrideAction.Type.FixedRequestResponse
+import com.gyanoba.inspektor.data.OverrideAction.Type.FixedResponse
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -13,7 +16,10 @@ public data class Override(
     val enabled: Boolean = true,
 ) {
     public companion object {
-        public val New: Override = Override(0, HttpRequest(HttpMethod.Get), emptyList(), NoAction)
+        public val New: Override = Override(
+            0, HttpRequest(HttpMethod.Get), emptyList(),
+            OverrideAction(OverrideAction.Type.None)
+        )
     }
 }
 
@@ -26,6 +32,7 @@ internal data class HttpRequest(val method: HttpMethod) : RequestType
 
 internal enum class HttpMethod {
     Get, Post, Put, Delete, Patch, Head, Options, Trace, Connect, Custom, Any;
+
     companion object {
         val currentlySupported = listOf(
             Get, Post, Put, Delete, Patch
@@ -68,61 +75,17 @@ internal data class PathMatcher(
 ) : Matcher
 
 @Serializable
-public sealed interface OverrideAction {
-    public enum class Type {
-        FixedRequest, FixedResponse, None
-    }
-}
-
-
-internal val OverrideAction.request: Boolean
-    get() = this is FixedRequestAction
-
-internal val OverrideAction.response: Boolean
-    get() = this is FixedResponseAction
-
-
-@Serializable
-@SerialName("FixedRequest")
-internal data class FixedRequestAction(
-    val headers: Map<String, List<String>> = emptyMap(),
-    val body: String? = null,
-) : OverrideAction
-
-@Serializable
-@SerialName("FixedResponse")
-internal data class FixedResponseAction(
+public data class OverrideAction(
+    val type: Type,
+    val requestHeaders: Map<String, List<String>> = emptyMap(),
+    val requestBody: String? = null,
     val statusCode: Int? = null,
-    val headers: Map<String, List<String>> = emptyMap(),
-    val body: String? = null,
-) : OverrideAction
-
-@Serializable
-@SerialName("NoAction")
-internal data object NoAction: OverrideAction
-
-
-internal fun OverrideAction.copy(
-    headers: Map<String, List<String>> = this.headersOrEmpty,
-    body: String? = this.bodyOrEmpty,
-    statusCode: Int? = (this as? FixedResponseAction)?.statusCode,
-): OverrideAction = when (this) {
-    is FixedRequestAction -> FixedRequestAction(headers, body)
-    is FixedResponseAction -> FixedResponseAction(statusCode, headers, body)
-    is NoAction -> NoAction
-}
-
-
-internal val OverrideAction.headersOrEmpty: Map<String, List<String>>
-    get() = when (this) {
-        is FixedRequestAction -> headers
-        is FixedResponseAction -> headers
-        NoAction -> emptyMap()
+    val responseHeaders: Map<String, List<String>> = emptyMap(),
+    val responseBody: String? = null,
+) {
+    public enum class Type {
+        FixedRequest, FixedResponse, FixedRequestResponse, None;
     }
-
-internal val OverrideAction.bodyOrEmpty: String
-    get() = when (this) {
-        is FixedRequestAction -> body
-        is FixedResponseAction -> body
-        NoAction -> null
-    } ?: ""
+    internal val request: Boolean get() = this.type == FixedRequest || this.type == FixedRequestResponse
+    internal val response: Boolean get() = this.type == FixedResponse || this.type == FixedRequestResponse
+}

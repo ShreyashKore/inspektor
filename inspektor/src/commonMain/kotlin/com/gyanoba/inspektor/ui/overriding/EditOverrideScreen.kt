@@ -47,12 +47,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.gyanoba.inspektor.data.FixedResponseAction
 import com.gyanoba.inspektor.data.HostMatcher
 import com.gyanoba.inspektor.data.HttpMethod
 import com.gyanoba.inspektor.data.HttpRequest
 import com.gyanoba.inspektor.data.Matcher
-import com.gyanoba.inspektor.data.NoAction
 import com.gyanoba.inspektor.data.Override
 import com.gyanoba.inspektor.data.OverrideAction
 import com.gyanoba.inspektor.data.OverrideRepositoryImpl
@@ -60,9 +58,6 @@ import com.gyanoba.inspektor.data.PathMatcher
 import com.gyanoba.inspektor.data.RequestType
 import com.gyanoba.inspektor.data.UrlMatcher
 import com.gyanoba.inspektor.data.UrlRegexMatcher
-import com.gyanoba.inspektor.data.bodyOrEmpty
-import com.gyanoba.inspektor.data.copy
-import com.gyanoba.inspektor.data.headersOrEmpty
 import com.gyanoba.inspektor.ui.components.SimpleDropdown
 
 
@@ -315,7 +310,7 @@ internal fun OverrideActionSection(
 
     Spacer(modifier = Modifier.height(8.dp))
 
-    if (action is NoAction) {
+    if (action.type == OverrideAction.Type.None) {
         Text(
             "Select an action to perform after matching the request.",
             style = MaterialTheme.typography.titleMedium,
@@ -328,9 +323,17 @@ internal fun OverrideActionSection(
         return@Column
     }
 
-    if (action is FixedResponseAction) {
+    if (action.type == OverrideAction.Type.FixedRequest) {
+        Text(
+            "Request",
+            style = MaterialTheme.typography.titleSmall,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+    }
+
+    if (action.statusCode != null) {
         TextField(
-            value = "${action.statusCode ?: ""}",
+            value = "${action.statusCode}",
             onValueChange = { updateOverrideAction(action.copy(statusCode = it.toIntOrNull())) },
             label = { Text("Status Code") },
             modifier = Modifier.fillMaxWidth(),
@@ -342,7 +345,7 @@ internal fun OverrideActionSection(
         style = MaterialTheme.typography.titleSmall,
     )
     Spacer(modifier = Modifier.height(8.dp))
-    action.headersOrEmpty.forEach {
+    action.requestHeaders.forEach {
         Row(
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -355,9 +358,9 @@ internal fun OverrideActionSection(
             Text(it.value.joinToString(";"), Modifier.weight(1f))
             IconButton(
                 onClick = {
-                    val headers = action.headersOrEmpty.toMutableMap()
+                    val headers = action.requestHeaders.toMutableMap()
                     headers.remove(it.key)
-                    updateOverrideAction(action.copy(headers = headers))
+                    updateOverrideAction(action.copy(requestHeaders = headers))
                 }
             ) {
                 Icon(Icons.Default.Clear, contentDescription = "Remove Header")
@@ -366,16 +369,16 @@ internal fun OverrideActionSection(
     }
     NewHeader(
         onAddHeader = {
-            val headers = action.headersOrEmpty.toMutableMap()
+            val headers = action.requestHeaders.toMutableMap()
             headers[it.name] = it.value.split(";")
-            updateOverrideAction(action.copy(headers = headers))
+            updateOverrideAction(action.copy(requestHeaders = headers))
         },
     )
     Spacer(modifier = Modifier.height(8.dp))
     TextField(
-        value = action.bodyOrEmpty,
+        value = action.requestBody ?: "",
         onValueChange = {
-            updateOverrideAction(action.copy(body = it))
+            updateOverrideAction(action.copy(requestBody = it))
         },
         label = { Text("Body") },
         modifier = Modifier.fillMaxWidth().heightIn(min = 300.dp),
@@ -569,4 +572,5 @@ internal val OverrideAction.Type.label: String
         OverrideAction.Type.FixedRequest -> "Fixed Request"
         OverrideAction.Type.FixedResponse -> "Fixed Response"
         OverrideAction.Type.None -> "None"
+        OverrideAction.Type.FixedRequestResponse -> "Fixed Request & Response"
     }
