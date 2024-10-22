@@ -5,15 +5,18 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -33,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.buildAnnotatedString
@@ -173,61 +177,72 @@ internal fun HeadersView(transaction: HttpTransaction) {
             KeyValueView("Response Code", transaction.responseCode?.toString())
             KeyValueView("Host", transaction.host)
             if (transaction.error != null) {
-                KeyValueView(
-                    "Error",
-                    transaction.error,
-                    MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.error)
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.errorContainer)
+                        .padding(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Warning,
+                        contentDescription = "Error",
+                        tint = MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = transaction.error ?: "",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                }
             }
         }
         val requestHeaders = transaction.requestHeaders ?: emptySet()
         SimpleAccordion(
             title = "Request Headers (${requestHeaders.size})",
-            initialExpanded = true
-        ) {
-            requestHeaders.forEach {
-                ExpandableKeyValue(
-                    key = it.key,
-                    value = it.value.joinToString("; "),
-                    content = headersInfo[it.key.lowercase()]?.let {
-                        {
-                            KeyInfoAndLink(
-                                it.summary,
-                                "https://developer.mozilla.org/en-US/docs/${it.mdnSlug}"
-                            )
-                        }
-                    }
-                )
-            }
-        }
+            initialExpanded = true,
+            content = HeadersListView(requestHeaders)
+        )
         val responseHeaders = transaction.responseHeaders ?: emptySet()
         SimpleAccordion(
             title = "Response Headers (${responseHeaders.size})",
-            initialExpanded = true
-        ) {
-            responseHeaders.forEach {
-                ExpandableKeyValue(
-                    it.key, it.value.joinToString("; "),
-                    content = headersInfo[it.key.lowercase()]?.let {
-                        {
-                            KeyInfoAndLink(
-                                it.summary,
-                                "https://developer.mozilla.org/en-US/docs/${it.mdnSlug}"
-                            )
-                        }
+            initialExpanded = true,
+            content = HeadersListView(responseHeaders)
+        )
+    }
+}
+
+
+@Composable
+internal fun HeadersListView(
+    headers: Set<Map.Entry<String, List<String>>>,
+): (@Composable ColumnScope.() -> Unit)? = headers.takeIf { it.isNotEmpty() }?.let {
+    {
+        it.forEach {
+            ExpandableKeyValue(
+                it.key, it.value.joinToString("; "),
+                content = headersInfo[it.key.lowercase()]?.let {
+                    {
+                        KeyInfoAndLink(
+                            it.summary,
+                            "https://developer.mozilla.org/en-US/docs/${it.mdnSlug}"
+                        )
                     }
-                )
-            }
+                }
+            )
         }
     }
 }
+
 
 @Composable
 private fun SimpleAccordion(
     title: String,
     modifier: Modifier = Modifier,
     initialExpanded: Boolean = false,
-    content: @Composable ColumnScope.() -> Unit,
+    content: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
     Accordion(
         title = {
@@ -240,15 +255,17 @@ private fun SimpleAccordion(
         initialExpanded = initialExpanded,
         modifier = modifier.padding(8.dp, 4.dp),
     ) {
-        Box(
-            modifier = Modifier
-                .padding(6.dp)
-                .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(10.dp))
-                .padding(8.dp)
-        ) {
-            SelectionContainer {
-                Column {
-                    content()
+        content?.let {
+            Box(
+                modifier = Modifier
+                    .padding(6.dp)
+                    .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(10.dp))
+                    .padding(8.dp)
+            ) {
+                SelectionContainer {
+                    Column {
+                        content()
+                    }
                 }
             }
         }

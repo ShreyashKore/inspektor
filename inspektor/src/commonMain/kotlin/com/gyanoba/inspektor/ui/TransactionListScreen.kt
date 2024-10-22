@@ -16,23 +16,23 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.CornerSize
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.clearText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.rounded.Clear
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerState
+import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -40,13 +40,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -56,10 +55,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gyanoba.inspektor.data.GetAllLatestWithLimit
@@ -72,7 +68,9 @@ import com.gyanoba.inspektor.ui.components.SimpleSearchBar
 import com.gyanoba.inspektor.ui.theme.errorColor
 import com.gyanoba.inspektor.ui.theme.successColor
 import com.gyanoba.inspektor.ui.theme.warningColor
+import com.gyanoba.inspektor.utils.DateFormatters
 import com.gyanoba.inspektor.utils.TimeFormatters
+import com.gyanoba.inspektor.utils.atLocalStartOfDay
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
@@ -132,7 +130,7 @@ internal fun TransactionListScreen(
         DeleteDialog(
             onDismissRequest = { showDeleteDialog = false },
             onConfirm = {
-                onDeleteTransactions(Clock.System.now())
+                onDeleteTransactions(it)
                 showDeleteDialog = false
             }
         )
@@ -324,7 +322,31 @@ internal fun TransactionItem(
 
             }
         }
-
+        if (transaction.error != null) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.errorContainer)
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.Warning,
+                    contentDescription = "Error",
+                    tint = MaterialTheme.colorScheme.onErrorContainer,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = transaction.error ?: "",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    maxLines = 1,
+                )
+            }
+        }
     }
 }
 
@@ -373,19 +395,39 @@ internal fun StatusCodeView(
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun DeleteDialog(
     onDismissRequest: () -> Unit,
-    onConfirm: () -> Unit,
+    onConfirm: (Instant) -> Unit,
 ) {
+    val datePickerState = rememberDatePickerState(initialDisplayMode = DisplayMode.Input)
     AlertDialog(
         onDismissRequest = onDismissRequest,
         title = { Text("Delete Transactions") },
-        text = { Text("Are you sure you want to delete all transactions?") },
+        text = {
+            Column {
+                Text("Are you sure you want to delete all transactions ${
+                    datePickerState.selectedDateInstant?.atLocalStartOfDay(TimeZone.currentSystemDefault())
+                        ?.toLocalDateTime(TimeZone.currentSystemDefault())
+                        ?.format(DateFormatters.simpleLocalFormatter)?.let { "before $it" } ?: ""
+                }?")
+                DatePicker(
+                    title = null,
+                    headline = null,
+                    showModeToggle = false,
+                    state = datePickerState,
+                )
+            }
+        },
         confirmButton = {
             TextButton(
                 onClick = {
-                    onConfirm()
+                    onConfirm(
+                        datePickerState.selectedDateInstant
+                            ?.atLocalStartOfDay(TimeZone.currentSystemDefault())
+                            ?: Clock.System.now()
+                    )
                     onDismissRequest()
                 }
             ) {

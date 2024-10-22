@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
@@ -414,8 +415,9 @@ private fun StatusRequestResponseEdit(
                 color = MaterialTheme.colorScheme.onSurface.copy(.6f)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text(it.value.joinToString(";"), Modifier.weight(1f))
+            Text(it.value.joinToString(";"), Modifier.weight(.7f))
             IconButton(
+                modifier = Modifier.size(22.dp).padding(4.dp),
                 colors = IconButtonDefaults.iconButtonColors(
                     contentColor = MaterialTheme.colorScheme.onSurface.copy(.6f)
                 ),
