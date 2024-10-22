@@ -29,6 +29,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -59,6 +60,7 @@ import com.gyanoba.inspektor.data.RequestType
 import com.gyanoba.inspektor.data.UrlMatcher
 import com.gyanoba.inspektor.data.UrlRegexMatcher
 import com.gyanoba.inspektor.ui.components.SimpleDropdown
+import com.gyanoba.inspektor.ui.components.SimpleTextField
 
 
 @Composable
@@ -187,6 +189,7 @@ internal fun EditOverrideScreen(
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.widthIn(max = 400.dp)
                     ) {
                         TextField(
                             value = name,
@@ -212,6 +215,7 @@ internal fun EditOverrideScreen(
                         removeMatcher = removeMatcher,
                         onUpdateMethod = updateHttpMethod,
                         modifier = Modifier.padding(8.dp).fillMaxHeight().weight(1f)
+                            .verticalScroll(rememberScrollState())
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -222,6 +226,7 @@ internal fun EditOverrideScreen(
                         updateOverrideActionType = updateOverrideActionType,
                         error = actionError,
                         modifier = Modifier.padding(8.dp).fillMaxHeight().weight(1f)
+                            .verticalScroll(rememberScrollState())
                     )
                 }
             }
@@ -323,29 +328,82 @@ internal fun OverrideActionSection(
         return@Column
     }
 
-    if (action.type == OverrideAction.Type.FixedRequest) {
+    if (action.type == OverrideAction.Type.FixedRequestResponse || action.type == OverrideAction.Type.FixedRequest) {
         Text(
             "Request",
             style = MaterialTheme.typography.titleSmall,
         )
         Spacer(modifier = Modifier.height(8.dp))
+        StatusRequestResponseEdit(
+            value = StatusRequestResponse(
+                statusCode = null,
+                headers = action.requestHeaders,
+                body = action.requestBody
+            ),
+            updateValue = {
+                updateOverrideAction(
+                    action.copy(
+                        requestHeaders = it.headers,
+                        requestBody = it.body
+                    )
+                )
+            },
+            showStatusCode = action.type == OverrideAction.Type.FixedRequestResponse,
+        )
     }
 
-    if (action.statusCode != null) {
-        TextField(
-            value = "${action.statusCode}",
-            onValueChange = { updateOverrideAction(action.copy(statusCode = it.toIntOrNull())) },
-            label = { Text("Status Code") },
+    if (action.type == OverrideAction.Type.FixedRequestResponse || action.type == OverrideAction.Type.FixedResponse) {
+        Text(
+            "Response",
+            style = MaterialTheme.typography.titleSmall,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        StatusRequestResponseEdit(
+            value = StatusRequestResponse(
+                statusCode = action.statusCode,
+                headers = action.responseHeaders,
+                body = action.responseBody
+            ),
+            updateValue = {
+                updateOverrideAction(
+                    action.copy(
+                        statusCode = it.statusCode,
+                        responseHeaders = it.headers,
+                        responseBody = it.body
+                    )
+                )
+            },
+            showStatusCode = true,
+        )
+    }
+}
+
+
+@Composable
+private fun StatusRequestResponseEdit(
+    value: StatusRequestResponse,
+    showStatusCode: Boolean,
+    updateValue: (StatusRequestResponse) -> Unit,
+) {
+    if (showStatusCode) {
+        SimpleTextField(
+            value = "${value.statusCode}",
+            onValueChange = { updateValue(value.copy(statusCode = it.toIntOrNull())) },
+            placeholder = "Status Code",
             modifier = Modifier.fillMaxWidth(),
         )
         Spacer(modifier = Modifier.height(8.dp))
     }
     Text(
         "Headers",
-        style = MaterialTheme.typography.titleSmall,
+        style = MaterialTheme.typography.labelMedium.copy(
+            color = MaterialTheme.colorScheme.onSurface.copy(.6f)
+        ),
+        modifier = Modifier.fillMaxWidth(),
+        textAlign = TextAlign.Start,
     )
     Spacer(modifier = Modifier.height(8.dp))
-    action.requestHeaders.forEach {
+    value.headers.forEach {
         Row(
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -357,10 +415,13 @@ internal fun OverrideActionSection(
             Spacer(modifier = Modifier.width(8.dp))
             Text(it.value.joinToString(";"), Modifier.weight(1f))
             IconButton(
+                colors = IconButtonDefaults.iconButtonColors(
+                    contentColor = MaterialTheme.colorScheme.onSurface.copy(.6f)
+                ),
                 onClick = {
-                    val headers = action.requestHeaders.toMutableMap()
+                    val headers = value.headers.toMutableMap()
                     headers.remove(it.key)
-                    updateOverrideAction(action.copy(requestHeaders = headers))
+                    updateValue(value.copy(headers = headers))
                 }
             ) {
                 Icon(Icons.Default.Clear, contentDescription = "Remove Header")
@@ -369,22 +430,27 @@ internal fun OverrideActionSection(
     }
     NewHeader(
         onAddHeader = {
-            val headers = action.requestHeaders.toMutableMap()
+            val headers = value.headers.toMutableMap()
             headers[it.name] = it.value.split(";")
-            updateOverrideAction(action.copy(requestHeaders = headers))
+            updateValue(value.copy(headers = headers))
         },
     )
     Spacer(modifier = Modifier.height(8.dp))
     TextField(
-        value = action.requestBody ?: "",
+        value = value.body ?: "",
         onValueChange = {
-            updateOverrideAction(action.copy(requestBody = it))
+            updateValue(value.copy(body = it))
         },
         label = { Text("Body") },
-        modifier = Modifier.fillMaxWidth().heightIn(min = 300.dp),
+        modifier = Modifier.fillMaxWidth().heightIn(min = 200.dp),
     )
 }
 
+internal data class StatusRequestResponse(
+    val headers: Map<String, List<String>>,
+    val body: String?,
+    val statusCode: Int?,
+)
 
 @Composable
 internal fun HttpMethodDropdown(
@@ -423,7 +489,12 @@ internal fun MatcherItem(
         }
 
         Spacer(modifier = Modifier.weight(1f))
-        IconButton(onClick = onClickRemove) {
+        IconButton(
+            onClick = onClickRemove,
+            colors = IconButtonDefaults.iconButtonColors(
+                contentColor = MaterialTheme.colorScheme.onSurface.copy(.6f)
+            ),
+        ) {
             Icon(Icons.Default.Clear, contentDescription = "Remove Matcher")
         }
     }
@@ -465,11 +536,10 @@ internal fun NewMatcher(onAddMatcher: (Matcher) -> Unit) = Row(
             itemAsString = { matcherLabels[it] ?: "Matcher Type" },
             modifier = Modifier.fillMaxWidth(),
         )
-        Spacer(modifier = Modifier.height(8.dp))
-        TextField(
+        Spacer(modifier = Modifier.height(4.dp))
+        SimpleTextField(
             value = matcherValue, onValueChange = { matcherValue = it },
-            label = { Text(matcherToValueLabel[matcherType] ?: "Value") },
-            placeholder = { Text(matcherToPlaceholders[matcherType] ?: "") },
+            placeholder = matcherToPlaceholders[matcherType] ?: "Value",
             modifier = Modifier.fillMaxWidth(),
         )
     }
@@ -504,15 +574,15 @@ internal fun NewHeader(onAddHeader: (NewHeader) -> Unit) = Row(
     Column(
         Modifier.weight(1f).padding(8.dp)
     ) {
-        TextField(
+        SimpleTextField(
             value = name, onValueChange = { name = it },
-            label = { Text("Header Name") },
+            placeholder = "Header Name",
             modifier = Modifier.fillMaxWidth(),
         )
         Spacer(modifier = Modifier.height(8.dp))
-        TextField(
+        SimpleTextField(
             value = value, onValueChange = { value = it },
-            label = { Text("Header Value") },
+            placeholder = "Header Value",
             modifier = Modifier.fillMaxWidth(),
         )
     }
@@ -558,13 +628,6 @@ internal val matcherToPlaceholders = mapOf(
     "UrlRegexMatcher" to "*//example.com/.*",
     "HostMatcher" to "example.com",
     "PathMatcher" to "/path",
-)
-
-internal val matcherToValueLabel = mapOf(
-    "UrlMatcher" to "URL",
-    "UrlRegexMatcher" to "URL Regex",
-    "HostMatcher" to "Host",
-    "PathMatcher" to "Path",
 )
 
 internal val OverrideAction.Type.label: String
