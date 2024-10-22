@@ -348,7 +348,7 @@ internal fun OverrideActionSection(
                     )
                 )
             },
-            showStatusCode = action.type == OverrideAction.Type.FixedRequestResponse,
+            showStatusCode = false
         )
     }
 
@@ -385,7 +385,7 @@ private fun StatusRequestResponseEdit(
     showStatusCode: Boolean,
     updateValue: (StatusRequestResponse) -> Unit,
 ) {
-    if (showStatusCode) {
+    if (false) { // Disable for now
         SimpleTextField(
             value = "${value.statusCode}",
             onValueChange = { updateValue(value.copy(statusCode = it.toIntOrNull())) },
