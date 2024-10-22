@@ -406,6 +406,7 @@ private fun StatusRequestResponseEdit(
     value.headers.forEach {
         Row(
             verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(vertical = 4.dp)
         ) {
             Text(
                 it.key, Modifier.weight(.3f),
@@ -511,10 +512,12 @@ internal fun NewMatcher(onAddMatcher: (Matcher) -> Unit) = Row(
 ) {
     var matcherType by remember { mutableStateOf<String?>(null) }
     var matcherValue by remember { mutableStateOf("") }
+    var error by remember { mutableStateOf<String?>(null) }
 
     fun validateAndAddMatcher() {
-        if (matcherType == null) return
-        if (matcherValue.isBlank()) return
+        error = validateMatcher(matcherType, matcherValue)
+        if (error != null) return
+
         val matcher = when (matcherType) {
             "UrlMatcher" -> UrlMatcher(matcherValue)
             "UrlRegexMatcher" -> UrlRegexMatcher(matcherValue)
@@ -542,6 +545,13 @@ internal fun NewMatcher(onAddMatcher: (Matcher) -> Unit) = Row(
             placeholder = matcherToPlaceholders[matcherType] ?: "Value",
             modifier = Modifier.fillMaxWidth(),
         )
+        error?.let {
+            Text(
+                it,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
     }
     IconButton(
         onClick = { validateAndAddMatcher() },
@@ -562,10 +572,12 @@ internal fun NewHeader(onAddHeader: (NewHeader) -> Unit) = Row(
 ) {
     var name by remember { mutableStateOf("") }
     var value by remember { mutableStateOf("") }
+    var error by remember { mutableStateOf<String?>(null) }
 
     fun validateAndAddHeader() {
-        if (name.isBlank()) return
-        if (value.isBlank()) return
+        error = validateHeader(name, value)
+        if (error != null) return
+
         onAddHeader(NewHeader(name, value))
         name = ""
         value = ""
@@ -585,6 +597,13 @@ internal fun NewHeader(onAddHeader: (NewHeader) -> Unit) = Row(
             placeholder = "Header Value",
             modifier = Modifier.fillMaxWidth(),
         )
+        error?.let {
+            Text(
+                it,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
     }
     IconButton(
         onClick = { validateAndAddHeader() },
@@ -637,3 +656,44 @@ internal val OverrideAction.Type.label: String
         OverrideAction.Type.None -> "None"
         OverrideAction.Type.FixedRequestResponse -> "Fixed Request & Response"
     }
+
+internal fun validateMatcher(matcherType: String?, matcherValue: String): String? {
+    if (matcherType == null) return "Matcher type should not be empty"
+    if (matcherValue.isBlank()) return "Value should not be empty"
+    return when (matcherType) {
+        "UrlMatcher" -> {
+            if (matcherValue.startsWith("http://") || matcherValue.startsWith("https://"))
+                null
+            else "URL should start with http:// or https://"
+        }
+        "UrlRegexMatcher" -> try {
+            Regex(matcherValue)
+            null
+        } catch (e: Exception) {
+            e.message
+        }
+
+        "HostMatcher" -> {
+            if (matcherValue.isNotBlank() && !matcherValue.contains(" "))
+                null
+            else "Host should not contain spaces"
+
+        }
+
+        "PathMatcher" -> {
+            if (matcherValue.startsWith("/")) null
+            else "Path should start with /"
+        }
+
+        else -> null
+    }
+}
+
+internal fun validateHeader(name: String, value: String): String? {
+    if (name.isBlank()) return "Header name should not be empty"
+    if (value.isBlank()) return "Header value should not be empty"
+    if (name.contains(" ")) return "Header name should not contain spaces"
+    if (name.contains(":")) return "Header name should not contain ':'"
+    if (value.contains("\n")) return "Header value should not contain new lines"
+    return null
+}
