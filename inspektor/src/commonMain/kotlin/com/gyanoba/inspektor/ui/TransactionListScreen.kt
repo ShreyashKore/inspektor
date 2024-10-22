@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.rounded.Clear
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -266,7 +267,8 @@ internal fun TransactionItem(
         Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
             StatusCodeView(
                 transaction.responseCode,
-                Modifier.width(60.dp),
+                isOverridden = transaction.isOverridden,
+                modifier = Modifier.width(60.dp),
             )
             Spacer(Modifier.width(8.dp))
             Column(
@@ -327,31 +329,45 @@ internal fun TransactionItem(
 @Composable
 internal fun StatusCodeView(
     statusCode: Long?,
+    isOverridden: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
+    Column(
+        modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        val color = when {
-            statusCode == null -> MaterialTheme.colorScheme.onSurface.copy(.5f)
-            statusCode < 300 -> successColor
-            statusCode < 400 -> warningColor
-            else -> errorColor
+        Row(
+            modifier = Modifier,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            val color = when {
+                statusCode == null -> MaterialTheme.colorScheme.onSurface.copy(.5f)
+                statusCode < 300 -> successColor
+                statusCode < 400 -> warningColor
+                else -> errorColor
+            }
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .clip(CircleShape)
+                    .background(color)
+            )
+            Spacer(Modifier.width(6.dp))
+            Text(
+                text = statusCode?.toString() ?: "---",
+                style = MaterialTheme.typography.titleMedium,
+            )
         }
-        Box(
-            modifier = Modifier
-                .size(8.dp)
-                .clip(CircleShape)
-                .background(color)
-        )
-        Spacer(Modifier.width(6.dp))
-        Text(
-            text = statusCode?.toString() ?: "---",
-            style = MaterialTheme.typography.titleMedium,
-        )
+        if (isOverridden) {
+            Spacer(Modifier.height(10.dp))
+            Icon(
+                Icons.Rounded.Edit,
+                contentDescription = "Overridden",
+                tint = MaterialTheme.colorScheme.primary.copy(.7f),
+                modifier = Modifier.size(24.dp)
+            )
+        }
     }
-
 }
 
 
@@ -387,3 +403,5 @@ internal val DatePickerState.selectedDateInstant: Instant?
     get() = selectedDateMillis?.let { Instant.fromEpochMilliseconds(it) }
 
 
+private val GetAllLatestWithLimit.isOverridden: Boolean
+    get() = isOverriddenNum > 0
