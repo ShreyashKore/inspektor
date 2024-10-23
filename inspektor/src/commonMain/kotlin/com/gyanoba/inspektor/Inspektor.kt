@@ -281,6 +281,11 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
 
 
             if (override == null) {
+                if (level.headers) {
+                    callLogger.addResponseHeaders(
+                        headers = response.headers.sanitizeHeaders(headerSanitizers).entries()
+                    )
+                }
                 proceed()
             } else {
                 when (override.action.type) {

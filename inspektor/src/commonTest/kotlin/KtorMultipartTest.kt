@@ -1,3 +1,5 @@
+import com.gyanoba.inspektor.ClientCallLogger
+import com.gyanoba.inspektor.HttpClientCallLogger
 import com.gyanoba.inspektor.Inspektor
 import com.gyanoba.inspektor.LogLevel
 import com.gyanoba.inspektor.UnstableInspektorAPI
@@ -81,7 +83,7 @@ class KtorMultipartTest {
                 ))
             }
             val request = response.request
-            println(db.httpTransactionQueries.getAll().executeAsList())
+            request.attributes[ClientCallLogger].joinRequestLogged()
             val transaction = db.httpTransactionQueries.getLast().executeAsOne()
             assertEquals(request.method.value, transaction.method)
         }
