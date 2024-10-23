@@ -1,9 +1,11 @@
 package com.gyanoba.inspektor.ui
 
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.gyanoba.inspektor.ui.overriding.EditOverrideScreen
 import com.gyanoba.inspektor.ui.overriding.OverridesListScreen
 
@@ -19,6 +21,9 @@ internal fun App() {
                 },
                 openOverridesScreen = {
                     navController.navigate("overrides")
+                },
+                openAddOverrideScreen = { id ->
+                    navController.navigate("add-override?transaction=${id}")
                 }
             )
         }
@@ -29,6 +34,9 @@ internal fun App() {
                     id,
                     onBack = {
                         navController.popBackStack()
+                    },
+                    openAddOverrideScreen = {
+                        navController.navigate("add-override?transaction=${id}")
                     },
                 )
             }
@@ -50,19 +58,23 @@ internal fun App() {
         composable("edit-override/{id}") { backStackEntry ->
             val id = backStackEntry.arguments?.getString("id")?.toLongOrNull()
             EditOverrideScreen(
-                id = id,
+                overrideId = id ?: 0,
                 onBack = {
                     navController.popBackStack()
                 },
             )
         }
 
-        composable("add-override") {
+        composable("add-override?transaction={transactionId}",
+            arguments = listOf(navArgument("transactionId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val transactionId = backStackEntry.arguments?.getLong("transactionId")
             EditOverrideScreen(
-                id = null,
+                overrideId = 0,
                 onBack = {
                     navController.popBackStack()
                 },
+                transactionId = transactionId
             )
         }
     }

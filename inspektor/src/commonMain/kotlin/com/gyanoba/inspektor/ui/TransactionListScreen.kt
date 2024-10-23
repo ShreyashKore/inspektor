@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Lock
@@ -61,8 +62,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gyanoba.inspektor.data.GetAllLatestWithLimit
 import com.gyanoba.inspektor.data.InspektorDataSourceImpl
 import com.gyanoba.inspektor.platform.getAppName
+import com.gyanoba.inspektor.ui.components.AddOverrideIcon
 import com.gyanoba.inspektor.ui.components.DateRangeButton
 import com.gyanoba.inspektor.ui.components.DateRangePickerDialog
+import com.gyanoba.inspektor.ui.components.DefaultIconButton
 import com.gyanoba.inspektor.ui.components.Logo
 import com.gyanoba.inspektor.ui.components.SimpleSearchBar
 import com.gyanoba.inspektor.ui.theme.errorColor
@@ -81,6 +84,7 @@ import kotlinx.datetime.toLocalDateTime
 internal fun TransactionListScreen(
     openTransaction: (Long) -> Unit,
     openOverridesScreen: () -> Unit,
+    openAddOverrideScreen: (Long) -> Unit,
 ) {
     val viewModel = viewModel<TransactionListViewModel> {
         TransactionListViewModel(InspektorDataSourceImpl.Instance)
@@ -90,6 +94,7 @@ internal fun TransactionListScreen(
         viewModel.searchFieldState,
         openTransaction,
         openOverridesScreen,
+        openAddOverrideScreen,
         viewModel.allCount.collectAsState().value,
         viewModel.startDate.collectAsState().value,
         viewModel.endDate.collectAsState().value,
@@ -105,6 +110,7 @@ internal fun TransactionListScreen(
     searchTermState: TextFieldState,
     onClickTransaction: (Long) -> Unit,
     openOverridesScreen: () -> Unit,
+    onAddOverride: (transaction: Long) -> Unit,
     allCount: Long,
     startDate: Instant,
     endDate: Instant,
@@ -248,6 +254,7 @@ internal fun TransactionListScreen(
                     TransactionItem(
                         transaction = transaction,
                         onClick = { onClickTransaction(transaction.id) },
+                        onAddOverride = { onAddOverride(transaction.id) },
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
@@ -261,10 +268,11 @@ internal fun TransactionListScreen(
 internal fun TransactionItem(
     transaction: GetAllLatestWithLimit,
     onClick: () -> Unit,
+    onAddOverride: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Card(onClick = onClick, modifier = modifier.fillMaxWidth()) {
-        Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Row(modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp)) {
             StatusCodeView(
                 transaction.responseCode,
                 isOverridden = transaction.isOverridden,
@@ -321,6 +329,10 @@ internal fun TransactionItem(
                 }
 
             }
+            DefaultIconButton(
+                onClick = onAddOverride,
+                tooltipText = "Add Override",
+            ) { AddOverrideIcon() }
         }
         if (transaction.error != null) {
             Row(
@@ -387,8 +399,11 @@ internal fun StatusCodeView(
             Icon(
                 Icons.Rounded.Edit,
                 contentDescription = "Overridden",
-                tint = MaterialTheme.colorScheme.primary.copy(.7f),
-                modifier = Modifier.size(24.dp)
+                tint = MaterialTheme.colorScheme.primary.copy(.6f),
+                modifier = Modifier.size(18.dp).background(
+                    MaterialTheme.colorScheme.primary.copy(.2f),
+                    CircleShape
+                ).padding(4.dp)
             )
         }
     }

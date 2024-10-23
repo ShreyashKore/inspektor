@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -52,8 +53,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gyanoba.inspektor.data.HostMatcher
 import com.gyanoba.inspektor.data.HttpMethod
 import com.gyanoba.inspektor.data.HttpRequest
+import com.gyanoba.inspektor.data.InspektorDataSourceImpl
 import com.gyanoba.inspektor.data.Matcher
-import com.gyanoba.inspektor.data.Override
 import com.gyanoba.inspektor.data.OverrideAction
 import com.gyanoba.inspektor.data.OverrideRepositoryImpl
 import com.gyanoba.inspektor.data.PathMatcher
@@ -66,12 +67,17 @@ import com.gyanoba.inspektor.ui.components.SimpleTextField
 
 @Composable
 internal fun EditOverrideScreen(
-    id: Long?,
+    overrideId: Long,
     onBack: () -> Unit,
+    transactionId: Long? = null,
 ) {
     val viewModel = viewModel<EditOverrideViewModel> {
-        val override = OverrideRepositoryImpl.Instance.all.firstOrNull { it.id == id }
-        EditOverrideViewModel(OverrideRepositoryImpl.Instance, override ?: Override.New)
+        EditOverrideViewModel(
+            OverrideRepositoryImpl.Instance,
+            InspektorDataSourceImpl.Instance,
+            overrideId = overrideId,
+            sourceTransactionId = transactionId
+        )
     }
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(viewModel) {
@@ -82,8 +88,14 @@ internal fun EditOverrideScreen(
             }
         }
     }
+    if (viewModel.isLoading) {
+        Box(Modifier.fillMaxSize()) {
+            CircularProgressIndicator()
+        }
+        return
+    }
     EditOverrideScreen(
-        id = viewModel.override.id,
+        id = viewModel.overrideId,
         name = viewModel.name,
         type = viewModel.type,
         matchers = viewModel.matchers,
@@ -668,6 +680,7 @@ internal fun validateMatcher(matcherType: String?, matcherValue: String): String
                 null
             else "URL should start with http:// or https://"
         }
+
         "UrlRegexMatcher" -> try {
             Regex(matcherValue)
             null

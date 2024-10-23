@@ -1,5 +1,6 @@
 package com.gyanoba.inspektor.ui
 
+import androidx.compose.foundation.BasicTooltipBox
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,7 +52,9 @@ import com.gyanoba.inspektor.data.InspektorDataSource
 import com.gyanoba.inspektor.data.InspektorDataSourceImpl
 import com.gyanoba.inspektor.inspektor.generated.resources.Res
 import com.gyanoba.inspektor.ui.components.Accordion
+import com.gyanoba.inspektor.ui.components.AddOverrideIcon
 import com.gyanoba.inspektor.ui.components.CodeBlock
+import com.gyanoba.inspektor.ui.components.DefaultIconButton
 import com.gyanoba.inspektor.ui.components.ExpandableKeyValue
 import com.gyanoba.inspektor.ui.components.Format
 import com.gyanoba.inspektor.ui.components.KeyValueView
@@ -62,12 +65,18 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 @Composable
-internal fun TransactionDetailsScreen(transactionId: Long, onBack: () -> Unit) {
+internal fun TransactionDetailsScreen(
+    transactionId: Long,
+    onBack: () -> Unit,
+    openAddOverrideScreen: () -> Unit,
+) {
     val viewModel = viewModel {
         TransactionDetailsViewModel(transactionId, InspektorDataSourceImpl.Instance)
     }
     TransactionDetailsScreen(
-        viewModel.transaction.collectAsState().value, onBack
+        viewModel.transaction.collectAsState().value,
+        onBack,
+        openAddOverrideScreen
     )
 }
 
@@ -77,6 +86,7 @@ internal fun TransactionDetailsScreen(transactionId: Long, onBack: () -> Unit) {
 internal fun TransactionDetailsScreen(
     transaction: HttpTransaction?,
     onBack: () -> Unit,
+    openAddOverrideScreen: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -104,6 +114,12 @@ internal fun TransactionDetailsScreen(
                         )
                     }
                 },
+                actions = {
+                    DefaultIconButton(
+                        onClick = openAddOverrideScreen,
+                        tooltipText = "Add Override",
+                    ) { AddOverrideIcon() }
+                }
             )
         },
     ) { paddingValues ->
@@ -335,7 +351,7 @@ internal class TransactionDetailsViewModel(
     transactionId: Long,
     dataSource: InspektorDataSource,
 ) : ViewModel() {
-    val transaction = dataSource.getTransaction(transactionId)
+    val transaction = dataSource.getTransactionFlow(transactionId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 }
 

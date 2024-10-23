@@ -37,6 +37,10 @@ internal enum class HttpMethod {
         val currentlySupported = listOf(
             Get, Post, Put, Delete, Patch
         )
+
+        fun parse(method: String): HttpMethod {
+            return currentlySupported.firstOrNull { it.name.equals(method, ignoreCase = true) } ?: Get
+        }
     }
 }
 

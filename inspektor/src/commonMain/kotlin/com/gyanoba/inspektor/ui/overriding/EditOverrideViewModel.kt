@@ -7,10 +7,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gyanoba.inspektor.data.HttpMethod
 import com.gyanoba.inspektor.data.HttpRequest
+import com.gyanoba.inspektor.data.InspektorDataSource
 import com.gyanoba.inspektor.data.Matcher
 import com.gyanoba.inspektor.data.Override
 import com.gyanoba.inspektor.data.OverrideAction
 import com.gyanoba.inspektor.data.OverrideRepository
+import com.gyanoba.inspektor.data.UrlMatcher
 import com.gyanoba.inspektor.utils.logErr
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,7 +21,9 @@ import kotlinx.coroutines.launch
 
 internal class EditOverrideViewModel(
     private val repository: OverrideRepository,
-    val override: Override,
+    private val inspektorDataSource: InspektorDataSource,
+    val overrideId: Long = 0,
+    val sourceTransactionId: Long? = null,
 ) : ViewModel() {
 
     interface Event {
@@ -27,13 +31,17 @@ internal class EditOverrideViewModel(
         data class Error(val message: String) : Event
     }
 
-    var name by mutableStateOf(override.name ?: "")
+    var isLoading by mutableStateOf(false)
         private set
-    var type by mutableStateOf(override.type)
+
+
+    var name by mutableStateOf("")
         private set
-    var matchers by mutableStateOf(override.matchers)
+    var type by mutableStateOf(HttpRequest(HttpMethod.Get))
         private set
-    var action by mutableStateOf(override.action)
+    var matchers by mutableStateOf<List<Matcher>>(emptyList())
+        private set
+    var action by mutableStateOf(OverrideAction(OverrideAction.Type.None))
         private set
 
     var matchersError: String? by mutableStateOf(null)
@@ -44,6 +52,44 @@ internal class EditOverrideViewModel(
 
     private val _events = MutableStateFlow<Event?>(null)
     val events = _events.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            isLoading = true
+            if (overrideId != 0L) {
+                val override = repository.getAll().firstOrNull {
+                    overrideId == it.id
+                }
+                if (override != null) {
+                    name = override.name ?: ""
+                    type = override.type as HttpRequest
+                    matchers = override.matchers
+                    action = override.action
+                }
+            } else if (sourceTransactionId != null) {
+                val transaction = inspektorDataSource.getTransaction(sourceTransactionId)
+                if (transaction != null) {
+                    name = transaction.url ?: ""
+                    type = HttpRequest(HttpMethod.parse(transaction.method ?: "GET"))
+                    matchers = listOf(
+                        UrlMatcher(transaction.url ?: ""),
+                    )
+                    action = OverrideAction(
+                        type = OverrideAction.Type.FixedRequestResponse,
+                        requestHeaders = transaction.requestHeaders?.associate { it.key to it.value }
+                            ?: emptyMap(),
+                        requestBody = transaction.requestBody,
+                        statusCode = transaction.responseCode?.toInt(),
+                        responseHeaders = transaction.responseHeaders?.associate { it.key to it.value }
+                            ?: emptyMap(),
+                        responseBody = transaction.responseBody,
+                    )
+                }
+            }
+        }.invokeOnCompletion {
+            isLoading = false
+        }
+    }
 
     fun updateOverrideAction(action: OverrideAction) {
         this.action = action
@@ -99,7 +145,8 @@ internal class EditOverrideViewModel(
         try {
             isSaving = true
             _events.emit(null)
-            val override = override.copy(
+            val override = Override(
+                id = overrideId,
                 name = name, type = type,
                 matchers = matchers, action = action,
             )

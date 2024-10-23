@@ -12,7 +12,8 @@ import kotlinx.datetime.Instant
 
 public interface InspektorDataSource {
     public suspend fun insertHttpTransaction(httpTransaction: HttpTransaction): Long
-    public fun getTransaction(id: Long): Flow<HttpTransaction?>
+    public fun getTransactionFlow(id: Long): Flow<HttpTransaction?>
+    public suspend fun getTransaction(id: Long): HttpTransaction?
     public suspend fun updateHttpTransaction(httpTransaction: HttpTransaction)
     public suspend fun getAllLatestHttpTransactionsForDateRange(
         startDate: Instant,
@@ -47,9 +48,13 @@ internal class InspektorDataSourceImpl(
             }
         }
 
-    override fun getTransaction(id: Long) =
+    override fun getTransactionFlow(id: Long) =
         db.httpTransactionQueries.getById(id).asFlow()
             .mapToOne(Dispatchers.IO)
+
+    override suspend fun getTransaction(id: Long) =
+        db.httpTransactionQueries.getById(id)
+            .executeAsOne()
 
     override suspend fun updateHttpTransaction(httpTransaction: HttpTransaction) =
         withContext(Dispatchers.IO) {
