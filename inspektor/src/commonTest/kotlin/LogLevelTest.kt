@@ -168,7 +168,9 @@ class LogLevelTest {
                 requestDateAdapter = instantAdapter,
                 responseDateAdapter = instantAdapter,
                 requestHeadersAdapter = setMapEntryAdapter,
-                responseHeadersAdapter = setMapEntryAdapter
+                responseHeadersAdapter = setMapEntryAdapter,
+                replacedResponseHeadersAdapter = setMapEntryAdapter,
+                replacedRequestHeadersAdapter = setMapEntryAdapter,
             )
         )
     }

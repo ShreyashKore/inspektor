@@ -11,6 +11,26 @@ import io.ktor.client.statement.HttpResponseContainer
 import io.ktor.client.statement.HttpResponsePipeline
 import io.ktor.util.pipeline.PipelineContext
 
+internal object SendStateHook :
+    ClientHook<suspend SendStateHook.Context.(request: HttpRequestBuilder) -> Unit> {
+
+    class Context(private val context: PipelineContext<Any, HttpRequestBuilder>) {
+        suspend fun proceedWithCache(call: HttpClientCall) {
+            context.finish()
+            context.proceedWith(call)
+        }
+    }
+
+    override fun install(
+        client: HttpClient,
+        handler: suspend Context.(request: HttpRequestBuilder) -> Unit,
+    ) {
+        client.sendPipeline.intercept(HttpSendPipeline.State) {
+            handler(Context(this), context)
+        }
+    }
+}
+
 internal object SendMonitoringHook :
     ClientHook<suspend SendMonitoringHook.Context.(response: HttpRequestBuilder) -> Unit> {
 
@@ -33,6 +53,7 @@ internal object ReceiveStateHook :
 
     class Context(private val context: PipelineContext<HttpResponse, Unit>) {
         suspend fun proceed() = context.proceed()
+        suspend fun proceedWith(subject: HttpResponse) = context.proceedWith(subject)
     }
 
     override fun install(

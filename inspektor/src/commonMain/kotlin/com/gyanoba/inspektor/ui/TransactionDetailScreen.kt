@@ -257,7 +257,19 @@ private fun SimpleAccordion(
 
 
 @Composable
-internal fun RequestBodyView(transaction: HttpTransaction) {
+internal fun RequestBodyView(transaction: HttpTransaction) = Column {
+    if (transaction.replacedRequestBody != null) {
+        SimpleAccordion(
+            title = "Original Request Body",
+            initialExpanded = true
+        ) {
+            CodeBlock(
+                AnnotatedString(transaction.replacedRequestBody!!),
+                Modifier.fillMaxWidth(),
+                format = Format.parse(transaction.requestContentType),
+            )
+        }
+    }
     if (transaction.requestBody.isNullOrEmpty()) {
         EmptyBody()
         return
@@ -272,6 +284,18 @@ internal fun RequestBodyView(transaction: HttpTransaction) {
 
 @Composable
 internal fun ResponseBodyView(transaction: HttpTransaction) {
+    if (transaction.replacedResponseBody != null) {
+        SimpleAccordion(
+            title = "Original Response Body",
+            initialExpanded = true
+        ) {
+            CodeBlock(
+                AnnotatedString(transaction.replacedResponseBody!!),
+                Modifier.fillMaxWidth(),
+                format = Format.parse(transaction.responseContentType),
+            )
+        }
+    }
     if (transaction.responseBody.isNullOrEmpty()) {
         EmptyBody()
         return

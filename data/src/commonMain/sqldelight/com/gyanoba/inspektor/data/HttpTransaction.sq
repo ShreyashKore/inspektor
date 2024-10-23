@@ -5,7 +5,7 @@ import kotlin.collections.Set;
 import kotlin.String;
 import kotlinx.datetime.Instant;
 
-PRAGMA user_version = 1;
+PRAGMA user_version = 2;
 
 CREATE TABLE IF NOT EXISTS HttpTransaction (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -34,7 +34,12 @@ CREATE TABLE IF NOT EXISTS HttpTransaction (
     responseHeaders TEXT AS Set<Map.Entry<String, List<String>>>,
     responseHeadersSize INTEGER,
     responseBody TEXT,
-    isResponseBodyEncoded INTEGER AS Boolean DEFAULT 0
+    isResponseBodyEncoded INTEGER AS Boolean DEFAULT 0,
+    replacedRequestHeaders TEXT AS Set<Map.Entry<String, List<String>>>,
+    replacedRequestBody TEXT,
+    replacedResponseCode INTEGER,
+    replacedResponseHeaders TEXT AS Set<Map.Entry<String, List<String>>>,
+    replacedResponseBody TEXT
 );
 
 CREATE INDEX IF NOT EXISTS HttpTransaction_method ON HttpTransaction(method);
@@ -63,7 +68,9 @@ SELECT * FROM HttpTransaction WHERE requestDate BETWEEN :startDate AND :endDate 
 
 getAllLatestWithLimit:
 SELECT id, requestDate, tookMs, protocol, method, host, path, scheme, responseCode,
-requestPayloadSize, responsePayloadSize, error FROM HttpTransaction WHERE requestDate BETWEEN :startDate AND :endDate AND
+requestPayloadSize, responsePayloadSize, error, CASE WHEN replacedResponseBody IS NULL
+AND replacedResponseHeaders IS NULL AND responseBody IS NULL AND responseHeaders IS NULL
+THEN 0 ELSE 1 END AS isOverriddenNum FROM HttpTransaction WHERE requestDate BETWEEN :startDate AND :endDate AND
 (responseCode LIKE :codeQuery AND path LIKE :pathQuery) ORDER BY requestDate DESC;
 
 insert:
@@ -82,8 +89,10 @@ INSERT INTO HttpTransaction(
    requestPayloadSize,
    requestContentType,
    requestHeaders,
+   replacedRequestHeaders,
    requestHeadersSize,
    requestBody,
+   replacedRequestBody,
    isRequestBodyEncoded,
    responseCode,
    responseMessage,
@@ -91,8 +100,10 @@ INSERT INTO HttpTransaction(
    responsePayloadSize,
    responseContentType,
    responseHeaders,
+   replacedResponseHeaders,
    responseHeadersSize,
    responseBody,
+   replacedResponseBody,
    isResponseBodyEncoded
 )
 VALUES ?;
@@ -114,8 +125,10 @@ INSERT OR REPLACE INTO HttpTransaction(
    requestPayloadSize,
    requestContentType,
    requestHeaders,
+   replacedRequestHeaders,
    requestHeadersSize,
    requestBody,
+   replacedRequestBody,
    isRequestBodyEncoded,
    responseCode,
    responseMessage,
@@ -123,8 +136,10 @@ INSERT OR REPLACE INTO HttpTransaction(
    responsePayloadSize,
    responseContentType,
    responseHeaders,
+   replacedResponseHeaders,
    responseHeadersSize,
    responseBody,
+   replacedResponseBody,
    isResponseBodyEncoded
 )
 VALUES ?;
@@ -147,10 +162,12 @@ SET responseCode = ?,
     responsePayloadSize = ?,
     responseContentType = ?,
     responseHeaders = ?,
+    replacedResponseHeaders = ?,
     responseHeadersSize = ?,
     responseTlsVersion = ?,
     responseCipherSuite = ?,
     responseBody = ?,
+    replacedResponseBody = ?,
     isResponseBodyEncoded = ?
 WHERE id = :id;
 

@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.gyanoba.inspektor.ui.overriding.EditOverrideScreen
+import com.gyanoba.inspektor.ui.overriding.OverridesListScreen
 
 @Composable
 internal fun App() {
@@ -15,6 +17,9 @@ internal fun App() {
                 openTransaction = { id ->
                     navController.navigate("transaction/${id}")
                 },
+                openOverridesScreen = {
+                    navController.navigate("overrides")
+                }
             )
         }
         composable("transaction/{id}") { backStackEntry ->
@@ -27,6 +32,38 @@ internal fun App() {
                     },
                 )
             }
+        }
+
+        composable("overrides") {
+            OverridesListScreen(
+                openEditOverrideScreen = {
+                    navController.navigate(
+                        if (it == null) "add-override" else "edit-override/${it}"
+                    )
+                },
+                onBack = {
+                    navController.popBackStack()
+                },
+            )
+        }
+
+        composable("edit-override/{id}") { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("id")?.toLongOrNull()
+            EditOverrideScreen(
+                id = id,
+                onBack = {
+                    navController.popBackStack()
+                },
+            )
+        }
+
+        composable("add-override") {
+            EditOverrideScreen(
+                id = null,
+                onBack = {
+                    navController.popBackStack()
+                },
+            )
         }
     }
 }
