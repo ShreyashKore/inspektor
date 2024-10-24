@@ -158,9 +158,9 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
         override?.let {
             when (override.action.type) {
                 OverrideAction.Type.FixedRequest, OverrideAction.Type.FixedRequestResponse -> {
-                    var replacedBody: String? = null
+                    var originalBody: String? = null
                     override.action.requestBody?.takeIf { it.isNotEmpty() }?.let { newBody ->
-                        replacedBody = (request.body as? TextContent)?.text?.run {
+                        originalBody = (request.body as? TextContent)?.text?.run {
                             substring(0..minOf(lastIndex, pluginConfig.maxContentLength))
                         }
                         request.setBody(
@@ -170,13 +170,13 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
                         )
                     }
 
-                    val replacedHeaders = mutableMapOf<String, List<String>>()
+                    val originalHeaders = mutableMapOf<String, List<String>>()
                     override.action.requestHeaders.takeIf { it.isNotEmpty() }?.let { newHeaders ->
                         request.apply {
                             newHeaders.forEach { newHeader ->
                                 if (headers.contains(newHeader.key)) {
                                     val values = headers.getAll(newHeader.key)
-                                    if (values != null) replacedHeaders[newHeader.key] = values
+                                    if (values != null) originalHeaders[newHeader.key] = values
                                 }
                                 headers.apply {
                                     remove(newHeader.key)
@@ -187,7 +187,7 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
                     }
 
                     callLogger.addOriginalRequest(
-                        headers = replacedHeaders.entries, body = replacedBody
+                        headers = originalHeaders.entries, body = originalBody
                     )
                 }
 
@@ -290,11 +290,11 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
             } else {
                 when (override.action.type) {
                     OverrideAction.Type.FixedResponse, OverrideAction.Type.FixedRequestResponse -> {
-                        var replacedBody: String? = null
-                        val replacedHeaders = mutableMapOf<String, List<String>>()
+                        var originalBody: String? = null
+                        val originalHeaders = mutableMapOf<String, List<String>>()
 
                         val newBody: ByteReadChannel? = override.action.responseBody?.takeIf { it.isNotEmpty() }?.let { newBodyString ->
-                            replacedBody = response.content.tryReadText(
+                            originalBody = response.content.tryReadText(
                                 response.charset() ?: Charsets.UTF_8, pluginConfig.maxContentLength
                             )?.run {
                                 substring(0..minOf(lastIndex, pluginConfig.maxContentLength))
@@ -304,22 +304,22 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
 
                         val newHeaders =
                             override.action.responseHeaders.takeIf { it.isNotEmpty() }?.let { newHeaders ->
-                                val originalHeaders = response.headers
+                                val responseHeaders = response.headers
                                 newHeaders.forEach { newHeader ->
-                                    if (originalHeaders.contains(newHeader.key)) {
-                                        val values = originalHeaders.getAll(newHeader.key)
-                                        if (values != null) replacedHeaders[newHeader.key] = values
+                                    if (responseHeaders.contains(newHeader.key)) {
+                                        val values = responseHeaders.getAll(newHeader.key)
+                                        if (values != null) originalHeaders[newHeader.key] = values
                                     }
                                 }
                                 buildHeaders {
-                                    (originalHeaders.toMap() + newHeaders).forEach {
+                                    (responseHeaders.toMap() + newHeaders).forEach {
                                         appendAll(it.key, it.value)
                                     }
                                 }
                             }
 
                         callLogger.addOriginalResponse(
-                            headers = replacedHeaders.entries, body = replacedBody
+                            headers = originalHeaders.entries, body = originalBody
                         )
                         if (level.headers) {
                             callLogger.addResponseHeaders(

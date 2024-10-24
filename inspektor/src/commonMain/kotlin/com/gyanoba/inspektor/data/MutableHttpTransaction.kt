@@ -30,11 +30,11 @@ internal data class MutableHttpTransaction(
     var responseHeadersSize: Long? = null,
     var responseBody: String? = null,
     var isResponseBodyEncoded: Boolean? = null,
-    var replacedRequestHeaders: Set<Map.Entry<String, List<String>>>? = null,
-    var replacedRequestBody: String? = null,
-    var replacedResponseCode: Long? = null,
-    var replacedResponseHeaders: Set<Map.Entry<String, List<String>>>? = null,
-    var replacedResponseBody: String? = null,
+    var originalRequestHeaders: Set<Map.Entry<String, List<String>>>? = null,
+    var originalRequestBody: String? = null,
+    var originalResponseCode: Long? = null,
+    var originalResponseHeaders: Set<Map.Entry<String, List<String>>>? = null,
+    var originalResponseBody: String? = null,
 )
 
 internal fun MutableHttpTransaction.toImmutable() = HttpTransaction(
@@ -66,11 +66,11 @@ internal fun MutableHttpTransaction.toImmutable() = HttpTransaction(
     responseHeadersSize = responseHeadersSize,
     responseBody = responseBody,
     isResponseBodyEncoded = isResponseBodyEncoded,
-    replacedRequestHeaders = replacedRequestHeaders,
-    replacedRequestBody = replacedRequestBody,
-    replacedResponseCode = replacedResponseCode,
-    replacedResponseHeaders = replacedResponseHeaders,
-    replacedResponseBody = replacedResponseBody,
+    originalRequestHeaders = originalRequestHeaders,
+    originalRequestBody = originalRequestBody,
+    originalResponseCode = originalResponseCode,
+    originalResponseHeaders = originalResponseHeaders,
+    originalResponseBody = originalResponseBody,
 )
 
 //internal fun buildHttpTransaction(builder: MutableHttpTransaction.() -> Unit): HttpTransaction =

@@ -155,8 +155,8 @@ class LogLevelTest : TestBase() {
                 responseDateAdapter = instantAdapter,
                 requestHeadersAdapter = setMapEntryAdapter,
                 responseHeadersAdapter = setMapEntryAdapter,
-                replacedResponseHeadersAdapter = setMapEntryAdapter,
-                replacedRequestHeadersAdapter = setMapEntryAdapter,
+                originalResponseHeadersAdapter = setMapEntryAdapter,
+                originalRequestHeadersAdapter = setMapEntryAdapter,
             )
         )
     }

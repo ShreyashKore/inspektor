@@ -224,7 +224,7 @@ internal fun HeadersView(transaction: HttpTransaction) {
             initialExpanded = true,
             content = HeadersListView(
                 requestHeaders,
-                transaction.replacedRequestHeaders,
+                transaction.originalRequestHeaders,
             )
         )
         val responseHeaders = transaction.responseHeaders ?: emptySet()
@@ -233,7 +233,7 @@ internal fun HeadersView(transaction: HttpTransaction) {
             initialExpanded = true,
             content = HeadersListView(
                 responseHeaders,
-                transaction.replacedResponseHeaders,
+                transaction.originalResponseHeaders,
             )
         )
     }
@@ -243,7 +243,7 @@ internal fun HeadersView(transaction: HttpTransaction) {
 @Composable
 internal fun HeadersListView(
     headers: Set<Map.Entry<String, List<String>>>,
-    replacedHeaders: Set<Map.Entry<String, List<String>>>? = null,
+    originalHeaders: Set<Map.Entry<String, List<String>>>? = null,
 ): (@Composable ColumnScope.() -> Unit)? = headers.takeIf { it.isNotEmpty() }?.let {
     {
         it.forEach {
@@ -259,7 +259,7 @@ internal fun HeadersListView(
                 }
             )
         }
-        replacedHeaders?.takeIf { it.isNotEmpty() }?.let {
+        originalHeaders?.takeIf { it.isNotEmpty() }?.let {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(top = 8.dp)
@@ -329,13 +329,13 @@ private fun SimpleAccordion(
 
 @Composable
 internal fun RequestBodyView(transaction: HttpTransaction) = Column {
-    if (transaction.replacedRequestBody != null) {
+    if (transaction.originalRequestBody != null) {
         SimpleAccordion(
             title = "Original Request Body",
             initialExpanded = false
         ) {
             CodeBlock(
-                AnnotatedString(transaction.replacedRequestBody!!),
+                AnnotatedString(transaction.originalRequestBody!!),
                 Modifier.fillMaxWidth(),
                 format = Format.parse(transaction.requestContentType),
             )
@@ -355,13 +355,13 @@ internal fun RequestBodyView(transaction: HttpTransaction) = Column {
 
 @Composable
 internal fun ResponseBodyView(transaction: HttpTransaction) {
-    if (transaction.replacedResponseBody != null) {
+    if (transaction.originalResponseBody != null) {
         SimpleAccordion(
             title = "Original Response Body",
             initialExpanded = false
         ) {
             CodeBlock(
-                AnnotatedString(transaction.replacedResponseBody!!),
+                AnnotatedString(transaction.originalResponseBody!!),
                 Modifier.fillMaxWidth(),
                 format = Format.parse(transaction.responseContentType),
             )

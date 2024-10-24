@@ -43,8 +43,8 @@ abstract class TestBase {
                 responseDateAdapter = instantAdapter,
                 requestHeadersAdapter = setMapEntryAdapter,
                 responseHeadersAdapter = setMapEntryAdapter,
-                replacedResponseHeadersAdapter = setMapEntryAdapter,
-                replacedRequestHeadersAdapter = setMapEntryAdapter,
+                originalResponseHeadersAdapter = setMapEntryAdapter,
+                originalRequestHeadersAdapter = setMapEntryAdapter,
             )
         )
     }

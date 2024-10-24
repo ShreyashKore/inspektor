@@ -32,8 +32,8 @@ internal class HttpClientCallLogger(
         body: String?,
     ) {
         transactionLog.apply {
-            this.replacedRequestHeaders = headers
-            this.replacedRequestBody = body
+            this.originalRequestHeaders = headers
+            this.originalRequestBody = body
         }
     }
 
@@ -79,8 +79,8 @@ internal class HttpClientCallLogger(
         body: String?,
     ) {
         transactionLog.apply {
-            this.replacedResponseHeaders = headers
-            this.replacedResponseBody = body
+            this.originalResponseHeaders = headers
+            this.originalResponseBody = body
         }
     }
 
