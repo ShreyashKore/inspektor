@@ -36,7 +36,7 @@ internal fun App() {
                         navController.popBackStack()
                     },
                     openAddOverrideScreen = {
-                        navController.navigate("add-override?transaction=${id}")
+                        navController.navigate("add-override?transactionId=${id}")
                     },
                 )
             }
@@ -66,9 +66,11 @@ internal fun App() {
         }
 
         composable("add-override?transaction={transactionId}",
-            arguments = listOf(navArgument("transactionId") { type = NavType.LongType })
+            arguments = listOf(navArgument("transactionId") {
+                type = NavType.StringType; defaultValue = null; nullable = true
+            })
         ) { backStackEntry ->
-            val transactionId = backStackEntry.arguments?.getLong("transactionId")
+            val transactionId = backStackEntry.arguments?.getString("transactionId")?.toLongOrNull()
             EditOverrideScreen(
                 overrideId = 0,
                 onBack = {
