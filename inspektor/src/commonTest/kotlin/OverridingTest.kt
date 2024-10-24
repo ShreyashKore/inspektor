@@ -168,4 +168,49 @@ class OverridingTest : TestBase() {
             )
         }
     }
+
+    @Test
+    fun givenOverrideIsDisabled_WhenMatchingCallIsMade_ItShouldNotBeOverridden() = runTest {
+        db.httpTransactionQueries.deleteAll()
+        store.reset()
+        store.plus(
+            Override(
+                id = 0,
+                type = HttpRequest(HttpMethod.Post),
+                matchers = listOf(UrlMatcher("http://localhost/text")),
+                action = OverrideAction(
+                    type = OverrideAction.Type.FixedRequestResponse,
+                    requestHeaders = mutableMapOf("Custom" to listOf("Overridden Request-Header")),
+                    requestBody = "Overridden-Request",
+                    responseHeaders = mutableMapOf("Custom" to listOf("Overridden Response-Header")),
+                    responseBody = "Overridden-Response"
+                ),
+                enabled = false
+            )
+        )
+
+        val client = createMockClient(logLevel = LogLevel.BODY) {
+            respond(
+                "Response",
+                status = HttpStatusCode.OK,
+                headers = headersOf(
+                    "Content-Type" to listOf("text/plain"),
+                    "Custom" to listOf("Response-Header")
+                )
+            )
+        }
+
+        val response = client.post("http://localhost/text") {
+            headers.append("Content-Type", "text/plain")
+            headers.append("Custom", "Request-Header")
+            setBody("Request")
+        }
+        response.call.attributes[ClientCallLogger].joinResponseLogged()
+
+        val transaction = db.httpTransactionQueries.getAll().executeAsOne()
+        assertEquals("Request-Header", transaction.requestHeaders?.firstOrNull { it.key == "Custom" }?.value?.first())
+        assertEquals("Request", transaction.requestBody)
+        assertEquals("Response-Header", transaction.responseHeaders?.firstOrNull { it.key == "Custom" }?.value?.first())
+        assertEquals("Response", transaction.responseBody)
+    }
 }

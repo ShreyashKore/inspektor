@@ -147,7 +147,7 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
         val override = run {
             val allOverrides = pluginConfig.overrideRepository.all
             allOverrides.firstOrNull {
-                it.action.request && (it.type is HttpRequest && it.type.method.name.equals(
+                it.enabled && it.action.request && (it.type is HttpRequest && it.type.method.name.equals(
                     request.method.value, true
                 )) && it.matchers.all { matcher ->
                     matcher.matches(request)
@@ -271,7 +271,7 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
             val override = run {
                 val allOverrides = pluginConfig.overrideRepository.all
                 allOverrides.firstOrNull {
-                    it.action.response && (it.type is HttpRequest && it.type.method.name.equals(
+                    it.enabled && it.action.response && (it.type is HttpRequest && it.type.method.name.equals(
                         request.method.value, true
                     )) && it.matchers.all { matcher ->
                         matcher.matches(response)
