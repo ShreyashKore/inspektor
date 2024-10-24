@@ -4,7 +4,7 @@ import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSSearchPathForDirectoriesInDomains
 import platform.Foundation.NSUserDomainMask
 
-public actual fun getAppDataDir(): String {
+internal actual fun getAppDataDir(): String {
     return NSSearchPathForDirectoriesInDomains(
         NSDocumentDirectory,
         NSUserDomainMask,

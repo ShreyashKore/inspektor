@@ -19,18 +19,18 @@ import kotlinx.coroutines.runBlocking
 import okio.Path.Companion.toPath
 
 
-public interface OverrideRepository {
-    public suspend fun add(override: Override)
+internal interface OverrideRepository {
+    suspend fun add(override: Override)
 
-    public suspend fun remove(override: Override)
+    suspend fun remove(override: Override)
 
-    public suspend fun update(override: Override)
+    suspend fun update(override: Override)
 
-    public val updates: Flow<List<Override>>
+    val updates: Flow<List<Override>>
 
-    public val all: List<Override>
+    val all: List<Override>
 
-    public suspend fun getAll(): List<Override>
+    suspend fun getAll(): List<Override>
 }
 
 internal class OverrideRepositoryImpl(

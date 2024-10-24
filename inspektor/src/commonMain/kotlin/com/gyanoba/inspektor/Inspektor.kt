@@ -91,13 +91,13 @@ public class InspektorConfig internal constructor() {
      * The data source to store the logs.
      */
     @VisibleForTesting
-    public var dataSource: InspektorDataSource = InspektorDataSourceImpl.Instance
+    internal var dataSource: InspektorDataSource = InspektorDataSourceImpl.Instance
 
     /**
      * The data source to store overrides.
      */
     @VisibleForTesting
-    public var overrideRepository: OverrideRepository = OverrideRepositoryImpl.Instance
+    internal var overrideRepository: OverrideRepository = OverrideRepositoryImpl.Instance
 
     /**
      * Allows you to filter log messages for calls matching a [predicate].

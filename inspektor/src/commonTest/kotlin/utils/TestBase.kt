@@ -22,9 +22,9 @@ import io.ktor.client.request.HttpResponseData
 import okio.Path.Companion.toPath
 
 abstract class TestBase {
-    protected val db = createTestDb()
+    internal val db by lazy { createTestDb() }
 
-    protected val store by lazy {
+    internal val store by lazy {
         listStoreOf<Override>(
             file = getAppDataDir().toPath().resolve("overrideStore-test")
         )
@@ -50,7 +50,7 @@ abstract class TestBase {
     }
 
     protected fun createMockClient(
-        logLevel: LogLevel,
+        logLevel: LogLevel = LogLevel.BODY,
         block: MockRequestHandleScope.(HttpRequestData) -> HttpResponseData,
     ): HttpClient {
         return HttpClient(MockEngine { block(it) }) {

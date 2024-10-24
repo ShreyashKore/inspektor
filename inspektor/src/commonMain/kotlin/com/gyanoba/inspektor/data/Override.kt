@@ -7,7 +7,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-public data class Override(
+internal data class Override(
     val id: Long,
     val type: RequestType,
     val matchers: List<Matcher>,
@@ -15,8 +15,8 @@ public data class Override(
     val name: String? = null,
     val enabled: Boolean = true,
 ) {
-    public companion object {
-        public val New: Override = Override(
+    companion object {
+        val New: Override = Override(
             0, HttpRequest(HttpMethod.Get), emptyList(),
             OverrideAction(OverrideAction.Type.None)
         )
@@ -24,7 +24,7 @@ public data class Override(
 }
 
 @Serializable
-public sealed interface RequestType
+internal sealed interface RequestType
 
 @Serializable
 @SerialName("http")
@@ -45,14 +45,14 @@ internal enum class HttpMethod {
 }
 
 @Serializable
-public data class Replacement(
+internal data class Replacement(
     val statusCode: Int? = null,
     val headers: Map<String, List<String>> = emptyMap(),
     val body: String? = null,
 )
 
 @Serializable
-public sealed interface Matcher
+internal sealed interface Matcher
 
 @Serializable
 @SerialName("url")
@@ -79,7 +79,7 @@ internal data class PathMatcher(
 ) : Matcher
 
 @Serializable
-public data class OverrideAction(
+internal data class OverrideAction(
     val type: Type,
     val requestHeaders: Map<String, List<String>> = emptyMap(),
     val requestBody: String? = null,
@@ -87,7 +87,7 @@ public data class OverrideAction(
     val responseHeaders: Map<String, List<String>> = emptyMap(),
     val responseBody: String? = null,
 ) {
-    public enum class Type {
+    internal enum class Type {
         FixedRequest, FixedResponse, FixedRequestResponse, None;
     }
     internal val request: Boolean get() = this.type == FixedRequest || this.type == FixedRequestResponse

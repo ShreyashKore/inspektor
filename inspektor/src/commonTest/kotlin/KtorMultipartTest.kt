@@ -23,43 +23,12 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.request
 import io.ktor.http.content.ByteArrayContent
 import kotlinx.coroutines.test.runTest
+import utils.TestBase
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 
-class KtorMultipartTest {
-    private val db = createTestDb()
-
-    init {
-        @OptIn(UnstableInspektorAPI::class)
-        setApplicationId("com.test.inspektor")
-    }
-
-    private fun createTestDb(): InspektorDatabase {
-        val driver = DriverFactory.createTempDbDriver()
-        return InspektorDatabase(
-            driver, HttpTransaction.Adapter(
-                requestDateAdapter = instantAdapter,
-                responseDateAdapter = instantAdapter,
-                requestHeadersAdapter = setMapEntryAdapter,
-                responseHeadersAdapter = setMapEntryAdapter,
-                replacedResponseHeadersAdapter = setMapEntryAdapter,
-                replacedRequestHeadersAdapter = setMapEntryAdapter,
-            )
-        )
-    }
-
-    private fun createMockClient(
-        block: MockRequestHandleScope.(HttpRequestData) -> HttpResponseData,
-    ): HttpClient {
-        return HttpClient(MockEngine { block(it) }) {
-            install(Inspektor) {
-                level = LogLevel.BODY
-                this.dataSource = InspektorDataSourceImpl(db)
-            }
-        }
-    }
-
+class KtorMultipartTest: TestBase() {
 
     @Test
     fun testMultipartRequest() {

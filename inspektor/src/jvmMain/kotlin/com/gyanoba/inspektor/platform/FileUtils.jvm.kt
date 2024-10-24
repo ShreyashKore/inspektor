@@ -3,7 +3,7 @@ package com.gyanoba.inspektor.platform
 import com.gyanoba.inspektor.data.APPLICATION_ID
 import java.nio.file.Paths
 
-public actual fun getAppDataDir(): String {
+internal actual fun getAppDataDir(): String {
     require(APPLICATION_ID != null) {
         "Application ID must be provided for the desktop platforms"
     }
