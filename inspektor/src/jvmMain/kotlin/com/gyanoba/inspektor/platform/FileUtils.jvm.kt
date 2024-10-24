@@ -1,8 +1,13 @@
 package com.gyanoba.inspektor.platform
 
+import com.gyanoba.inspektor.data.APPLICATION_ID
 import java.nio.file.Paths
 
-internal fun getAppDataDir(appId: String): String {
+internal actual fun getAppDataDir(): String {
+    require(APPLICATION_ID != null) {
+        "Application ID must be provided for the desktop platforms"
+    }
+    val appId = APPLICATION_ID!!
     return when (currentOs) {
         DesktopOs.WINDOWS -> {
             // %APPDATA% or a custom directory

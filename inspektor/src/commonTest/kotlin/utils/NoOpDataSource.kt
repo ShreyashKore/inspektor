@@ -12,8 +12,12 @@ object NoOpDataSource : InspektorDataSource {
         return 0
     }
 
-    override fun getTransaction(id: Long): Flow<HttpTransaction?> {
-        return flowOf(null)
+    override fun getTransactionFlow(id: Long): Flow<HttpTransaction?> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getTransaction(id: Long): HttpTransaction {
+        TODO("Not yet implemented")
     }
 
     override suspend fun updateHttpTransaction(httpTransaction: HttpTransaction) {

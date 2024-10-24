@@ -60,8 +60,8 @@ This is used to determine the location to store the database file.
 import data.db.setApplicationId
 
 fun main() {
-    setApplicationId("com.example.myapp")
-    // ...
+  setApplicationId("com.example.myapp")
+  // ...
 }
 ```
 
@@ -80,10 +80,10 @@ You can customize Inspektor using the `InspektorConfig` object. Here are the ava
 
 ```kotlin
 install(Inspektor) {
-    level = LogLevel.HEADERS
-    maxContentLength = 100_000
-    filter { request -> request.url.host.contains("example.com") }
-    sanitizeHeader { header -> header == "Authorization" }
+  level = LogLevel.HEADERS
+  maxContentLength = 100_000
+  filter { request -> request.url.host.contains("example.com") }
+  sanitizeHeader { header -> header == "Authorization" }
 }
 ```
 

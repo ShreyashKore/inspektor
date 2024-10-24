@@ -20,7 +20,9 @@ internal fun createDatabase(): InspektorDatabase {
             requestDateAdapter = instantAdapter,
             responseDateAdapter = instantAdapter,
             requestHeadersAdapter = setMapEntryAdapter,
-            responseHeadersAdapter = setMapEntryAdapter
+            responseHeadersAdapter = setMapEntryAdapter,
+            originalResponseHeadersAdapter = setMapEntryAdapter,
+            originalRequestHeadersAdapter = setMapEntryAdapter,
         )
     )
 }

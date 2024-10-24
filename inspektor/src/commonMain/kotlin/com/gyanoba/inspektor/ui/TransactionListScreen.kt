@@ -9,26 +9,31 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.CornerSize
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.clearText
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.rounded.Clear
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerState
+import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,13 +41,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,22 +56,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gyanoba.inspektor.data.GetAllLatestWithLimit
 import com.gyanoba.inspektor.data.InspektorDataSourceImpl
 import com.gyanoba.inspektor.platform.getAppName
+import com.gyanoba.inspektor.ui.components.AddOverrideIcon
 import com.gyanoba.inspektor.ui.components.DateRangeButton
 import com.gyanoba.inspektor.ui.components.DateRangePickerDialog
+import com.gyanoba.inspektor.ui.components.DefaultIconButton
 import com.gyanoba.inspektor.ui.components.Logo
+import com.gyanoba.inspektor.ui.components.SimpleSearchBar
 import com.gyanoba.inspektor.ui.theme.errorColor
 import com.gyanoba.inspektor.ui.theme.successColor
 import com.gyanoba.inspektor.ui.theme.warningColor
+import com.gyanoba.inspektor.utils.DateFormatters
 import com.gyanoba.inspektor.utils.TimeFormatters
+import com.gyanoba.inspektor.utils.atLocalStartOfDay
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
@@ -77,6 +83,8 @@ import kotlinx.datetime.toLocalDateTime
 @Composable
 internal fun TransactionListScreen(
     openTransaction: (Long) -> Unit,
+    openOverridesScreen: () -> Unit,
+    openAddOverrideScreen: (Long) -> Unit,
 ) {
     val viewModel = viewModel<TransactionListViewModel> {
         TransactionListViewModel(InspektorDataSourceImpl.Instance)
@@ -85,6 +93,8 @@ internal fun TransactionListScreen(
         viewModel.transactions.collectAsState().value,
         viewModel.searchFieldState,
         openTransaction,
+        openOverridesScreen,
+        openAddOverrideScreen,
         viewModel.allCount.collectAsState().value,
         viewModel.startDate.collectAsState().value,
         viewModel.endDate.collectAsState().value,
@@ -99,6 +109,8 @@ internal fun TransactionListScreen(
     transactions: List<GetAllLatestWithLimit> = emptyList(),
     searchTermState: TextFieldState,
     onClickTransaction: (Long) -> Unit,
+    openOverridesScreen: () -> Unit,
+    onAddOverride: (transaction: Long) -> Unit,
     allCount: Long,
     startDate: Instant,
     endDate: Instant,
@@ -124,7 +136,7 @@ internal fun TransactionListScreen(
         DeleteDialog(
             onDismissRequest = { showDeleteDialog = false },
             onConfirm = {
-                onDeleteTransactions(Clock.System.now())
+                onDeleteTransactions(it)
                 showDeleteDialog = false
             }
         )
@@ -153,7 +165,6 @@ internal fun TransactionListScreen(
                     }
                 },
                 actions = {
-
                     IconButton(onClick = { showSearch = !showSearch }) {
                         AnimatedContent(
                             targetState = showSearch,
@@ -194,6 +205,19 @@ internal fun TransactionListScreen(
                                     )
                                 }
                             )
+                            DropdownMenuItem(
+                                text = { Text("Overrides") },
+                                onClick = {
+                                    openOverridesScreen()
+                                    showMenu = false
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.Edit,
+                                        contentDescription = null
+                                    )
+                                }
+                            )
                         }
                     }
                 },
@@ -230,6 +254,7 @@ internal fun TransactionListScreen(
                     TransactionItem(
                         transaction = transaction,
                         onClick = { onClickTransaction(transaction.id) },
+                        onAddOverride = { onAddOverride(transaction.id) },
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
@@ -243,13 +268,15 @@ internal fun TransactionListScreen(
 internal fun TransactionItem(
     transaction: GetAllLatestWithLimit,
     onClick: () -> Unit,
+    onAddOverride: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Card(onClick = onClick, modifier = modifier.fillMaxWidth()) {
-        Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Row(modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp)) {
             StatusCodeView(
                 transaction.responseCode,
-                Modifier.width(60.dp),
+                isOverridden = transaction.isOverridden,
+                modifier = Modifier.width(60.dp),
             )
             Spacer(Modifier.width(8.dp))
             Column(
@@ -302,55 +329,120 @@ internal fun TransactionItem(
                 }
 
             }
+            DefaultIconButton(
+                onClick = onAddOverride,
+                tooltipText = "Add Override",
+            ) { AddOverrideIcon() }
         }
-
+        if (transaction.error != null) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.errorContainer)
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.Warning,
+                    contentDescription = "Error",
+                    tint = MaterialTheme.colorScheme.onErrorContainer,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = transaction.error ?: "",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    maxLines = 1,
+                )
+            }
+        }
     }
 }
 
 @Composable
 internal fun StatusCodeView(
     statusCode: Long?,
+    isOverridden: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
+    Column(
+        modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        val color = when {
-            statusCode == null -> MaterialTheme.colorScheme.onSurface.copy(.5f)
-            statusCode < 300 -> successColor
-            statusCode < 400 -> warningColor
-            else -> errorColor
+        Row(
+            modifier = Modifier,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            val color = when {
+                statusCode == null -> MaterialTheme.colorScheme.onSurface.copy(.5f)
+                statusCode < 300 -> successColor
+                statusCode < 400 -> warningColor
+                else -> errorColor
+            }
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .clip(CircleShape)
+                    .background(color)
+            )
+            Spacer(Modifier.width(6.dp))
+            Text(
+                text = statusCode?.toString() ?: "---",
+                style = MaterialTheme.typography.titleMedium,
+            )
         }
-        Box(
-            modifier = Modifier
-                .size(8.dp)
-                .clip(CircleShape)
-                .background(color)
-        )
-        Spacer(Modifier.width(6.dp))
-        Text(
-            text = statusCode?.toString() ?: "---",
-            style = MaterialTheme.typography.titleMedium,
-        )
+        if (isOverridden) {
+            Spacer(Modifier.height(10.dp))
+            Icon(
+                Icons.Rounded.Edit,
+                contentDescription = "Overridden",
+                tint = MaterialTheme.colorScheme.primary.copy(.6f),
+                modifier = Modifier.size(18.dp).background(
+                    MaterialTheme.colorScheme.primary.copy(.2f),
+                    CircleShape
+                ).padding(4.dp)
+            )
+        }
     }
-
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun DeleteDialog(
     onDismissRequest: () -> Unit,
-    onConfirm: () -> Unit,
+    onConfirm: (Instant) -> Unit,
 ) {
+    val datePickerState = rememberDatePickerState(initialDisplayMode = DisplayMode.Input)
     AlertDialog(
         onDismissRequest = onDismissRequest,
         title = { Text("Delete Transactions") },
-        text = { Text("Are you sure you want to delete all transactions?") },
+        text = {
+            Column {
+                Text("Are you sure you want to delete all transactions ${
+                    datePickerState.selectedDateInstant?.atLocalStartOfDay(TimeZone.currentSystemDefault())
+                        ?.toLocalDateTime(TimeZone.currentSystemDefault())
+                        ?.format(DateFormatters.simpleLocalFormatter)?.let { "before $it" } ?: ""
+                }?")
+                DatePicker(
+                    title = null,
+                    headline = null,
+                    showModeToggle = false,
+                    state = datePickerState,
+                )
+            }
+        },
         confirmButton = {
             TextButton(
                 onClick = {
-                    onConfirm()
+                    onConfirm(
+                        datePickerState.selectedDateInstant
+                            ?.atLocalStartOfDay(TimeZone.currentSystemDefault())
+                            ?: Clock.System.now()
+                    )
                     onDismissRequest()
                 }
             ) {
@@ -365,43 +457,10 @@ internal fun DeleteDialog(
     )
 }
 
-@Composable
-internal fun SimpleSearchBar(
-    searchFieldState: TextFieldState,
-    placeholder: @Composable () -> Unit = { Text("Search") },
-) {
-    val focusRequester = remember { FocusRequester() }
-    LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
-    }
-    OutlinedTextField(
-        searchFieldState.text.toString(),
-        onValueChange = {
-            searchFieldState.edit {
-                replace(0, searchFieldState.text.length, it)
-            }
-        },
-        placeholder = placeholder,
-        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Search),
-        shape = MaterialTheme.shapes.medium.copy(CornerSize(24.dp)),
-        trailingIcon = {
-            if (searchFieldState.text.isNotEmpty()) {
-                IconButton(
-                    onClick = { searchFieldState.clearText() },
-                    modifier = Modifier.size(24.dp),
-                ) {
-                    Icon(
-                        Icons.Rounded.Clear,
-                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                        contentDescription = "Clear",
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-            }
-        },
-        singleLine = true,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
-            .focusRequester(focusRequester),
-    )
-}
+@OptIn(ExperimentalMaterial3Api::class)
+internal val DatePickerState.selectedDateInstant: Instant?
+    get() = selectedDateMillis?.let { Instant.fromEpochMilliseconds(it) }
 
+
+private val GetAllLatestWithLimit.isOverridden: Boolean
+    get() = isOverriddenNum > 0

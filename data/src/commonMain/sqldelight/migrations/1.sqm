@@ -1,0 +1,5 @@
+ALTER TABLE HttpTransaction ADD COLUMN originalRequestHeaders TEXT;
+ALTER TABLE HttpTransaction ADD COLUMN originalRequestBody TEXT;
+ALTER TABLE HttpTransaction ADD COLUMN originalResponseCode INTEGER;
+ALTER TABLE HttpTransaction ADD COLUMN originalResponseHeaders TEXT;
+ALTER TABLE HttpTransaction ADD COLUMN originalResponseBody TEXT;

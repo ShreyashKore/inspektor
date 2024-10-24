@@ -10,29 +10,30 @@ import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
 
 
-public interface InspektorDataSource {
-    public suspend fun insertHttpTransaction(httpTransaction: HttpTransaction): Long
-    public fun getTransaction(id: Long): Flow<HttpTransaction?>
-    public suspend fun updateHttpTransaction(httpTransaction: HttpTransaction)
-    public suspend fun getAllLatestHttpTransactionsForDateRange(
+internal interface InspektorDataSource {
+    suspend fun insertHttpTransaction(httpTransaction: HttpTransaction): Long
+    fun getTransactionFlow(id: Long): Flow<HttpTransaction?>
+    suspend fun getTransaction(id: Long): HttpTransaction?
+    suspend fun updateHttpTransaction(httpTransaction: HttpTransaction)
+    suspend fun getAllLatestHttpTransactionsForDateRange(
         startDate: Instant,
         endDate: Instant,
     ): List<HttpTransaction>
 
-    public fun getAllLatestHttpTransactionsForDateRangeFlow(
+    fun getAllLatestHttpTransactionsForDateRangeFlow(
         startDate: Instant,
         endDate: Instant,
     ): Flow<List<HttpTransaction>>
 
-    public fun getAllLatestHttpTransactionsFilteredFlow(
+    fun getAllLatestHttpTransactionsFilteredFlow(
         startDate: Instant,
         endDate: Instant,
         responseCode: String,
         path: String,
     ): Flow<List<GetAllLatestWithLimit>>
 
-    public fun getAllHttpTransactionsCount(): Flow<Long>
-    public suspend fun deleteBefore(timestamp: Instant)
+    fun getAllHttpTransactionsCount(): Flow<Long>
+    suspend fun deleteBefore(timestamp: Instant)
 }
 
 internal class InspektorDataSourceImpl(
@@ -47,9 +48,13 @@ internal class InspektorDataSourceImpl(
             }
         }
 
-    override fun getTransaction(id: Long) =
+    override fun getTransactionFlow(id: Long) =
         db.httpTransactionQueries.getById(id).asFlow()
             .mapToOne(Dispatchers.IO)
+
+    override suspend fun getTransaction(id: Long) =
+        db.httpTransactionQueries.getById(id)
+            .executeAsOne()
 
     override suspend fun updateHttpTransaction(httpTransaction: HttpTransaction) =
         withContext(Dispatchers.IO) {

@@ -1,40 +1,26 @@
 import com.gyanoba.inspektor.ClientCallLogger
 import com.gyanoba.inspektor.DisableLogging
-import com.gyanoba.inspektor.Inspektor
 import com.gyanoba.inspektor.LogLevel
-import com.gyanoba.inspektor.UnstableInspektorAPI
 import com.gyanoba.inspektor.data.DriverFactory
 import com.gyanoba.inspektor.data.HttpTransaction
-import com.gyanoba.inspektor.data.InspektorDataSourceImpl
 import com.gyanoba.inspektor.data.InspektorDatabase
 import com.gyanoba.inspektor.data.adapters.instantAdapter
 import com.gyanoba.inspektor.data.adapters.setMapEntryAdapter
-import com.gyanoba.inspektor.data.setApplicationId
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.mock.MockEngine
-import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.engine.mock.respondOk
-import io.ktor.client.request.HttpRequestData
-import io.ktor.client.request.HttpResponseData
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import kotlinx.coroutines.test.runTest
+import utils.TestBase
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 
-class LogLevelTest {
-    private val db = createTestDb()
-
-    init {
-        @OptIn(UnstableInspektorAPI::class)
-        setApplicationId("com.test.inspektor")
-    }
+class LogLevelTest : TestBase() {
 
     @Test
     fun `when logLevel is NONE then nothing is recorded`() = runTest {
@@ -168,22 +154,11 @@ class LogLevelTest {
                 requestDateAdapter = instantAdapter,
                 responseDateAdapter = instantAdapter,
                 requestHeadersAdapter = setMapEntryAdapter,
-                responseHeadersAdapter = setMapEntryAdapter
+                responseHeadersAdapter = setMapEntryAdapter,
+                originalResponseHeadersAdapter = setMapEntryAdapter,
+                originalRequestHeadersAdapter = setMapEntryAdapter,
             )
         )
     }
-
-    private fun createMockClient(
-        logLevel: LogLevel,
-        block: MockRequestHandleScope.(HttpRequestData) -> HttpResponseData,
-    ): HttpClient {
-        return HttpClient(MockEngine { block(it) }) {
-            install(Inspektor) {
-                level = logLevel
-                this.dataSource = InspektorDataSourceImpl(db)
-            }
-        }
-    }
-
 
 }
