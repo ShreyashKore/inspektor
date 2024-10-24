@@ -1,6 +1,5 @@
 package com.gyanoba.inspektor.ui
 
-import androidx.compose.foundation.BasicTooltipBox
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +20,7 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -40,9 +40,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withLink
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -219,13 +222,19 @@ internal fun HeadersView(transaction: HttpTransaction) {
         SimpleAccordion(
             title = "Request Headers (${requestHeaders.size})",
             initialExpanded = true,
-            content = HeadersListView(requestHeaders)
+            content = HeadersListView(
+                requestHeaders,
+                transaction.replacedRequestHeaders,
+            )
         )
         val responseHeaders = transaction.responseHeaders ?: emptySet()
         SimpleAccordion(
             title = "Response Headers (${responseHeaders.size})",
             initialExpanded = true,
-            content = HeadersListView(responseHeaders)
+            content = HeadersListView(
+                responseHeaders,
+                transaction.replacedResponseHeaders,
+            )
         )
     }
 }
@@ -234,6 +243,7 @@ internal fun HeadersView(transaction: HttpTransaction) {
 @Composable
 internal fun HeadersListView(
     headers: Set<Map.Entry<String, List<String>>>,
+    replacedHeaders: Set<Map.Entry<String, List<String>>>? = null,
 ): (@Composable ColumnScope.() -> Unit)? = headers.takeIf { it.isNotEmpty() }?.let {
     {
         it.forEach {
@@ -248,6 +258,34 @@ internal fun HeadersListView(
                     }
                 }
             )
+        }
+        replacedHeaders?.takeIf { it.isNotEmpty() }?.let {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(top = 8.dp)
+            ) {
+                HorizontalDivider(Modifier.weight(1f))
+                Text(
+                    "Original Headers",
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.padding(vertical = 2.dp, horizontal = 12.dp),
+                    textAlign = TextAlign.Center
+                )
+                HorizontalDivider(Modifier.weight(1f))
+            }
+            it.forEach {
+                ExpandableKeyValue(
+                    it.key, it.value.joinToString("; "),
+                    content = headersInfo[it.key.lowercase()]?.let {
+                        {
+                            KeyInfoAndLink(
+                                it.summary,
+                                "https://developer.mozilla.org/en-US/docs/${it.mdnSlug}"
+                            )
+                        }
+                    }
+                )
+            }
         }
     }
 }
@@ -294,7 +332,7 @@ internal fun RequestBodyView(transaction: HttpTransaction) = Column {
     if (transaction.replacedRequestBody != null) {
         SimpleAccordion(
             title = "Original Request Body",
-            initialExpanded = true
+            initialExpanded = false
         ) {
             CodeBlock(
                 AnnotatedString(transaction.replacedRequestBody!!),
@@ -320,7 +358,7 @@ internal fun ResponseBodyView(transaction: HttpTransaction) {
     if (transaction.replacedResponseBody != null) {
         SimpleAccordion(
             title = "Original Response Body",
-            initialExpanded = true
+            initialExpanded = false
         ) {
             CodeBlock(
                 AnnotatedString(transaction.replacedResponseBody!!),
@@ -359,24 +397,25 @@ internal class TransactionDetailsViewModel(
 internal fun KeyInfoAndLink(
     info: String,
     link: String,
-    modifier: Modifier = Modifier.padding(vertical = 4.dp),
+    modifier: Modifier = Modifier.padding(bottom = 8.dp, top = 4.dp),
 ) = Column(modifier = modifier) {
     Text(
-        text = info,
-        style = MaterialTheme.typography.bodySmall,
-    )
-    Text(
         text = buildAnnotatedString {
+            append(info)
             append(" ")
-            withLink(LinkAnnotation.Url(link)) {
-                append("More info ↗")
+            withStyle(
+                SpanStyle(
+                    color =  MaterialTheme.colorScheme.primary,
+                    textDecoration = TextDecoration.Underline
+                )
+            ) {
+                withLink(LinkAnnotation.Url(link)) {
+                    append("More info ↗")
+                }
             }
         },
-        style = MaterialTheme.typography.bodySmall.copy(
-            color = MaterialTheme.colorScheme.primary,
-            textDecoration = TextDecoration.Underline
-        ),
-        modifier = Modifier,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
     )
 }
 

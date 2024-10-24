@@ -69,7 +69,7 @@ SELECT * FROM HttpTransaction WHERE requestDate BETWEEN :startDate AND :endDate 
 getAllLatestWithLimit:
 SELECT id, requestDate, tookMs, protocol, method, host, path, scheme, responseCode,
 requestPayloadSize, responsePayloadSize, error, CASE WHEN replacedResponseBody IS NULL
-AND replacedResponseHeaders IS NULL AND responseBody IS NULL AND responseHeaders IS NULL
+AND replacedResponseHeaders IS NULL AND replacedResponseBody IS NULL AND replacedResponseHeaders IS NULL
 THEN 0 ELSE 1 END AS isOverriddenNum FROM HttpTransaction WHERE requestDate BETWEEN :startDate AND :endDate AND
 (responseCode LIKE :codeQuery AND path LIKE :pathQuery) ORDER BY requestDate DESC;
 
