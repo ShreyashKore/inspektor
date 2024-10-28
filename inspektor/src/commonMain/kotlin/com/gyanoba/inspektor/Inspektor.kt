@@ -382,7 +382,7 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
 }
 
 private inline fun ClientPluginBuilder<InspektorConfig>.shouldNotLog(attributes: Attributes): Boolean {
-    return pluginConfig.level == LogLevel.NONE && attributes.contains(DisableLogging)
+    return pluginConfig.level == LogLevel.NONE || attributes.contains(DisableLogging)
 }
 
 internal fun Matcher.matches(request: HttpRequestBuilder): Boolean {
