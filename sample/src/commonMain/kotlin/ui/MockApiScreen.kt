@@ -41,7 +41,10 @@ fun MockApiScreen(
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(onClick = { openInspektor() }) {
+            ExtendedFloatingActionButton(
+                onClick = { openInspektor() },
+                containerColor = MaterialTheme.colorScheme.tertiary
+            ) {
                 Icon(Icons.Rounded.Check, contentDescription = null)
                 Text("Open Inspektor")
             }

@@ -3,6 +3,7 @@ package com.gyanoba.inspektor.sample.ui
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -13,7 +14,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Done
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -29,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -72,7 +73,10 @@ fun TodoListScreen(
             },
         )
     }, contentWindowInsets = WindowInsets(top = 60.dp), floatingActionButton = {
-        ExtendedFloatingActionButton(onClick = { openInspektor() }) {
+        ExtendedFloatingActionButton(
+            onClick = { openInspektor() },
+            containerColor = MaterialTheme.colorScheme.tertiary
+        ) {
             Icon(Icons.Rounded.Check, contentDescription = null)
             Text("Open Inspektor")
         }
@@ -136,10 +140,13 @@ fun TodoCard(todo: Todo, onClick: (Todo) -> Unit) {
                 modifier = Modifier.width(60.dp)
             )
             Text(text = todo.title, Modifier.weight(1f))
-            Icon(
-                if (todo.completed) Icons.Rounded.Done else Icons.Rounded.Check,
-                contentDescription = null
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("Completed")
+                Spacer(Modifier.width(8.dp))
+                Text(if (todo.completed) "✅" else "❌", Modifier.padding(start = 4.dp))
+            }
         }
     }
 }
