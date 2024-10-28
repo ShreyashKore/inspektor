@@ -33,11 +33,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -47,8 +47,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gyanoba.inspektor.data.HostMatcher
 import com.gyanoba.inspektor.data.HttpMethod
@@ -61,6 +63,7 @@ import com.gyanoba.inspektor.data.PathMatcher
 import com.gyanoba.inspektor.data.RequestType
 import com.gyanoba.inspektor.data.UrlMatcher
 import com.gyanoba.inspektor.data.UrlRegexMatcher
+import com.gyanoba.inspektor.ui.components.Gap
 import com.gyanoba.inspektor.ui.components.SimpleDropdown
 import com.gyanoba.inspektor.ui.components.SimpleTextField
 
@@ -155,14 +158,14 @@ internal fun EditOverrideScreen(
                     Modifier.padding(it).weight(1f).verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    TextField(
+                    Gap(8.dp)
+                    OutlinedTextField(
                         value = name,
                         onValueChange = updateName,
                         label = { Text("Override Name") },
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Gap(16.dp)
 
                     MatchersSection(
                         type = type,
@@ -174,7 +177,7 @@ internal fun EditOverrideScreen(
                         modifier = Modifier.padding(8.dp)
                     )
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Gap(4.dp)
 
                     OverrideActionSection(
                         action = action,
@@ -197,20 +200,20 @@ internal fun EditOverrideScreen(
                 Modifier.fillMaxSize().padding(it),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Spacer(modifier = Modifier.height(8.dp))
+                Gap(8.dp)
                 Box(Modifier.widthIn(max = 600.dp)) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center,
-                        modifier = Modifier.widthIn(max = 400.dp)
+                        modifier = Modifier.widthIn(max = 500.dp)
                     ) {
-                        TextField(
+                        OutlinedTextField(
                             value = name,
                             onValueChange = updateName,
                             label = { Text("Override Name") },
-                            modifier = Modifier.weight(1f).widthIn(max = 300.dp)
+                            modifier = Modifier.weight(1f),
                         )
-                        Spacer(Modifier.width(20.dp))
+                        Gap(20.dp)
                         Button(onClick = saveOverride) {
                             Text("Save Override")
                         }
@@ -231,7 +234,7 @@ internal fun EditOverrideScreen(
                             .verticalScroll(rememberScrollState())
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Gap(8.dp)
 
                     OverrideActionSection(
                         action = action,
@@ -259,7 +262,7 @@ internal fun MatchersSection(
 ) = Column(
     modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
         .background(
-            MaterialTheme.colorScheme.secondaryContainer
+            MaterialTheme.colorScheme.surfaceContainerHighest
         ).padding(8.dp)
 ) {
     Row(
@@ -284,7 +287,7 @@ internal fun MatchersSection(
     matchers.forEach { matcher ->
         MatcherItem(matcher = matcher, onClickRemove = { removeMatcher(matcher) })
     }
-    Spacer(modifier = Modifier.height(8.dp))
+    Gap(8.dp)
     NewMatcher(onAddMatcher = addMatcher)
 }
 
@@ -299,7 +302,7 @@ internal fun OverrideActionSection(
 ) = Column(
     modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
         .background(
-            MaterialTheme.colorScheme.secondaryContainer
+            MaterialTheme.colorScheme.surfaceContainerHighest
         ).padding(8.dp).animateContentSize(),
     horizontalAlignment = Alignment.CenterHorizontally,
 ) {
@@ -326,7 +329,7 @@ internal fun OverrideActionSection(
         )
     }
 
-    Spacer(modifier = Modifier.height(8.dp))
+    Gap(8.dp)
 
     if (action.type == OverrideAction.Type.None) {
         Text(
@@ -346,7 +349,7 @@ internal fun OverrideActionSection(
             "Request",
             style = MaterialTheme.typography.titleSmall,
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Gap(8.dp)
         StatusRequestResponseEdit(
             value = StatusRequestResponse(
                 statusCode = null,
@@ -366,11 +369,12 @@ internal fun OverrideActionSection(
     }
 
     if (action.type == OverrideAction.Type.FixedRequestResponse || action.type == OverrideAction.Type.FixedResponse) {
+        Gap(16.dp)
         Text(
             "Response",
             style = MaterialTheme.typography.titleSmall,
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Gap(8.dp)
         StatusRequestResponseEdit(
             value = StatusRequestResponse(
                 statusCode = action.statusCode,
@@ -397,7 +401,7 @@ private fun StatusRequestResponseEdit(
     value: StatusRequestResponse,
     showStatusCode: Boolean,
     updateValue: (StatusRequestResponse) -> Unit,
-) {
+) = Column {
     if (false) { // Disable for now
         SimpleTextField(
             value = "${value.statusCode}",
@@ -405,7 +409,7 @@ private fun StatusRequestResponseEdit(
             placeholder = "Status Code",
             modifier = Modifier.fillMaxWidth(),
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Gap(8.dp)
     }
     Text(
         "Headers",
@@ -415,7 +419,7 @@ private fun StatusRequestResponseEdit(
         modifier = Modifier.fillMaxWidth(),
         textAlign = TextAlign.Start,
     )
-    Spacer(modifier = Modifier.height(8.dp))
+    Gap(8.dp)
     value.headers.forEach {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -426,10 +430,15 @@ private fun StatusRequestResponseEdit(
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(.6f)
             )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(it.value.joinToString(";"), Modifier.weight(.7f))
+            Gap(8.dp)
+            Text(
+                it.value.joinToString(";",),
+                fontFamily = FontFamily.Monospace,
+                fontSize = 14.sp,
+                modifier = Modifier.weight(.7f),
+            )
             IconButton(
-                modifier = Modifier.size(22.dp).padding(4.dp),
+                modifier = Modifier.size(22.dp).padding(2.dp),
                 colors = IconButtonDefaults.iconButtonColors(
                     contentColor = MaterialTheme.colorScheme.onSurface.copy(.6f)
                 ),
@@ -450,14 +459,16 @@ private fun StatusRequestResponseEdit(
             updateValue(value.copy(headers = headers))
         },
     )
-    Spacer(modifier = Modifier.height(8.dp))
-    TextField(
+    Gap(8.dp)
+    OutlinedTextField(
         value = value.body ?: "",
         onValueChange = {
             updateValue(value.copy(body = it))
         },
         label = { Text("Body") },
         modifier = Modifier.fillMaxWidth().heightIn(min = 200.dp),
+        shape = RoundedCornerShape(8.dp),
+        textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
     )
 }
 
@@ -493,14 +504,31 @@ internal fun MatcherItem(
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(.6f)
             )
-            Text(
-                when (matcher) {
-                    is UrlMatcher -> "URL: ${matcher.url}"
-                    is UrlRegexMatcher -> "URL Regex: ${matcher.url}"
-                    is HostMatcher -> "Host: ${matcher.host}"
-                    is PathMatcher -> "Path: ${matcher.path}"
-                }
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    when(matcher) {
+                        is UrlMatcher -> "URL"
+                        is UrlRegexMatcher -> "URL Regex"
+                        is HostMatcher -> "Host"
+                        is PathMatcher -> "Path"
+                    },
+                    color = MaterialTheme.colorScheme.onSurface.copy(.6f),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Gap(8.dp)
+                Text(
+                    when (matcher) {
+                        is UrlMatcher -> matcher.url
+                        is UrlRegexMatcher -> matcher.url
+                        is HostMatcher -> matcher.host
+                        is PathMatcher -> matcher.path
+                    },
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 14.sp
+                )
+            }
         }
 
         Spacer(modifier = Modifier.weight(1f))
@@ -553,11 +581,13 @@ internal fun NewMatcher(onAddMatcher: (Matcher) -> Unit) = Row(
             itemAsString = { matcherLabels[it] ?: "Matcher Type" },
             modifier = Modifier.fillMaxWidth(),
         )
-        Spacer(modifier = Modifier.height(4.dp))
+        Gap(4.dp)
         SimpleTextField(
-            value = matcherValue, onValueChange = { matcherValue = it },
+            value = matcherValue,
+            onValueChange = { matcherValue = it },
             placeholder = matcherToPlaceholders[matcherType] ?: "Value",
             modifier = Modifier.fillMaxWidth(),
+            textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
         )
         error?.let {
             Text(
@@ -605,11 +635,13 @@ internal fun NewHeader(onAddHeader: (NewHeader) -> Unit) = Row(
             placeholder = "Header Name",
             modifier = Modifier.fillMaxWidth(),
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Gap(8.dp)
         SimpleTextField(
-            value = value, onValueChange = { value = it },
+            value = value,
+            onValueChange = { value = it },
             placeholder = "Header Value",
             modifier = Modifier.fillMaxWidth(),
+            textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
         )
         error?.let {
             Text(

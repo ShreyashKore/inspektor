@@ -1,6 +1,6 @@
 <div align="center">
   <picture>
-    <img width="120px" alt="Inspektor logo" src="https://raw.githubusercontent.com/Gyanoba/inspektor/dev/readme-images/inspektor.png">
+    <img width="120px" alt="Inspektor logo" src="https://raw.githubusercontent.com/Gyanoba/inspektor/dev/images/inspektor.png">
   </picture>
 </div>
 
@@ -25,7 +25,7 @@ Add the following dependency to your `build.gradle.kts` file:
 
 ```kotlin
 dependencies {
-  implementation("com.gyanoba.inspektor:inspektor:latest-version")
+    implementation("com.gyanoba.inspektor:inspektor:latest-version")
 }
 ```
 
@@ -37,7 +37,7 @@ To use Inspektor, install the plugin in your `HttpClient` configuration:
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.api.install
 import io.ktor.client.request.get
-import javax.management.InvalidApplicationException
+import com.gyanoba.inspektor.Inspektor
 
 // For Android this is enough
 val client = HttpClient {
@@ -49,7 +49,7 @@ suspend fun apiCall() {
 }
 ```
 
-For ios you need to add following `-lsqlite3` to the Other Linker flags under Build Settings.
+For ios you need to add the following `-lsqlite3` to the Other Linker flags under Build Settings.
 See more details [here](https://github.com/cashapp/sqldelight/issues/1442#issuecomment-523435492)
 
 For Desktop platforms, you need to specify the APPLICATION_ID using `setApplicationId` before using
@@ -60,8 +60,8 @@ This is used to determine the location to store the database file.
 import data.db.setApplicationId
 
 fun main() {
-  setApplicationId("com.example.myapp")
-  // ...
+    setApplicationId("com.example.myapp")
+    // ...
 }
 ```
 
@@ -80,25 +80,43 @@ You can customize Inspektor using the `InspektorConfig` object. Here are the ava
 
 ```kotlin
 install(Inspektor) {
-  level = LogLevel.HEADERS
-  maxContentLength = 100_000
-  filter { request -> request.url.host.contains("example.com") }
-  sanitizeHeader { header -> header == "Authorization" }
+    level = LogLevel.HEADERS
+    maxContentLength = 100_000
+    filter { request -> request.url.host.contains("example.com") }
+    sanitizeHeader { header -> header == "Authorization" }
 }
 ```
+
+## Overriding Requests and Responses
+
+This feature is meant to be used for testing purposes. It allows you to override the request
+and response bodies.
+To use this feature, open the overrides page from the menu. Add new overrides by specifying matchers for the request; then select the action to perform, i.e.
+override the request or response. Only the values specified are replaced in the request or response.
+Empty values are ignored.
+
+
+
+https://github.com/user-attachments/assets/d779934d-3e9c-447e-8f37-94869c251717
+
+
+
+You can easily add new overrides by clicking on the Edit icon in the Transactions List screen.
+Default override with original info gets created which you can then modify to get your desired result.
 
 ## Viewing the logs
 
 Inspektor provides a UI to view the logs. You can access it by invoking `openInspektor` function.
-This opens up a new activity in Android, a bottom sheet in iOS, and a new window in Desktop.
+This opens up a new activity in Android, a bottom sheet in iOS, and a new window in the Desktop.
 
 On Android you can also open the UI by clicking on the generated notifications.
 
 ## Upcoming Features 🚀
 
-- Network interception functionality
-- HAR export for detailed analysis
-- More HTTP client support (OkHttp maybe?)
+- [x] Request-Response overriding functionality
+- [ ] Pause and allow editing Request and Response
+- [ ] HAR export for detailed analysis
+- [ ] More HTTP client support (OkHttp maybe?)
 
 ## License
 

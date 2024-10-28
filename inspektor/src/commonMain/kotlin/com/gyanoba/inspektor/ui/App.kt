@@ -8,9 +8,10 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.gyanoba.inspektor.ui.overriding.EditOverrideScreen
 import com.gyanoba.inspektor.ui.overriding.OverridesListScreen
+import com.gyanoba.inspektor.ui.theme.InspektorTheme
 
 @Composable
-internal fun App() {
+internal fun App() = InspektorTheme {
     val navController = rememberNavController()
 
     NavHost(navController = navController, startDestination = "transactions") {
