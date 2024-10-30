@@ -10,12 +10,15 @@
 ![kotlin](https://img.shields.io/badge/Kotlin-2.0.20-8949FB.svg?style=flat&logo=kotlin)
 ![latest version](https://img.shields.io/maven-central/v/com.gyanoba.inspektor/inspektor?color=blue&label=Version)
 
-> ⚠️ This library is **not stable**, and the API may change. It is not advised to use it in
-> production projects.⚠️
+> [!CAUTION]
+> This library is **not stable**, and the API may change. It is not advised to use it in
+> production projects.
 
 Inspektor is an HTTP inspection library for Ktor. It allows you to view HTTP requests and responses,
 including basic information, headers, and bodies. Please note that this library is not stable, and
 the API may change. Users are not advised to use it in production projects.
+
+Here's an [introductory article](https://medium.com/@koreshreyash/inspektor-multiplatform-http-inspection-library-for-ktor-6c78ae5e5661) for those who are interested.
 
 ![Screenshots](images/screenshots.png)
 
