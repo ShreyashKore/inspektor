@@ -2,6 +2,7 @@ package com.gyanoba.inspektor.ui
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,7 +20,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Lock
@@ -57,6 +57,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gyanoba.inspektor.data.GetAllLatestWithLimit
@@ -103,7 +104,7 @@ internal fun TransactionListScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 internal fun TransactionListScreen(
     transactions: List<GetAllLatestWithLimit> = emptyList(),
@@ -250,14 +251,25 @@ internal fun TransactionListScreen(
             }
 
             LazyColumn {
-                items(transactions) { transaction ->
-                    TransactionItem(
-                        transaction = transaction,
-                        onClick = { onClickTransaction(transaction.id) },
-                        onAddOverride = { onAddOverride(transaction.id) },
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                    )
-                }
+                transactions.groupBy { it.requestDate?.toLocalDateTime(TimeZone.currentSystemDefault())?.date }
+                    .map { (date, transactions) ->
+                        stickyHeader(key = date) {
+                            Text(
+                                date?.format(DateFormatters.simpleLocalFormatter) ?: "Unknown",
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                                    .background(MaterialTheme.colorScheme.surface).padding(4.dp)
+                            )
+                        }
+                        items(transactions, key = { it.id }) { transaction ->
+                            TransactionItem(
+                                transaction = transaction,
+                                onClick = { onClickTransaction(transaction.id) },
+                                onAddOverride = { onAddOverride(transaction.id) },
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
             }
         }
 
@@ -424,7 +436,7 @@ internal fun DeleteDialog(
             Column {
                 Text("Are you sure you want to delete all transactions ${
                     datePickerState.selectedDateInstant?.atLocalStartOfDay(TimeZone.currentSystemDefault())
-                        ?.toLocalDateTime(TimeZone.currentSystemDefault())
+                        ?.toLocalDateTime(TimeZone.currentSystemDefault())?.date
                         ?.format(DateFormatters.simpleLocalFormatter)?.let { "before $it" } ?: ""
                 }?")
                 DatePicker(

@@ -130,11 +130,6 @@ internal fun OverrideRow(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    "${override.id}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                )
-                Text(
                     override.name.takeIf { it.isNullOrBlank().not() } ?: "[Unnamed]",
                     style = MaterialTheme.typography.titleMedium,
                 )

@@ -42,6 +42,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withLink
@@ -191,10 +192,11 @@ internal fun HeadersView(transaction: HttpTransaction) {
             title = "Overview",
             initialExpanded = true
         ) {
-            KeyValueView("URL", transaction.url)
-            KeyValueView("Method", transaction.method)
-            KeyValueView("Response Code", transaction.responseCode?.toString())
-            KeyValueView("Host", transaction.host)
+            val valueTextStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace)
+            KeyValueView("URL", transaction.url, textStyle = valueTextStyle)
+            KeyValueView("Method", transaction.method, textStyle = valueTextStyle)
+            KeyValueView("Response Code", transaction.responseCode?.toString(), textStyle = valueTextStyle)
+            KeyValueView("Host", transaction.host, textStyle = valueTextStyle)
             if (transaction.error != null) {
                 Row(
                     modifier = Modifier
@@ -249,6 +251,7 @@ internal fun HeadersListView(
         it.forEach {
             ExpandableKeyValue(
                 it.key, it.value.joinToString("; "),
+                textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
                 content = headersInfo[it.key.lowercase()]?.let {
                     {
                         KeyInfoAndLink(
@@ -276,6 +279,7 @@ internal fun HeadersListView(
             it.forEach {
                 ExpandableKeyValue(
                     it.key, it.value.joinToString("; "),
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
                     content = headersInfo[it.key.lowercase()]?.let {
                         {
                             KeyInfoAndLink(

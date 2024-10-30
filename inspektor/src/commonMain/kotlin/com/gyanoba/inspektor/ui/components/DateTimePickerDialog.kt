@@ -31,7 +31,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.gyanoba.inspektor.utils.DateFormatters
 import kotlinx.datetime.DateTimePeriod
 import kotlinx.datetime.Instant
-import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format
 import kotlinx.datetime.format.DateTimeFormat
@@ -117,12 +117,12 @@ internal fun DateRangeButton(
     startDate: Instant,
     endDate: Instant,
     onClick: () -> Unit,
-    dateFormatter: DateTimeFormat<LocalDateTime> = DateFormatters.simpleLocalFormatter,
+    dateFormatter: DateTimeFormat<LocalDate> = DateFormatters.simpleLocalFormatter,
 ) {
     val startDateFormatted =
-        startDate.toLocalDateTime(TimeZone.currentSystemDefault())
+        startDate.toLocalDateTime(TimeZone.currentSystemDefault()).date
             .format(dateFormatter)
-    val endDateFormatted = endDate.toLocalDateTime(TimeZone.currentSystemDefault())
+    val endDateFormatted = endDate.toLocalDateTime(TimeZone.currentSystemDefault()).date
         .format(dateFormatter)
 
     val textStyle = MaterialTheme.typography.labelMedium

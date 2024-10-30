@@ -1,6 +1,7 @@
 package com.gyanoba.inspektor.utils
 
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format.DateTimeComponents
@@ -43,7 +44,7 @@ internal object DateTimeFormatters {
 
 internal object DateFormatters {
 
-    internal val simpleLocalFormatter = LocalDateTime.Format {
+    internal val simpleLocalFormatter = LocalDate.Format {
         dayOfMonth(); char(' '); monthName(MonthNames.ENGLISH_ABBREVIATED); char(' '); year()
     }
 }

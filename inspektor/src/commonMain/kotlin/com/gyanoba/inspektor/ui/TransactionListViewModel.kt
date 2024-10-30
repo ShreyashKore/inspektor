@@ -17,13 +17,14 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlin.time.Duration.Companion.days
 
 
 internal class TransactionListViewModel(
     private val inspektorDataSource: InspektorDataSource,
 ) : ViewModel() {
 
-    private val _startDate = MutableStateFlow(Clock.System.now().atLocalStartOfDay())
+    private val _startDate = MutableStateFlow((Clock.System.now() - 6.days).atLocalStartOfDay())
     val startDate = _startDate.asStateFlow()
     private val _endDate = MutableStateFlow(Clock.System.now().atLocalEndOfDay())
     val endDate = _endDate.asStateFlow()

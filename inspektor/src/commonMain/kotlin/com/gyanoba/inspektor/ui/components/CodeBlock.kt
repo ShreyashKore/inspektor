@@ -73,7 +73,7 @@ internal fun CodeBlock(
 
     var formatted by remember { mutableStateOf(false) }
     var showSearch by remember { mutableStateOf(false) }
-    var softWrap by remember { mutableStateOf(false) }
+    var softWrap by remember { mutableStateOf(true) }
 
     Column(modifier = modifier) {
         Row(
