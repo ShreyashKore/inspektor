@@ -48,15 +48,24 @@ public final class com/gyanoba/inspektor/platform/NotificationManager_jvmKt {
 	public static final fun composeDesktopResourcesPath ()Ljava/lang/String;
 }
 
+public final class com/gyanoba/inspektor/ui/ComposableSingletons$AppKt {
+	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/ComposableSingletons$AppKt;
+	public static field lambda-1 Lkotlin/jvm/functions/Function2;
+	public fun <init> ()V
+	public final fun getLambda-1$inspektor ()Lkotlin/jvm/functions/Function2;
+}
+
 public final class com/gyanoba/inspektor/ui/ComposableSingletons$TransactionDetailScreenKt {
 	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/ComposableSingletons$TransactionDetailScreenKt;
 	public static field lambda-1 Lkotlin/jvm/functions/Function2;
 	public static field lambda-2 Lkotlin/jvm/functions/Function2;
 	public static field lambda-3 Lkotlin/jvm/functions/Function2;
+	public static field lambda-4 Lkotlin/jvm/functions/Function2;
 	public fun <init> ()V
 	public final fun getLambda-1$inspektor ()Lkotlin/jvm/functions/Function2;
 	public final fun getLambda-2$inspektor ()Lkotlin/jvm/functions/Function2;
 	public final fun getLambda-3$inspektor ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda-4$inspektor ()Lkotlin/jvm/functions/Function2;
 }
 
 public final class com/gyanoba/inspektor/ui/ComposableSingletons$TransactionListScreenKt {
@@ -159,7 +168,7 @@ public final class com/gyanoba/inspektor/ui/overriding/ComposableSingletons$Over
 	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/overriding/ComposableSingletons$OverridesListScreenKt;
 	public static field lambda-1 Lkotlin/jvm/functions/Function2;
 	public static field lambda-2 Lkotlin/jvm/functions/Function2;
-	public static field lambda-3 Lkotlin/jvm/functions/Function2;
+	public static field lambda-3 Lkotlin/jvm/functions/Function3;
 	public static field lambda-4 Lkotlin/jvm/functions/Function2;
 	public static field lambda-5 Lkotlin/jvm/functions/Function2;
 	public static field lambda-6 Lkotlin/jvm/functions/Function2;
@@ -167,7 +176,7 @@ public final class com/gyanoba/inspektor/ui/overriding/ComposableSingletons$Over
 	public fun <init> ()V
 	public final fun getLambda-1$inspektor ()Lkotlin/jvm/functions/Function2;
 	public final fun getLambda-2$inspektor ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda-3$inspektor ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda-3$inspektor ()Lkotlin/jvm/functions/Function3;
 	public final fun getLambda-4$inspektor ()Lkotlin/jvm/functions/Function2;
 	public final fun getLambda-5$inspektor ()Lkotlin/jvm/functions/Function2;
 	public final fun getLambda-6$inspektor ()Lkotlin/jvm/functions/Function2;

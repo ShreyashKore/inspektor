@@ -22,7 +22,7 @@ import okio.Path.Companion.toPath
 internal interface OverrideRepository {
     suspend fun add(override: Override)
 
-    suspend fun remove(override: Override)
+    suspend fun remove(vararg overrides: Override)
 
     suspend fun update(override: Override)
 
@@ -42,7 +42,7 @@ internal class OverrideRepositoryImpl(
         store.plus(override.copy(id = newId))
     }
 
-    override suspend fun remove(override: Override) = store.minus(override)
+    override suspend fun remove(vararg overrides: Override) = store.minus(*overrides)
 
     override suspend fun update(override: Override) = store.update { overrideList ->
         overrideList?.map {

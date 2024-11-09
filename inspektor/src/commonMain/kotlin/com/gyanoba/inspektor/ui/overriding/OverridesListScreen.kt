@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.input.TextFieldState
@@ -13,7 +14,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -22,23 +22,35 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gyanoba.inspektor.data.HostMatcher
+import com.gyanoba.inspektor.data.HttpRequest
 import com.gyanoba.inspektor.data.Override
 import com.gyanoba.inspektor.data.OverrideAction
 import com.gyanoba.inspektor.data.OverrideRepositoryImpl
 import com.gyanoba.inspektor.data.PathMatcher
 import com.gyanoba.inspektor.data.UrlMatcher
 import com.gyanoba.inspektor.data.UrlRegexMatcher
+import com.gyanoba.inspektor.ui.components.Gap
 import com.gyanoba.inspektor.ui.components.SimpleSearchBar
+import kotlinx.coroutines.launch
 
 @Composable
 internal fun OverridesListScreen(
@@ -52,6 +64,7 @@ internal fun OverridesListScreen(
         overrides = viewModel.visibleOverrides.collectAsState().value,
         searchFieldState = viewModel.searchFieldState,
         deleteOverride = viewModel::deleteOverride,
+        undoDeleteOverride = viewModel::undoDeleteOverride,
         openAddOverrideScreen = openEditOverrideScreen,
         toggleEnableDisableOverride = viewModel::toggleEnableDisable,
         onBack = onBack,
@@ -65,11 +78,39 @@ internal fun OverridesListScreen(
     overrides: List<Override>,
     searchFieldState: TextFieldState,
     deleteOverride: (Override) -> Unit,
+    undoDeleteOverride: (Override) -> Unit,
     openAddOverrideScreen: (Long?) -> Unit,
     toggleEnableDisableOverride: (Override) -> Unit,
     onBack: () -> Unit,
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    fun onDeleteOverride(override: Override) {
+        deleteOverride(override)
+        scope.launch {
+            val result = snackbarHostState.showSnackbar(
+                "Override ${override.name} deleted!",
+                actionLabel = "Undo",
+                duration = SnackbarDuration.Short
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                undoDeleteOverride(override)
+            }
+        }
+    }
     Scaffold(
+        snackbarHost = {
+            SnackbarHost(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .wrapContentHeight(Alignment.Bottom),
+                hostState = snackbarHostState,
+                snackbar = { data ->
+                    Snackbar(snackbarData = data)
+                }
+            )
+        },
         topBar = {
             CenterAlignedTopAppBar(
                 navigationIcon = {
@@ -101,7 +142,7 @@ internal fun OverridesListScreen(
                 items(overrides) { override ->
                     OverrideRow(
                         override = override,
-                        deleteOverride = { deleteOverride(override) },
+                        deleteOverride = { onDeleteOverride(override) },
                         editOverride = { openAddOverrideScreen(override.id) },
                         toggleEnableDisable = { toggleEnableDisableOverride(override) },
                     )
@@ -120,25 +161,31 @@ internal fun OverrideRow(
     toggleEnableDisable: (Boolean) -> Unit,
 ) {
     Card(
-        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+        onClick = editOverride,
     ) {
         Row(
             Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(
-                modifier = Modifier.weight(1f)
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     override.name.takeIf { it.isNullOrBlank().not() } ?: "[Unnamed]",
                     style = MaterialTheme.typography.titleMedium,
                 )
+                Gap(8.dp)
+                Text(
+                    "${(override.type as? HttpRequest)?.method?.name}".capitalize(Locale.current),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                    maxLines = 1,
+                )
             }
             IconButton(onClick = deleteOverride) {
                 Icon(Icons.Rounded.Delete, contentDescription = "Delete")
-            }
-            IconButton(onClick = editOverride) {
-                Icon(Icons.Rounded.Edit, contentDescription = "Edit")
             }
             Switch(checked = override.enabled, onCheckedChange = { toggleEnableDisable(it) })
         }

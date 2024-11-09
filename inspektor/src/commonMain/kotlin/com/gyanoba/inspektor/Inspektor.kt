@@ -171,16 +171,17 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
                     }
 
                     val originalHeaders = mutableMapOf<String, List<String>>()
-                    override.action.requestHeaders.takeIf { it.isNotEmpty() }?.let { newHeaders ->
+                    override.action.requestHeaders.takeIf { it.isNotEmpty() }?.let { overrideHeaders ->
                         request.apply {
-                            newHeaders.forEach { newHeader ->
-                                if (headers.contains(newHeader.key)) {
-                                    val values = headers.getAll(newHeader.key)
-                                    if (values != null) originalHeaders[newHeader.key] = values
+                            overrideHeaders.forEach { overrideHeader ->
+                                val isOverriding = headers.contains(overrideHeader.key) && headers.getAll(overrideHeader.key) != overrideHeader.value
+                                if (isOverriding) {
+                                    val values = headers.getAll(overrideHeader.key)!!
+                                    originalHeaders[overrideHeader.key] = values
                                 }
                                 headers.apply {
-                                    remove(newHeader.key)
-                                    appendAll(newHeader.key, newHeader.value)
+                                    remove(overrideHeader.key)
+                                    appendAll(overrideHeader.key, overrideHeader.value)
                                 }
                             }
                         }
@@ -303,16 +304,19 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
                         }
 
                         val newHeaders =
-                            override.action.responseHeaders.takeIf { it.isNotEmpty() }?.let { newHeaders ->
+                            override.action.responseHeaders.takeIf { it.isNotEmpty() }?.let { overrideHeaders ->
                                 val responseHeaders = response.headers
-                                newHeaders.forEach { newHeader ->
-                                    if (responseHeaders.contains(newHeader.key)) {
-                                        val values = responseHeaders.getAll(newHeader.key)
-                                        if (values != null) originalHeaders[newHeader.key] = values
+                                // before overriding headers, store the original headers
+                                overrideHeaders.forEach { overrideHeader ->
+                                    val isOverriding = responseHeaders.contains(overrideHeader.key) &&
+                                        responseHeaders.getAll(overrideHeader.key) != overrideHeader.value
+                                    if (isOverriding) {
+                                        val values = responseHeaders.getAll(overrideHeader.key)!!
+                                        originalHeaders[overrideHeader.key] = values
                                     }
                                 }
                                 buildHeaders {
-                                    (responseHeaders.toMap() + newHeaders).forEach {
+                                    (responseHeaders.toMap() + overrideHeaders).forEach {
                                         appendAll(it.key, it.value)
                                     }
                                 }
