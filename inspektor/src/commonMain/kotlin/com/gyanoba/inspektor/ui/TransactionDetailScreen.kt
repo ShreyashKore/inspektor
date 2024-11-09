@@ -16,6 +16,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
@@ -38,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
@@ -62,6 +64,7 @@ import com.gyanoba.inspektor.ui.components.DefaultIconButton
 import com.gyanoba.inspektor.ui.components.ExpandableKeyValue
 import com.gyanoba.inspektor.ui.components.Format
 import com.gyanoba.inspektor.ui.components.KeyValueView
+import com.gyanoba.inspektor.utils.toCurlString
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.runBlocking
@@ -92,6 +95,7 @@ internal fun TransactionDetailsScreen(
     onBack: () -> Unit,
     openAddOverrideScreen: () -> Unit,
 ) {
+    val clipboardManager = LocalClipboardManager.current
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -119,6 +123,15 @@ internal fun TransactionDetailsScreen(
                     }
                 },
                 actions = {
+                    DefaultIconButton(
+                        onClick = {
+                            // Copy to clipboard
+                            clipboardManager.setText(AnnotatedString(transaction?.toCurlString() ?: ""))
+                        },
+                        tooltipText = "Copy as cURL",
+                    ) {
+                        Icon(Icons.Filled.Share, contentDescription = "Copy as cURL")
+                    }
                     DefaultIconButton(
                         onClick = openAddOverrideScreen,
                         tooltipText = "Add Override",
