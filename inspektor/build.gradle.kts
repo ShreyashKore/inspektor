@@ -16,7 +16,7 @@ plugins {
 }
 
 group = "com.gyanoba.inspektor"
-version = "0.3.2"
+version = project.properties["VERSION_NAME"]!!
 
 kotlin {
     explicitApiWarning()

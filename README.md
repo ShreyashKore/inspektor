@@ -5,10 +5,10 @@
 </div>
 
 # Inspektor 🕵️‍♂️
-
 ![main status](https://github.com/ShreyashKore/inspektor/actions/workflows/publish.yaml/badge.svg?branch=main)
-![kotlin](https://img.shields.io/badge/Kotlin-2.0.20-8949FB.svg?style=flat&logo=kotlin)
-![latest version](https://img.shields.io/maven-central/v/com.gyanoba.inspektor/inspektor?color=blue&label=Version)
+[![kotlin](https://img.shields.io/badge/Kotlin-2.0.21-8949FB.svg?style=flat&logo=kotlin)](https://kotlinlang.org/)
+[![kotlin](https://img.shields.io/badge/ktor-3.0.1-8949FB.svg?style=flat&logo=kotlin)](https://github.com/ktorio/ktor)
+[![latest version](https://img.shields.io/maven-central/v/com.gyanoba.inspektor/inspektor?color=blue&label=Version)](https://central.sonatype.com/artifact/com.gyanoba.inspektor/inspektor)
 
 > [!CAUTION]
 > This library is **not stable**, and the API may change. It is not advised to use it in
