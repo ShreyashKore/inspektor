@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.input.TextFieldState
@@ -24,20 +25,25 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gyanoba.inspektor.data.HostMatcher
+import com.gyanoba.inspektor.data.HttpRequest
 import com.gyanoba.inspektor.data.Override
 import com.gyanoba.inspektor.data.OverrideAction
 import com.gyanoba.inspektor.data.OverrideRepositoryImpl
 import com.gyanoba.inspektor.data.PathMatcher
 import com.gyanoba.inspektor.data.UrlMatcher
 import com.gyanoba.inspektor.data.UrlRegexMatcher
+import com.gyanoba.inspektor.ui.components.Gap
 import com.gyanoba.inspektor.ui.components.SimpleSearchBar
 
 @Composable
@@ -126,12 +132,20 @@ internal fun OverrideRow(
             Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(
-                modifier = Modifier.weight(1f)
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     override.name.takeIf { it.isNullOrBlank().not() } ?: "[Unnamed]",
                     style = MaterialTheme.typography.titleMedium,
+                )
+                Gap(8.dp)
+                Text(
+                    "${(override.type as? HttpRequest)?.method?.name}".capitalize(Locale.current),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                    maxLines = 1,
                 )
             }
             IconButton(onClick = deleteOverride) {
