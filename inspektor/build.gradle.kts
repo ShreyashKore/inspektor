@@ -16,7 +16,7 @@ plugins {
 }
 
 group = "com.gyanoba.inspektor"
-version = "0.3.2"
+version = project.properties["VERSION_NAME"]!!
 
 kotlin {
     explicitApiWarning()
@@ -93,6 +93,7 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.android)
                 implementation(libs.ktor.client.okhttp)
                 implementation(libs.sqlDelight.driver.android)
+                implementation(libs.sqlDelight.driver.sqlite)
                 implementation(libs.androidx.startup.runtime)
             }
         }

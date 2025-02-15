@@ -8,6 +8,11 @@ plugins {
     alias(libs.plugins.kotlinx.serialization).apply(false)
     alias(libs.plugins.sqlDelight).apply(false)
     alias(libs.plugins.binaryCompatibility)
+    alias(libs.plugins.kotlinx.kover)
+}
+
+allprojects {
+    apply(plugin = "org.jetbrains.kotlinx.kover")
 }
 
 apiValidation {
