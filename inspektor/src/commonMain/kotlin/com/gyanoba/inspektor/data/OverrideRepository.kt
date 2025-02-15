@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import okio.Path.Companion.toPath
+import kotlinx.io.files.Path
 
 
 internal interface OverrideRepository {
@@ -71,7 +71,7 @@ internal class OverrideRepositoryImpl(
     companion object {
         val Instance by lazy {
             OverrideRepositoryImpl(
-                listStoreOf<Override>(file = getAppDataDir().toPath().resolve("overrideStore"))
+                listStoreOf<Override>(file = Path("${getAppDataDir()}/overrideStore"))
             )
         }
     }
