@@ -78,3 +78,4 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 sqlDelight = { id = "app.cash.sqldelight", version.ref = "sqlDelight" }
 binaryCompatibility = "org.jetbrains.kotlinx.binary-compatibility-validator:0.16.3"
+kotlinx-kover = "org.jetbrains.kotlinx.kover:0.9.1"
