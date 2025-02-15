@@ -14,7 +14,7 @@ import com.gyanoba.inspektor.data.adapters.instantAdapter
 import com.gyanoba.inspektor.data.adapters.setMapEntryAdapter
 import com.gyanoba.inspektor.data.setApplicationId
 import com.gyanoba.inspektor.platform.NotificationManager
-import io.github.xxfast.kstore.file.extensions.listStoreOf
+import io.github.xxfast.kstore.storeOf
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
@@ -27,13 +27,12 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 
 internal val TEST_DIR = Path("test")
-internal val OVERRIDES_FILE = Path("test/overrides.json")
 
 abstract class TestBase {
     internal val db by lazy { createTestDb() }
 
     internal val store by lazy {
-        listStoreOf<Override>(file = Path(OVERRIDES_FILE))
+        storeOf<List<Override>>(codec = KStoreInMemoryCodec())
     }
 
     @BeforeTest

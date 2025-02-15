@@ -8,7 +8,7 @@ import com.gyanoba.inspektor.data.Override
 import com.gyanoba.inspektor.data.OverrideRepositoryImpl
 import com.gyanoba.inspektor.data.setApplicationId
 import com.gyanoba.inspektor.platform.NotificationManager
-import io.github.xxfast.kstore.file.extensions.listStoreOf
+import io.github.xxfast.kstore.storeOf
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.mock.MockEngine
@@ -20,8 +20,8 @@ import io.ktor.client.request.setBody
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import kotlinx.coroutines.runBlocking
+import utils.KStoreInMemoryCodec
 import utils.NoOpDataSource
-import utils.OVERRIDES_FILE
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -33,7 +33,7 @@ class MaxContentLengthTest {
         setApplicationId("com.test.inspektor")
     }
     private val store by lazy {
-        listStoreOf<Override>(file = OVERRIDES_FILE)
+        storeOf<List<Override>>(codec = KStoreInMemoryCodec())
     }
 
     private fun HttpClientConfig<MockEngineConfig>.installDefaultInspektor(config: InspektorConfig.() -> Unit) {
