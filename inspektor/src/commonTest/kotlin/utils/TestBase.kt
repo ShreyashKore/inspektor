@@ -1,6 +1,7 @@
 package utils
 
 import com.gyanoba.inspektor.Inspektor
+import com.gyanoba.inspektor.IsTest
 import com.gyanoba.inspektor.LogLevel
 import com.gyanoba.inspektor.UnstableInspektorAPI
 import com.gyanoba.inspektor.data.DriverFactory
@@ -12,25 +13,42 @@ import com.gyanoba.inspektor.data.OverrideRepositoryImpl
 import com.gyanoba.inspektor.data.adapters.instantAdapter
 import com.gyanoba.inspektor.data.adapters.setMapEntryAdapter
 import com.gyanoba.inspektor.data.setApplicationId
-import com.gyanoba.inspektor.platform.getAppDataDir
+import com.gyanoba.inspektor.platform.NotificationManager
 import io.github.xxfast.kstore.file.extensions.listStoreOf
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.request.HttpRequestData
 import io.ktor.client.request.HttpResponseData
-import okio.Path.Companion.toPath
+import kotlinx.io.files.FileSystem
+import kotlinx.io.files.Path
+import kotlinx.io.files.SystemFileSystem
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+
+internal val TEST_DIR = Path("test")
+internal val OVERRIDES_FILE = Path("test/overrides.json")
 
 abstract class TestBase {
     internal val db by lazy { createTestDb() }
 
     internal val store by lazy {
-        listStoreOf<Override>(
-            file = getAppDataDir().toPath().resolve("overrideStore-test")
-        )
+        listStoreOf<Override>(file = Path(OVERRIDES_FILE))
+    }
+
+    @BeforeTest
+    fun createTestDir() {
+        with(SystemFileSystem) { if(!exists(TEST_DIR)) createDirectories(TEST_DIR) }
+    }
+
+    @AfterTest
+    fun deleteTestDir() {
+        with(SystemFileSystem) { if(exists(TEST_DIR)) { deleteRecursively(TEST_DIR) } }
     }
 
     init {
+        IsTest = true
+
         @OptIn(UnstableInspektorAPI::class)
         setApplicationId("com.test.inspektor")
     }
@@ -58,7 +76,23 @@ abstract class TestBase {
                 level = logLevel
                 this.dataSource = InspektorDataSourceImpl(db)
                 this.overrideRepository = OverrideRepositoryImpl(store)
+                this.notificationManager = object : NotificationManager {
+                    override fun notify(title: String, message: String) {
+                        println("$title: $message")
+                    }
+                }
             }
         }
     }
+}
+
+private fun FileSystem.deleteRecursively(path: Path, mustExist: Boolean = true) {
+    list(path).forEach {
+        if (metadataOrNull(it)?.isDirectory == true) {
+            deleteRecursively(it, mustExist)
+        } else {
+            delete(it, mustExist)
+        }
+    }
+    delete(path, mustExist)
 }
