@@ -93,6 +93,7 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.android)
                 implementation(libs.ktor.client.okhttp)
                 implementation(libs.sqlDelight.driver.android)
+                implementation(libs.sqlDelight.driver.sqlite)
                 implementation(libs.androidx.startup.runtime)
             }
         }
