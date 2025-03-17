@@ -16,7 +16,8 @@ allprojects {
 }
 
 apiValidation {
-    ignoredProjects.addAll(listOf("sample", "data"))
+    ignoredProjects.addAll(listOf("sample"))
+    ignoredPackages.addAll(listOf("com.gyanoba.inspektor.data"))
 }
 
 buildscript {
