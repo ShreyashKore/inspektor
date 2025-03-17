@@ -16,7 +16,7 @@ plugins {
 }
 
 group = "com.gyanoba.inspektor"
-version = "0.3.3"
+version = "0.3.6"
 
 kotlin {
     explicitApiWarning()
@@ -73,7 +73,6 @@ kotlin {
                 implementation(libs.jsontree)
                 implementation(libs.kstore)
                 implementation(libs.kstore.file)
-                implementation(project(":data"))
             }
         }
         val commonTest by getting {
@@ -143,3 +142,11 @@ fun Project.linkSqlite() {
 }
 
 //linkSqlite()
+
+sqldelight {
+    databases {
+        create("InspektorDatabase") {
+            packageName.set("com.gyanoba.inspektor.data")
+        }
+    }
+}

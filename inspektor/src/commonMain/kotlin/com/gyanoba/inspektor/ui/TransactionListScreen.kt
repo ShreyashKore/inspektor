@@ -253,7 +253,7 @@ internal fun TransactionListScreen(
             LazyColumn {
                 transactions.groupBy { it.requestDate?.toLocalDateTime(TimeZone.currentSystemDefault())?.date }
                     .map { (date, transactions) ->
-                        stickyHeader(key = date) {
+                        stickyHeader(key = date.toString()) {
                             Text(
                                 date?.format(DateFormatters.simpleLocalFormatter) ?: "Unknown",
                                 textAlign = TextAlign.Center,

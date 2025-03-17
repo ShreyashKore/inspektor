@@ -16,4 +16,3 @@ dependencyResolutionManagement {
 rootProject.name = "inspektor"
 include(":inspektor")
 include(":sample")
-include(":data")
