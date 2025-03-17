@@ -71,6 +71,7 @@ public enum class LogLevel(
     BODY(info = true, headers = true, body = true)
 }
 
+internal var IsTest = false
 
 /**
  * A configuration for the [Inspektor] plugin.
@@ -91,13 +92,25 @@ public class InspektorConfig internal constructor() {
      * The data source to store the logs.
      */
     @VisibleForTesting
-    internal var dataSource: InspektorDataSource = InspektorDataSourceImpl.Instance
+    internal lateinit var dataSource: InspektorDataSource
 
     /**
      * The data source to store overrides.
      */
     @VisibleForTesting
-    internal var overrideRepository: OverrideRepository = OverrideRepositoryImpl.Instance
+    internal lateinit var overrideRepository: OverrideRepository
+
+    @VisibleForTesting
+    internal lateinit var notificationManager: NotificationManager
+
+    init {
+        // temp change; TODO: inject these dependencies
+        if (!IsTest) {
+            dataSource = InspektorDataSourceImpl.Instance
+            overrideRepository = OverrideRepositoryImpl.Instance
+            notificationManager = NotificationManager()
+        }
+    }
 
     /**
      * Allows you to filter log messages for calls matching a [predicate].
@@ -123,6 +136,8 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
     "Inspektor", ::InspektorConfig,
 ) {
     val inspektorDataSource = pluginConfig.dataSource
+    val notificationManager = pluginConfig.notificationManager
+
     val level: LogLevel = pluginConfig.level
     if (level == LogLevel.NONE) return@createClientPlugin
 
@@ -140,7 +155,7 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
         }
 
         val callLogger = HttpClientCallLogger(
-            inspektorDataSource, Dispatchers.IO, NotificationManager()
+            inspektorDataSource, Dispatchers.IO, notificationManager
         )
         request.attributes.put(ClientCallLogger, callLogger)
 
