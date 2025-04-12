@@ -135,8 +135,7 @@ jobs:
         run: ./gradlew sample:assembleDebug
 
       - name: Build iOS app
-        if: false # TODO: Fix iOS build
-        run: xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp -destination 'platform=iOS Simulator,name=iPhone 14,OS=latest'
+        run: xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
 
   deploy-snapshot:
     name: Deploy

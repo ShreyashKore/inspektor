@@ -1,22 +1,22 @@
 [versions]
 android-minSdk = "24"
-android-compileSdk = "34"
+android-compileSdk = "35"
 
 # dependencies versions
-agp = "8.7.1"
-kotlin = "2.0.21"
-publish = "0.30.0"
+agp = "8.7.3"
+kotlin = "2.1.20"
+publish = "0.31.0"
 androidxPaging3Extensions = "2.0.2"
-atomicfuGradlePlugin = "0.22.0"
-kotlinx-coroutines = "1.9.0"
-kotlinx-serialization = "1.7.3"
+atomicfuGradlePlugin = "0.27.0"
+kotlinx-coroutines = "1.10.1"
+kotlinx-serialization = "1.8.0"
 compose = "1.7.3"
-androidx-activityCompose = "1.9.3"
+androidx-activityCompose = "1.10.1"
 androidx-uiTest = "1.7.8"
 napier = "2.7.1"
 kotlinx-datetime = "0.6.2"
 kermit = "2.0.0-RC5"
-ktor = "3.0.1"
+ktor = "3.1.0"
 pagingComposeCommon = "3.3.0-alpha02-0.5.1"
 sqlDelight = "2.0.2"
 sqlDelightCoroutinesExtensions = "2.0.2"
@@ -26,6 +26,8 @@ lifecycle = "2.8.4"
 androidx-navigation = "2.8.0-alpha10"
 jsontree = "2.5.0"
 kstore = "0.9.1"
+bcv = "0.17.0"
+kover = "0.9.1"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -77,5 +79,6 @@ compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 sqlDelight = { id = "app.cash.sqldelight", version.ref = "sqlDelight" }
-binaryCompatibility = "org.jetbrains.kotlinx.binary-compatibility-validator:0.16.3"
-kotlinx-kover = "org.jetbrains.kotlinx.kover:0.9.1"
+binaryCompatibility = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "bcv" }
+kotlinx-kover = { id = "org.jetbrains.kotlinx.kover" , version.ref = "kover" }
+atomifu = { id = "org.jetbrains.kotlinx.atomicfu", version.ref = "atomicfuGradlePlugin" }

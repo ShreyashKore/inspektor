@@ -11,7 +11,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlinx.serialization)
     alias(libs.plugins.sqlDelight)
-    id("kotlinx-atomicfu")
+    alias(libs.plugins.atomifu)
     alias(libs.plugins.vanniktech)
 }
 
