@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Edit
@@ -62,6 +63,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gyanoba.inspektor.data.GetAllLatestWithLimit
 import com.gyanoba.inspektor.data.InspektorDataSourceImpl
+import com.gyanoba.inspektor.platform.FileSharer
 import com.gyanoba.inspektor.platform.getAppName
 import com.gyanoba.inspektor.ui.components.AddOverrideIcon
 import com.gyanoba.inspektor.ui.components.DateRangeButton
@@ -88,7 +90,7 @@ internal fun TransactionListScreen(
     openAddOverrideScreen: (Long) -> Unit,
 ) {
     val viewModel = viewModel<TransactionListViewModel> {
-        TransactionListViewModel(InspektorDataSourceImpl.Instance)
+        TransactionListViewModel(InspektorDataSourceImpl.Instance, FileSharer())
     }
     TransactionListScreen(
         viewModel.transactions.collectAsState().value,
@@ -100,7 +102,8 @@ internal fun TransactionListScreen(
         viewModel.startDate.collectAsState().value,
         viewModel.endDate.collectAsState().value,
         viewModel::onDateRangeSelected,
-        viewModel::deleteTransactions
+        viewModel::deleteTransactions,
+        viewModel::shareAsHar,
     )
 }
 
@@ -117,6 +120,7 @@ internal fun TransactionListScreen(
     endDate: Instant,
     onDateRangeSelected: (Instant, Instant) -> Unit,
     onDeleteTransactions: (Instant) -> Unit,
+    onShareAsHar: () -> Unit,
 ) {
     var showDateRangePicker by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -215,6 +219,19 @@ internal fun TransactionListScreen(
                                 leadingIcon = {
                                     Icon(
                                         Icons.Default.Edit,
+                                        contentDescription = null
+                                    )
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Export As HAR") },
+                                onClick = {
+                                    onShareAsHar()
+                                    showMenu = false
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.Share,
                                         contentDescription = null
                                     )
                                 }
