@@ -7,6 +7,8 @@ import androidx.lifecycle.viewModelScope
 import com.gyanoba.inspektor.data.InspektorDataSource
 import com.gyanoba.inspektor.har.toHarLog
 import com.gyanoba.inspektor.platform.FileSharer
+import com.gyanoba.inspektor.platform.Os
+import com.gyanoba.inspektor.platform.currentOs
 import com.gyanoba.inspektor.platform.getAppCacheDir
 import com.gyanoba.inspektor.utils.atLocalEndOfDay
 import com.gyanoba.inspektor.utils.atLocalStartOfDay
@@ -85,13 +87,17 @@ internal class TransactionListViewModel(
                 val harFileContent = transactions.toHarLog(
                     creatorName = "Inspektor",
                 )
-                val harFilePath = "${getAppCacheDir()}/inspektor_share/inspektor.har"
+                // macOS won't open .har files if supporting application is not installed
+                val fileExtension =
+                    if (currentOs is Os.Desktop.MACOS) "txt" else "har"
+
+                val harFilePath = "${getAppCacheDir()}/inspektor_share/inspektor.$fileExtension"
                 createTextFile(
                     filePath = harFilePath,
                     text = harFileContent
                 )
 
-                fileSharer.shareFile(harFilePath, "application/json")
+                fileSharer.shareFile(harFilePath, "text/plain")
             }
         }
     }
