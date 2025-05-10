@@ -12,6 +12,15 @@
                 android:name="com.gyanoba.inspektor.utils.ContextInitializer"
                 android:value="androidx.startup" />
         </provider>
+        <provider
+            android:name="com.gyanoba.inspektor.platform.InspektorFileProvider"
+            android:authorities="${applicationId}.inspektor.file_provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/inspektor_share_paths"/>
+        </provider>
         <activity
             android:name="com.gyanoba.inspektor.MainActivity"
             android:label="Inspektor"

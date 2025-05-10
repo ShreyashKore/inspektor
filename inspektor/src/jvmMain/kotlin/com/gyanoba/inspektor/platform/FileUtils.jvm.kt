@@ -30,3 +30,5 @@ internal actual fun getAppDataDir(): String {
         DesktopOs.UNKNOWN -> throw UnsupportedOperationException("Unsupported operating system")
     }
 }
+
+internal actual fun getAppCacheDir(): String = getAppDataDir() + "/cache"
