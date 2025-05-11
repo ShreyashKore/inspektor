@@ -23,8 +23,10 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.gyanoba.inspektor.data.GetAllLatestWithLimit
 import com.gyanoba.inspektor.ui.components.AddOverrideIcon
 import com.gyanoba.inspektor.ui.components.DefaultIconButton
@@ -63,7 +65,11 @@ internal fun TransactionItem(
                     Spacer(Modifier.width(8.dp))
                     Text(
                         text = transaction.path ?: "",
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.W600)
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.W500,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 14.sp
+                        ),
                     )
                 }
                 CompositionLocalProvider(
@@ -90,10 +96,14 @@ internal fun TransactionItem(
                     Row {
                         Text(
                             text = transaction.requestDate?.toLocalDateTime(TimeZone.currentSystemDefault())
-                                ?.format(TimeFormatters.simpleLocalAmPm) ?: ""
+                                ?.format(TimeFormatters.simpleLocalAmPm) ?: "",
+                            style = MaterialTheme.typography.labelMedium,
                         )
                         Spacer(Modifier.weight(1f))
-                        Text(text = (transaction.tookMs?.toString() ?: "--") + " ms")
+                        Text(
+                            text = (transaction.tookMs?.toString() ?: "--") + " ms",
+                            style = MaterialTheme.typography.labelMedium,
+                        )
                     }
                 }
 

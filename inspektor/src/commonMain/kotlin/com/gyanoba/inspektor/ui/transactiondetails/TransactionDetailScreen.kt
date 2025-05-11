@@ -2,7 +2,9 @@ package com.gyanoba.inspektor.ui.transactiondetails
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.filled.Share
@@ -14,6 +16,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
@@ -22,11 +26,15 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gyanoba.inspektor.data.HttpTransaction
 import com.gyanoba.inspektor.data.InspektorDataSourceImpl
@@ -36,6 +44,7 @@ import com.gyanoba.inspektor.ui.transactiondetails.components.HeadersView
 import com.gyanoba.inspektor.ui.transactiondetails.components.RequestBodyView
 import com.gyanoba.inspektor.ui.transactiondetails.components.ResponseBodyView
 import com.gyanoba.inspektor.utils.toCurlString
+import kotlinx.coroutines.launch
 
 @Composable
 internal fun TransactionDetailsScreen(
@@ -59,6 +68,8 @@ internal fun TransactionDetailsScreen(
     onBack: () -> Unit,
     openAddOverrideScreen: () -> Unit,
 ) {
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
     val clipboardManager = LocalClipboardManager.current
     Scaffold(
         topBar = {
@@ -80,21 +91,28 @@ internal fun TransactionDetailsScreen(
                             text = transaction.method ?: "",
                             style = MaterialTheme.typography.titleMedium
                         )
+                        Spacer(Modifier.width(8.dp))
                         Text(
                             text = transaction.path ?: "",
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 16.sp,
+                            )
                         )
                     }
                 },
                 actions = {
                     DefaultIconButton(
                         onClick = {
-                            // Copy to clipboard
-                            clipboardManager.setText(
-                                AnnotatedString(
-                                    transaction?.toCurlString() ?: ""
+                            scope.launch {
+                                // Copy to clipboard
+                                clipboardManager.setText(
+                                    AnnotatedString(
+                                        transaction?.toCurlString() ?: ""
+                                    )
                                 )
-                            )
+                                snackbarHostState.showSnackbar("Copied as CURL")
+                            }
                         },
                         tooltipText = "Copy as cURL",
                     ) {
@@ -106,6 +124,9 @@ internal fun TransactionDetailsScreen(
                     ) { AddOverrideIcon() }
                 },
             )
+        },
+        snackbarHost = {
+            SnackbarHost(snackbarHostState)
         },
     ) { paddingValues ->
         if (transaction == null) {
