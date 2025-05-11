@@ -1,4 +1,4 @@
-package com.gyanoba.inspektor.ui.overriding
+package com.gyanoba.inspektor.ui.overriding.overrideslist
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.snapshotFlow
