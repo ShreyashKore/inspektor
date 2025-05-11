@@ -9,6 +9,8 @@ import androidx.navigation.navArgument
 import com.gyanoba.inspektor.ui.overriding.EditOverrideScreen
 import com.gyanoba.inspektor.ui.overriding.OverridesListScreen
 import com.gyanoba.inspektor.ui.theme.InspektorTheme
+import com.gyanoba.inspektor.ui.transactiondetails.TransactionDetailsScreen
+import com.gyanoba.inspektor.ui.transactionlist.TransactionListScreen
 
 @Composable
 internal fun App() = InspektorTheme {

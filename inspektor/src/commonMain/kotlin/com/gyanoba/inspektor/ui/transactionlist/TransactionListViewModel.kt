@@ -1,4 +1,4 @@
-package com.gyanoba.inspektor.ui
+package com.gyanoba.inspektor.ui.transactionlist
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.snapshotFlow
@@ -10,6 +10,7 @@ import com.gyanoba.inspektor.platform.FileSharer
 import com.gyanoba.inspektor.platform.Os
 import com.gyanoba.inspektor.platform.currentOs
 import com.gyanoba.inspektor.platform.getAppCacheDir
+import com.gyanoba.inspektor.ui.UiEvent
 import com.gyanoba.inspektor.utils.atLocalEndOfDay
 import com.gyanoba.inspektor.utils.atLocalStartOfDay
 import io.ktor.utils.io.core.writeText
@@ -42,6 +43,9 @@ internal class TransactionListViewModel(
     val startDate = _startDate.asStateFlow()
     private val _endDate = MutableStateFlow(Clock.System.now().atLocalEndOfDay())
     val endDate = _endDate.asStateFlow()
+
+    private val _events: MutableStateFlow<UiEvent> = MutableStateFlow(UiEvent.NoEvent)
+    val events = _events.asStateFlow()
 
     val searchFieldState = TextFieldState()
     private val searchFlow = snapshotFlow { searchFieldState.text }
@@ -78,27 +82,35 @@ internal class TransactionListViewModel(
         _endDate.value = endDate.atLocalEndOfDay()
     }
 
-    fun shareAsHar() {
-        viewModelScope.launch {
-            inspektorDataSource.getAllLatestHttpTransactionsForDateRange(
+    fun shareAsHar() = viewModelScope.launch {
+        try {
+            val transactions = inspektorDataSource.getAllLatestHttpTransactionsForDateRange(
                 startDate.value,
                 endDate.value
-            ).let { transactions ->
-                val harFileContent = transactions.toHarLog(
-                    creatorName = "Inspektor",
-                )
-                // macOS won't open .har files if supporting application is not installed
-                val fileExtension =
-                    if (currentOs is Os.Desktop.MACOS) "txt" else "har"
-
-                val harFilePath = "${getAppCacheDir()}/inspektor_share/inspektor.$fileExtension"
-                createTextFile(
-                    filePath = harFilePath,
-                    text = harFileContent
-                )
-
-                fileSharer.shareFile(harFilePath, "text/plain")
+            )
+            if (transactions.isEmpty()) {
+                _events.value = UiEvent.ShowSnackBar("No transactions to share")
+                return@launch
             }
+            val harFileContent = transactions.toHarLog(
+                creatorName = "Inspektor",
+            )
+            // macOS won't open .har files if supporting application is not installed
+            val fileExtension = if (currentOs is Os.Desktop.MACOS) "txt" else "har"
+
+            val harFilePath = "${getAppCacheDir()}/inspektor_share/inspektor.$fileExtension"
+            createTextFile(
+                filePath = harFilePath,
+                text = harFileContent
+            )
+
+            fileSharer.shareFile(harFilePath, "text/plain")
+        } catch (e: IOException) {
+            _events.value = UiEvent.ShowErrorDialog("Error sharing HAR file: ${e.message}")
+            println("Error sharing HAR file: ${e.message}")
+        } catch (e: Exception) {
+            _events.value = UiEvent.ShowErrorDialog("An unexpected error occurred: ${e.message}")
+            println("An unexpected error occurred: ${e.message}")
         }
     }
 }
