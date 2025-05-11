@@ -8,25 +8,27 @@ internal actual fun getAppDataDir(): String {
         "Application ID must be provided for the desktop platforms"
     }
     val appId = APPLICATION_ID!!
-    return when (currentOs) {
-        DesktopOs.WINDOWS -> {
+    return when (currentOs as Os.Desktop) {
+        Os.Desktop.WINDOWS -> {
             // %APPDATA% or a custom directory
             val appData = System.getenv("APPDATA") ?: System.getProperty("user.home")
             Paths.get(appData, appId).toString()
         }
 
-        DesktopOs.MACOS -> {
+        Os.Desktop.MACOS -> {
             // ~/Library/Application Support/YourApp
             val homeDir = System.getProperty("user.home")
             Paths.get(homeDir, "Library", "Application Support", appId).toString()
         }
 
-        DesktopOs.LINUX -> {
+        Os.Desktop.LINUX -> {
             // use ~/.local/share/YourApp
             val homeDir = System.getProperty("user.home")
             Paths.get(homeDir, ".local", "share", appId).toString()
         }
 
-        DesktopOs.UNKNOWN -> throw UnsupportedOperationException("Unsupported operating system")
+        Os.Desktop.UNKNOWN -> throw UnsupportedOperationException("Unsupported operating system")
     }
 }
+
+internal actual fun getAppCacheDir(): String = getAppDataDir() + "/cache"
