@@ -8,6 +8,7 @@ import com.gyanoba.inspektor.platform.NotificationManager
 import com.gyanoba.inspektor.utils.logErr
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -118,6 +119,7 @@ internal class HttpClientCallLogger(
     }
 
 
+    @OptIn(DelicateCoroutinesApi::class)
     fun closeRequestLog() = GlobalScope.launch(ioDispatcher) {
         if (!requestLogged.compareAndSet(false, true)) return@launch
         try {
@@ -129,6 +131,7 @@ internal class HttpClientCallLogger(
         }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     fun closeResponseLog() = GlobalScope.launch(ioDispatcher) {
         if (!responseLogged.compareAndSet(false, true)) return@launch
         requestLoggedMonitor.join()

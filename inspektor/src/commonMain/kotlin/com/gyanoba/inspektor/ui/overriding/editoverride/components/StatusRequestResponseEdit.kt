@@ -68,7 +68,7 @@ internal fun StatusRequestResponseEdit(
             )
             Gap(8.dp)
             Text(
-                it.value.joinToString(";",),
+                it.value.joinToString(";"),
                 fontFamily = FontFamily.Monospace,
                 fontSize = 14.sp,
                 modifier = Modifier.weight(.7f),

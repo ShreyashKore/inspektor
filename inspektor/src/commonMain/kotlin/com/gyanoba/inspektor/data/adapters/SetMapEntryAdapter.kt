@@ -1,7 +1,6 @@
 package com.gyanoba.inspektor.data.adapters
 
 import app.cash.sqldelight.ColumnAdapter
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 internal val setMapEntryAdapter =

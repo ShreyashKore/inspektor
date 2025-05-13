@@ -28,6 +28,7 @@ jsontree = "2.5.0"
 kstore = "0.9.1"
 bcv = "0.17.0"
 kover = "0.9.1"
+statelyCommon = "2.1.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -68,6 +69,8 @@ multiplatformSettings = { module = "com.russhwolf:multiplatform-settings-no-arg"
 kstore = { module = "io.github.xxfast:kstore", version.ref = "kstore" }
 kstore-file = { module = "io.github.xxfast:kstore-file", version.ref = "kstore" }
 jsontree = { module = "com.sebastianneubauer.jsontree:jsontree", version.ref = "jsontree" }
+stately-common = { module = "co.touchlab:stately-common", version.ref = "statelyCommon" }
+stately-iso-collections = { module = "co.touchlab:stately-iso-collections", version.ref = "statelyCommon" }
 
 [plugins]
 androidLibrary = { id = "com.android.library", version.ref = "agp" }
