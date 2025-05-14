@@ -19,7 +19,7 @@ private const val TAG = "Inspektor HttpClientCallLogger"
 internal class HttpClientCallLogger(
     private val dataSource: InspektorDataSource,
     private val ioDispatcher: CoroutineDispatcher,
-    private val notificationManager: NotificationManager,
+    private val notificationManager: NotificationManager?,
 ) {
     private val transactionLog = MutableHttpTransaction()
     @VisibleForTesting
@@ -51,7 +51,7 @@ internal class HttpClientCallLogger(
         requestPayloadSize: Long?,
         requestDate: Instant,
     ) {
-        notificationManager.notify("Recording Ktor Activity", "$method $url")
+        notificationManager?.notify("Recording Ktor Activity", "$method $url")
         transactionLog.apply {
             this.url = url
             this.host = host

@@ -33,7 +33,6 @@ import io.ktor.client.plugins.observer.wrap
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.content
 import io.ktor.client.statement.request
 import io.ktor.client.utils.buildHeaders
 import io.ktor.http.ContentType
@@ -87,7 +86,12 @@ public class InspektorConfig internal constructor() {
      */
     public var level: LogLevel = LogLevel.BODY
 
+    /** The maximum size of the request/response body to log. */
     public var maxContentLength: Int = 250_000
+
+    /** Shows a notification when a request is sent. */
+    @UnstableInspektorAPI
+    public var showNotifications: Boolean = true
 
     /**
      * The data source to store the logs.
@@ -132,12 +136,13 @@ public class InspektorConfig internal constructor() {
     }
 }
 
-@OptIn(InternalAPI::class, DelicateCoroutinesApi::class)
+@OptIn(InternalAPI::class, DelicateCoroutinesApi::class, UnstableInspektorAPI::class)
 public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
     "Inspektor", ::InspektorConfig,
 ) {
     val inspektorDataSource = pluginConfig.dataSource
-    val notificationManager = pluginConfig.notificationManager
+    val notificationManager =
+        if (pluginConfig.showNotifications) pluginConfig.notificationManager else null
 
     val level: LogLevel = pluginConfig.level
     if (level == LogLevel.NONE) return@createClientPlugin
