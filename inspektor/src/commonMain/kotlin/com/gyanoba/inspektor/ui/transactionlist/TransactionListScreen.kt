@@ -1,53 +1,40 @@
-package com.gyanoba.inspektor.ui
+package com.gyanoba.inspektor.ui.transactionlist
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerState
-import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -56,8 +43,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -65,19 +50,14 @@ import com.gyanoba.inspektor.data.GetAllLatestWithLimit
 import com.gyanoba.inspektor.data.InspektorDataSourceImpl
 import com.gyanoba.inspektor.platform.FileSharer
 import com.gyanoba.inspektor.platform.getAppName
-import com.gyanoba.inspektor.ui.components.AddOverrideIcon
+import com.gyanoba.inspektor.ui.UiEvent
 import com.gyanoba.inspektor.ui.components.DateRangeButton
 import com.gyanoba.inspektor.ui.components.DateRangePickerDialog
-import com.gyanoba.inspektor.ui.components.DefaultIconButton
 import com.gyanoba.inspektor.ui.components.Logo
 import com.gyanoba.inspektor.ui.components.SimpleSearchBar
-import com.gyanoba.inspektor.ui.theme.errorColor
-import com.gyanoba.inspektor.ui.theme.successColor
-import com.gyanoba.inspektor.ui.theme.warningColor
+import com.gyanoba.inspektor.ui.transactionlist.components.DeleteDialog
+import com.gyanoba.inspektor.ui.transactionlist.components.TransactionItem
 import com.gyanoba.inspektor.utils.DateFormatters
-import com.gyanoba.inspektor.utils.TimeFormatters
-import com.gyanoba.inspektor.utils.atLocalStartOfDay
-import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format
@@ -92,6 +72,36 @@ internal fun TransactionListScreen(
     val viewModel = viewModel<TransactionListViewModel> {
         TransactionListViewModel(InspektorDataSourceImpl.Instance, FileSharer())
     }
+    val snackbarHostState = remember { SnackbarHostState() }
+    var alertDialogData by remember { mutableStateOf<UiEvent.ShowErrorDialog?>(null) }
+    if (alertDialogData != null) {
+        AlertDialog(
+            onDismissRequest = { alertDialogData = null },
+            title = { Text("Error") },
+            text = { Text(alertDialogData?.message ?: "") },
+            confirmButton = {
+                TextButton(onClick = { alertDialogData = null }) {
+                    Text("OK")
+                }
+            }
+        )
+    }
+    LaunchedEffect(viewModel) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is UiEvent.ShowSnackBar -> {
+                    snackbarHostState.showSnackbar(
+                        message = event.message,
+                    )
+                }
+                is UiEvent.ShowErrorDialog -> {
+                    alertDialogData = event
+                }
+                else -> {}
+            }
+        }
+    }
+
     TransactionListScreen(
         viewModel.transactions.collectAsState().value,
         viewModel.searchFieldState,
@@ -104,6 +114,7 @@ internal fun TransactionListScreen(
         viewModel::onDateRangeSelected,
         viewModel::deleteTransactions,
         viewModel::shareAsHar,
+        snackbarHostState,
     )
 }
 
@@ -121,6 +132,7 @@ internal fun TransactionListScreen(
     onDateRangeSelected: (Instant, Instant) -> Unit,
     onDeleteTransactions: (Instant) -> Unit,
     onShareAsHar: () -> Unit,
+    snackbarHostState: SnackbarHostState,
 ) {
     var showDateRangePicker by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -211,7 +223,7 @@ internal fun TransactionListScreen(
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text("Overrides") },
+                                text = { Text("View Overrides") },
                                 onClick = {
                                     openOverridesScreen()
                                     showMenu = false
@@ -239,6 +251,12 @@ internal fun TransactionListScreen(
                         }
                     }
                 },
+            )
+        },
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier.padding(16.dp)
             )
         },
     ) { paddingValues ->
@@ -292,204 +310,3 @@ internal fun TransactionListScreen(
 
     }
 }
-
-@Composable
-internal fun TransactionItem(
-    transaction: GetAllLatestWithLimit,
-    onClick: () -> Unit,
-    onAddOverride: () -> Unit = {},
-    modifier: Modifier = Modifier,
-) {
-    Card(onClick = onClick, modifier = modifier.fillMaxWidth()) {
-        Row(modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp)) {
-            StatusCodeView(
-                transaction.responseCode,
-                isOverridden = transaction.isOverridden,
-                modifier = Modifier.width(60.dp),
-            )
-            Spacer(Modifier.width(8.dp))
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = transaction.method ?: "",
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.W600)
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        text = transaction.path ?: "",
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.W600)
-                    )
-                }
-                CompositionLocalProvider(
-                    LocalContentColor provides MaterialTheme.colorScheme.onSurface.copy(
-                        .6f
-                    )
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        if (transaction.scheme == "https") {
-                            Icon(
-                                Icons.Default.Lock,
-                                contentDescription = "Secure",
-                                modifier = Modifier.size(12.dp)
-                            )
-                            Spacer(Modifier.width(4.dp))
-                        }
-                        Text(
-                            text = transaction.host ?: "",
-                            style = MaterialTheme.typography.labelMedium
-                        )
-                    }
-                    Row {
-                        Text(
-                            text = transaction.requestDate?.toLocalDateTime(TimeZone.currentSystemDefault())
-                                ?.format(TimeFormatters.simpleLocalAmPm) ?: ""
-                        )
-                        Spacer(Modifier.weight(1f))
-                        Text(text = (transaction.tookMs?.toString() ?: "--") + " ms")
-                    }
-                }
-
-            }
-            DefaultIconButton(
-                onClick = onAddOverride,
-                tooltipText = "Add Override",
-            ) { AddOverrideIcon() }
-        }
-        if (transaction.error != null) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.errorContainer)
-                    .padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    Icons.Default.Warning,
-                    contentDescription = "Error",
-                    tint = MaterialTheme.colorScheme.onErrorContainer,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    text = transaction.error ?: "",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onErrorContainer,
-                    maxLines = 1,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-internal fun StatusCodeView(
-    statusCode: Long?,
-    isOverridden: Boolean = false,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Row(
-            modifier = Modifier,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            val color = when {
-                statusCode == null -> MaterialTheme.colorScheme.onSurface.copy(.5f)
-                statusCode < 300 -> successColor
-                statusCode < 400 -> warningColor
-                else -> errorColor
-            }
-            Box(
-                modifier = Modifier
-                    .size(8.dp)
-                    .clip(CircleShape)
-                    .background(color)
-            )
-            Spacer(Modifier.width(6.dp))
-            Text(
-                text = statusCode?.toString() ?: "---",
-                style = MaterialTheme.typography.titleMedium,
-            )
-        }
-        if (isOverridden) {
-            Spacer(Modifier.height(10.dp))
-            Icon(
-                Icons.Rounded.Edit,
-                contentDescription = "Overridden",
-                tint = MaterialTheme.colorScheme.primary.copy(.6f),
-                modifier = Modifier.size(18.dp).background(
-                    MaterialTheme.colorScheme.primary.copy(.2f),
-                    CircleShape
-                ).padding(4.dp)
-            )
-        }
-    }
-}
-
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-internal fun DeleteDialog(
-    onDismissRequest: () -> Unit,
-    onConfirm: (Instant) -> Unit,
-) {
-    val datePickerState = rememberDatePickerState(initialDisplayMode = DisplayMode.Input)
-    AlertDialog(
-        onDismissRequest = onDismissRequest,
-        title = { Text("Delete Transactions") },
-        text = {
-            Column {
-                Text("Are you sure you want to delete all transactions ${
-                    datePickerState.selectedDateInstant?.atLocalStartOfDay(TimeZone.currentSystemDefault())
-                        ?.toLocalDateTime(TimeZone.currentSystemDefault())?.date
-                        ?.format(DateFormatters.simpleLocalFormatter)?.let { "before $it" } ?: ""
-                }?")
-                DatePicker(
-                    title = null,
-                    headline = null,
-                    showModeToggle = false,
-                    state = datePickerState,
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    onConfirm(
-                        datePickerState.selectedDateInstant
-                            ?.atLocalStartOfDay(TimeZone.currentSystemDefault())
-                            ?: Clock.System.now()
-                    )
-                    onDismissRequest()
-                }
-            ) {
-                Text("Delete")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text("Cancel")
-            }
-        }
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-internal val DatePickerState.selectedDateInstant: Instant?
-    get() = selectedDateMillis?.let { Instant.fromEpochMilliseconds(it) }
-
-
-private val GetAllLatestWithLimit.isOverridden: Boolean
-    get() = isOverriddenNum > 0

@@ -24,6 +24,7 @@ internal actual object DriverFactory {
     }
 }
 
+@Suppress("EmptyMethod")
 @UnstableInspektorAPI
 public actual fun setApplicationId(applicationId: String) {
     // No-op

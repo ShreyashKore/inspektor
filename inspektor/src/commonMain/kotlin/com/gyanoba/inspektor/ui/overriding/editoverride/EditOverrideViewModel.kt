@@ -1,4 +1,4 @@
-package com.gyanoba.inspektor.ui.overriding
+package com.gyanoba.inspektor.ui.overriding.editoverride
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf

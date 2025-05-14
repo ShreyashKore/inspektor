@@ -1,21 +1,5 @@
 import com.gyanoba.inspektor.ClientCallLogger
-import com.gyanoba.inspektor.HttpClientCallLogger
-import com.gyanoba.inspektor.Inspektor
-import com.gyanoba.inspektor.LogLevel
-import com.gyanoba.inspektor.UnstableInspektorAPI
-import com.gyanoba.inspektor.data.DriverFactory
-import com.gyanoba.inspektor.data.HttpTransaction
-import com.gyanoba.inspektor.data.InspektorDataSourceImpl
-import com.gyanoba.inspektor.data.InspektorDatabase
-import com.gyanoba.inspektor.data.adapters.instantAdapter
-import com.gyanoba.inspektor.data.adapters.setMapEntryAdapter
-import com.gyanoba.inspektor.data.setApplicationId
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.mock.MockEngine
-import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respondOk
-import io.ktor.client.request.HttpRequestData
-import io.ktor.client.request.HttpResponseData
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.post
@@ -28,7 +12,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 
-class KtorMultipartTest: TestBase() {
+class KtorMultipartTest : TestBase() {
 
     @Test
     fun testMultipartRequest() {

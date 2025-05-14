@@ -1,5 +1,6 @@
 package com.gyanoba.inspektor
 
+import androidx.annotation.VisibleForTesting
 import com.gyanoba.inspektor.data.InspektorDataSource
 import com.gyanoba.inspektor.data.MutableHttpTransaction
 import com.gyanoba.inspektor.data.toImmutable
@@ -7,6 +8,7 @@ import com.gyanoba.inspektor.platform.NotificationManager
 import com.gyanoba.inspektor.utils.logErr
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -20,6 +22,7 @@ internal class HttpClientCallLogger(
     private val notificationManager: NotificationManager,
 ) {
     private val transactionLog = MutableHttpTransaction()
+    @VisibleForTesting
     val transaction get() = transactionLog.toImmutable()
     private val requestLoggedMonitor = Job()
     private val responseLoggedMonitor = Job()
@@ -116,6 +119,7 @@ internal class HttpClientCallLogger(
     }
 
 
+    @OptIn(DelicateCoroutinesApi::class)
     fun closeRequestLog() = GlobalScope.launch(ioDispatcher) {
         if (!requestLogged.compareAndSet(false, true)) return@launch
         try {
@@ -127,6 +131,7 @@ internal class HttpClientCallLogger(
         }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     fun closeResponseLog() = GlobalScope.launch(ioDispatcher) {
         if (!responseLogged.compareAndSet(false, true)) return@launch
         requestLoggedMonitor.join()
@@ -139,7 +144,9 @@ internal class HttpClientCallLogger(
         }
     }
 
+    @VisibleForTesting
     suspend fun joinRequestLogged() = requestLoggedMonitor.join()
 
+    @VisibleForTesting
     suspend fun joinResponseLogged() = responseLoggedMonitor.join()
 }

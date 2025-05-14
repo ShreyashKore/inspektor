@@ -51,6 +51,7 @@ import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.InternalAPI
 import io.ktor.utils.io.KtorDsl
 import io.ktor.utils.io.charsets.Charsets
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.IO
@@ -131,7 +132,7 @@ public class InspektorConfig internal constructor() {
     }
 }
 
-@OptIn(InternalAPI::class)
+@OptIn(InternalAPI::class, DelicateCoroutinesApi::class)
 public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
     "Inspektor", ::InspektorConfig,
 ) {
@@ -310,7 +311,7 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
                         val originalHeaders = mutableMapOf<String, List<String>>()
 
                         val newBody: ByteReadChannel? = override.action.responseBody?.takeIf { it.isNotEmpty() }?.let { newBodyString ->
-                            originalBody = response.content.tryReadText(
+                            originalBody = response.rawContent.tryReadText(
                                 response.charset() ?: Charsets.UTF_8, pluginConfig.maxContentLength
                             )?.run {
                                 substring(0..minOf(lastIndex, pluginConfig.maxContentLength))
@@ -388,7 +389,7 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
         val callLogger = response.call.attributes[ClientCallLogger]
         try {
             val charset = response.contentType()?.charset() ?: Charsets.UTF_8
-            val message = response.content.tryReadText(charset, pluginConfig.maxContentLength)
+            val message = response.rawContent.tryReadText(charset, pluginConfig.maxContentLength)
             message?.let { callLogger.addResponseBody(it) }
         } catch (e: Throwable) {
             logErr(e, "Inspektor") { "Failed to read response body" }

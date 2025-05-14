@@ -23,7 +23,6 @@ kotlin {
     jvm()
     androidTarget {
         publishLibraryVariants("release")
-        @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_1_8)
         }
@@ -109,8 +108,8 @@ kotlin {
         val appleMain by creating {
             dependsOn(commonMain)
             dependencies {
-                implementation("co.touchlab:stately-common:2.1.0")
-                implementation("co.touchlab:stately-iso-collections:2.1.0")
+                implementation(libs.stately.common)
+                implementation(libs.stately.iso.collections)
                 implementation(libs.ktor.client.darwin)
                 implementation(libs.sqlDelight.driver.native)
             }
