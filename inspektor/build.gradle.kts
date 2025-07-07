@@ -1,3 +1,4 @@
+import org.gradle.kotlin.dsl.invoke
 import org.jetbrains.compose.ExperimentalComposeLibrary
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -13,6 +14,7 @@ plugins {
     alias(libs.plugins.sqlDelight)
     alias(libs.plugins.atomifu)
     alias(libs.plugins.vanniktech)
+    alias(libs.plugins.mokkery)
 }
 
 group = "com.gyanoba.inspektor"

@@ -56,6 +56,9 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.minutes
 
 internal val ClientCallLogger = AttributeKey<HttpClientCallLogger>("CallLogger")
 internal val DisableLogging = AttributeKey<Unit>("DisableLogging")
@@ -88,6 +91,15 @@ public class InspektorConfig internal constructor() {
 
     /** The maximum size of the request/response body to log. */
     public var maxContentLength: Int = 250_000
+
+    @UnstableInspektorAPI
+    /** The maximum duration for which logs are retained. */
+    public var retentionDuration: Duration = 30.days
+        set(value) {
+            if (value < 5.minutes) {
+                throw IllegalArgumentException("Retention duration must be at least 5 minutes")
+            }
+        }
 
     /** Shows a notification when a request is sent. */
     @UnstableInspektorAPI
@@ -144,6 +156,11 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
     val notificationManager =
         if (pluginConfig.showNotifications) pluginConfig.notificationManager else null
 
+    val retentionManger = RetentionManager(
+        retentionDuration = pluginConfig.retentionDuration,
+        dataSource = inspektorDataSource
+    )
+
     val level: LogLevel = pluginConfig.level
     if (level == LogLevel.NONE) return@createClientPlugin
 
@@ -164,6 +181,7 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
             inspektorDataSource, Dispatchers.IO, notificationManager
         )
         request.attributes.put(ClientCallLogger, callLogger)
+        retentionManger.checkAndCleanUp()
 
         val override = run {
             val allOverrides = pluginConfig.overrideRepository.all
