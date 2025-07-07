@@ -22,6 +22,10 @@ internal class FileSharerImpl(private val context: Context) : FileSharer {
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
 
-        context.startActivity(Intent.createChooser(intent, "Share file"))
+        context.startActivity(
+            Intent.createChooser(intent, "Share file").apply {
+                setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+        )
     }
 }
