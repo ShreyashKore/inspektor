@@ -11,7 +11,8 @@ import kotlin.time.Duration.Companion.minutes
 
 internal class RetentionManager(
     private val retentionDuration: Duration,
-    private val dataSource: InspektorDataSource
+    private val dataSource: InspektorDataSource,
+    private val clock: Clock = Clock.System,
 ) {
     private val mutex = Mutex()
 
@@ -23,7 +24,7 @@ internal class RetentionManager(
     }
 
     suspend fun checkAndCleanUp() {
-        val currentTime = Clock.System.now()
+        val currentTime = clock.now()
         mutex.withLock {
             val isCleanupDue = currentTime - lastCleanupTime > cleanupFrequency
             if (isCleanupDue) {
@@ -35,7 +36,7 @@ internal class RetentionManager(
 
     private suspend fun cleanUpOldTransactions() {
         try {
-            val currentTime = Clock.System.now()
+            val currentTime = clock.now()
             val deleteBefore = currentTime - retentionDuration
             log("RetentionManager") {
                 "Cleaning up transactions older than $deleteBefore (retention duration: $retentionDuration)"

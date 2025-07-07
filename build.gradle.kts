@@ -10,6 +10,7 @@ plugins {
     alias(libs.plugins.atomifu)
     alias(libs.plugins.binaryCompatibility)
     alias(libs.plugins.kotlinx.kover)
+    alias(libs.plugins.mokkery).apply(false)
 }
 
 allprojects {
