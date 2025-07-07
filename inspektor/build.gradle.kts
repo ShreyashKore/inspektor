@@ -65,6 +65,7 @@ kotlin {
                 implementation(libs.androidx.paging3.extensions)
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.serialization.json)
+                implementation(libs.kotlinx.serialization.json.io)
                 implementation(libs.kotlinx.datetime)
                 implementation(libs.ktor.core)
                 implementation(libs.multiplatformSettings)

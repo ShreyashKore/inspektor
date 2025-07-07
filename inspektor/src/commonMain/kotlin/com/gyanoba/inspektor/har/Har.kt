@@ -182,7 +182,7 @@ internal fun HttpTransaction.toHarEntry(): Har.Entry? {
  * @param creatorVersion The version of the creator of the HAR log.
  * @return A string representation of the HAR log in JSON format.
  */
-internal fun List<HttpTransaction>.toHarLog(creatorName: String): String {
+internal fun List<HttpTransaction>.toHarLogString(creatorName: String): String {
     val log = Har.Log(
         creator = Har.Creator(name = creatorName),
         entries = this.mapNotNull { it.toHarEntry() },
@@ -190,4 +190,4 @@ internal fun List<HttpTransaction>.toHarLog(creatorName: String): String {
     return json.encodeToString(Har(log))
 }
 
-private val json = Json { encodeDefaults = true }
+internal val json = Json { encodeDefaults = true }
