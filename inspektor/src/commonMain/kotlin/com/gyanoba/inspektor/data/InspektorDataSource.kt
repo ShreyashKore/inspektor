@@ -40,7 +40,7 @@ internal class InspektorDataSourceImpl(
     private val db: InspektorDatabase,
 ) : InspektorDataSource {
 
-    override suspend fun insertHttpTransaction(httpTransaction: HttpTransaction) =
+    override suspend fun insertHttpTransaction(httpTransaction: HttpTransaction): Long =
         withContext(Dispatchers.IO) {
             db.transactionWithResult {
                 db.httpTransactionQueries.insert(httpTransaction)
@@ -48,15 +48,15 @@ internal class InspektorDataSourceImpl(
             }
         }
 
-    override fun getTransactionFlow(id: Long) =
+    override fun getTransactionFlow(id: Long): Flow<HttpTransaction> =
         db.httpTransactionQueries.getById(id).asFlow()
             .mapToOne(Dispatchers.IO)
 
-    override suspend fun getTransaction(id: Long) =
+    override suspend fun getTransaction(id: Long): HttpTransaction =
         db.httpTransactionQueries.getById(id)
             .executeAsOne()
 
-    override suspend fun updateHttpTransaction(httpTransaction: HttpTransaction) =
+    override suspend fun updateHttpTransaction(httpTransaction: HttpTransaction): Unit =
         withContext(Dispatchers.IO) {
             db.httpTransactionQueries.insertOrReplace(httpTransaction)
         }
@@ -65,7 +65,7 @@ internal class InspektorDataSourceImpl(
     override suspend fun getAllLatestHttpTransactionsForDateRange(
         startDate: Instant,
         endDate: Instant,
-    ) =
+    ): List<HttpTransaction> =
         withContext(Dispatchers.IO) {
             db.httpTransactionQueries.getAllLatestForDateRange(startDate, endDate).executeAsList()
         }
@@ -73,7 +73,7 @@ internal class InspektorDataSourceImpl(
     override fun getAllLatestHttpTransactionsForDateRangeFlow(
         startDate: Instant,
         endDate: Instant,
-    ) =
+    ): Flow<List<HttpTransaction>> =
         db.httpTransactionQueries.getAllLatestForDateRange(startDate, endDate).asFlow()
             .mapToList(Dispatchers.IO)
 
@@ -96,11 +96,11 @@ internal class InspektorDataSourceImpl(
     }
 
 
-    override fun getAllHttpTransactionsCount() =
+    override fun getAllHttpTransactionsCount(): Flow<Long> =
         db.httpTransactionQueries.getAllCount().asFlow()
             .mapToOne(Dispatchers.IO)
 
-    override suspend fun deleteBefore(timestamp: Instant) = withContext(Dispatchers.IO) {
+    override suspend fun deleteBefore(timestamp: Instant): Unit = withContext(Dispatchers.IO) {
         db.httpTransactionQueries.deleteBefore(timestamp)
     }
 

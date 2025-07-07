@@ -179,7 +179,6 @@ internal fun HttpTransaction.toHarEntry(): Har.Entry? {
  * Converts a list of [HttpTransaction] to a HAR log string.
  *
  * @param creatorName The name of the creator of the HAR log.
- * @param creatorVersion The version of the creator of the HAR log.
  * @return A string representation of the HAR log in JSON format.
  */
 internal fun List<HttpTransaction>.toHarLogString(creatorName: String): String {
