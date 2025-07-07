@@ -11,7 +11,7 @@ atomicfuGradlePlugin = "0.27.0"
 mokkery = "2.9.0"
 kotlinx-coroutines = "1.10.2"
 kotlinx-serialization = "1.9.0"
-compose = "1.7.3"
+compose = "1.8.2"
 androidx-activityCompose = "1.10.1"
 androidx-uiTest = "1.8.3"
 napier = "2.7.1"
@@ -30,10 +30,12 @@ kstore = "1.0.0"
 bcv = "0.18.0"
 kover = "0.9.1"
 statelyCommon = "2.1.0"
+material-icons = "1.7.3"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 
+material-icons-core = { module = "org.jetbrains.compose.material:material-icons-core", version.ref = "material-icons" }
 androidx-paging3-extensions = { module = "app.cash.sqldelight:androidx-paging3-extensions", version.ref = "androidxPaging3Extensions" }
 lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 lifecycle-runtime-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
