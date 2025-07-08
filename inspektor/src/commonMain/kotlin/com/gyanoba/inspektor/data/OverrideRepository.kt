@@ -7,6 +7,7 @@ import io.github.xxfast.kstore.extensions.minus
 import io.github.xxfast.kstore.extensions.plus
 import io.github.xxfast.kstore.extensions.updatesOrEmpty
 import io.github.xxfast.kstore.file.extensions.listStoreOf
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.Flow
@@ -61,6 +62,7 @@ internal class OverrideRepositoryImpl(
 
     init {
         // start collection to receive cached value
+        @OptIn(DelicateCoroutinesApi::class)
         GlobalScope.launch { cached.collect() }
     }
 

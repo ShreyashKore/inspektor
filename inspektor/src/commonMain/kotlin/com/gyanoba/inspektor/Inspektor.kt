@@ -424,7 +424,7 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
     ResponseObserver.install(ResponseObserver.prepare { onResponse(observer) }, client)
 }
 
-private inline fun ClientPluginBuilder<InspektorConfig>.shouldNotLog(attributes: Attributes): Boolean {
+private fun ClientPluginBuilder<InspektorConfig>.shouldNotLog(attributes: Attributes): Boolean {
     return pluginConfig.level == LogLevel.NONE || attributes.contains(DisableLogging)
 }
 
