@@ -37,11 +37,6 @@ dependencies {
 To use Inspektor, install the plugin in your `HttpClient` configuration:
 
 ```kotlin
-import io.ktor.client.HttpClient
-import io.ktor.client.plugins.api.install
-import io.ktor.client.request.get
-import com.gyanoba.inspektor.Inspektor
-
 // For Android this is enough
 val client = HttpClient {
     install(Inspektor)
@@ -60,8 +55,6 @@ Inspektor.
 This is used to determine the location to store the database file.
 
 ```kotlin
-import data.db.setApplicationId
-
 fun main() {
     setApplicationId("com.example.myapp")
     // ...
@@ -78,6 +71,8 @@ You can customize Inspektor using the `InspektorConfig` object. Here are the ava
 - `filter`: Allows you to filter log messages for calls matching a predicate.
 - `sanitizeHeader`: Allows you to sanitize sensitive headers to avoid their values appearing in the
   logs.
+- `showNotifications`: If set to `true`, notifications will be shown for HTTP requests. Defaults to `true`.
+- `retentionDuration`: Specifies the duration for which the logs will be retained. Defaults to 30 days.
 
 ### Example
 
@@ -87,6 +82,8 @@ install(Inspektor) {
     maxContentLength = 100_000
     filter { request -> request.url.host.contains("example.com") }
     sanitizeHeader { header -> header == "Authorization" }
+    showNotifications = true
+    retentionDuration = 30.days
 }
 ```
 
@@ -114,11 +111,17 @@ This opens up a new activity in Android, a bottom sheet in iOS, and a new window
 
 On Android you can also open the UI by clicking on the generated notifications.
 
+## HAR Export
+
+Inspektor supports exporting the logs in HAR format. You can export the logs by clicking on the
+"Export as HAR" button in the UI. This allows you to analyze the logs in detail using tools like
+[HAR Viewer](https://toolbox.googleapps.com/apps/har_analyzer/) or [Fiddler](https://www.telerik.com/fiddler).
+
 ## Upcoming Features 🚀
 
 - [x] Request-Response overriding functionality
 - [ ] Pause and allow editing Request and Response
-- [ ] HAR export for detailed analysis
+- [x] HAR export for detailed analysis
 - [ ] More HTTP client support (OkHttp maybe?)
 
 ## License
