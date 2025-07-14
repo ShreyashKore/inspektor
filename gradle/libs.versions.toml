@@ -5,7 +5,7 @@ android-compileSdk = "36"
 # dependencies versions
 agp = "8.11.0"
 kotlin = "2.2.0"
-publish = "0.33.0"
+publish = "0.34.0"
 androidxPaging3Extensions = "2.1.0"
 atomicfuGradlePlugin = "0.27.0"
 mokkery = "2.9.0"
