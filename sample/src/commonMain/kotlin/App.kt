@@ -27,7 +27,7 @@ internal fun App() = MaterialTheme {
             )
         }
         composable("todos/{todoId}") { backStackEntry ->
-            val todoId = backStackEntry.arguments?.getString("todoId")?.toIntOrNull()
+            val todoId = backStackEntry.savedStateHandle.get<String>("todoId")?.toIntOrNull()
             if (todoId != null) {
                 TodoDetailsScreen(
                     todoId = todoId,
