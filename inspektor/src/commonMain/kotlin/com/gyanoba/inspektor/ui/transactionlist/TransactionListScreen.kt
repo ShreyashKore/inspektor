@@ -58,7 +58,7 @@ import com.gyanoba.inspektor.ui.components.SimpleSearchBar
 import com.gyanoba.inspektor.ui.transactionlist.components.DeleteDialog
 import com.gyanoba.inspektor.ui.transactionlist.components.TransactionItem
 import com.gyanoba.inspektor.utils.DateFormatters
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format
 import kotlinx.datetime.toLocalDateTime
