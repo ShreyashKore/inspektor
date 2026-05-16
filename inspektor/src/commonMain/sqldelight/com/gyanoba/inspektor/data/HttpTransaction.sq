@@ -3,7 +3,7 @@ import kotlin.collections.List;
 import kotlin.collections.Map;
 import kotlin.collections.Set;
 import kotlin.String;
-import kotlinx.datetime.Instant;
+import kotlin.time.Instant;
 
 PRAGMA user_version = 3;
 

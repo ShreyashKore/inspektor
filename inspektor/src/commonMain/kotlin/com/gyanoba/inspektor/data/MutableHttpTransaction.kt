@@ -1,6 +1,6 @@
 package com.gyanoba.inspektor.data
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 internal data class MutableHttpTransaction(
     var id: Long = 0L,

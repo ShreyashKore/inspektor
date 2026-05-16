@@ -29,12 +29,11 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_1_8)
         }
     }
-    val iosX64 = iosX64()
     val iosArm64 = iosArm64()
     val iosSimulatorArm64 = iosSimulatorArm64()
 
     val appleTargets = listOf(
-        iosX64, iosArm64, iosSimulatorArm64,
+        iosArm64, iosSimulatorArm64,
     )
 
     appleTargets.forEach { target ->
