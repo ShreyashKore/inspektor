@@ -135,7 +135,17 @@ jobs:
         run: ./gradlew sample:assembleDebug
 
       - name: Build iOS app
-        run: xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp -sdk iphonesimulator -arch arm64 ONLY_ACTIVE_ARCH=YES CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO build
+        run: |
+          xcodebuild \
+            -project iosApp/iosApp.xcodeproj \
+            -scheme iosApp \
+            -sdk iphonesimulator \
+            -arch arm64 \
+            OTHER_LDFLAGS='$(inherited) -Wl,-ld_classic' \
+            ONLY_ACTIVE_ARCH=YES \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            build
 
   deploy-snapshot:
     name: Deploy
