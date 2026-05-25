@@ -65,6 +65,7 @@ kotlin {
                 implementation(libs.sqlDelight.coroutines.extensions)
                 implementation(libs.paging.compose.common)
                 implementation(libs.androidx.paging3.extensions)
+                implementation(libs.kotlinx.atomicfu)
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.kotlinx.serialization.json.io)
@@ -84,6 +85,8 @@ kotlin {
                 implementation(compose.uiTest)
                 implementation(libs.kotlinx.coroutines.test)
                 implementation(libs.ktor.client.mock)
+                implementation(libs.ktor.client.content.negotiation)
+                implementation(libs.ktor.serialization.kotlinx.json)
             }
         }
 
