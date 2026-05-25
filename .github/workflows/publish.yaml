@@ -145,7 +145,18 @@ jobs:
           xcrun --sdk iphonesimulator --show-sdk-version
 
       - name: Build iOS app
-        run: xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
+        run: |
+          xcodebuild \
+            -project iosApp/iosApp.xcodeproj \
+            -scheme iosApp \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            ONLY_ACTIVE_ARCH=YES \
+            ARCHS=arm64 \
+            EXCLUDED_ARCHS=x86_64 \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            build
 
   deploy-snapshot:
     name: Deploy
