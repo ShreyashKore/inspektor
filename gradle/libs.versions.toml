@@ -4,7 +4,7 @@ android-compileSdk = "36"
 
 # dependencies versions
 agp = "9.2.1"
-kotlin = "2.3.21"
+kotlin = "2.4.0"
 publish = "0.36.0"
 androidxPaging3Extensions = "2.3.2"
 atomicfuGradlePlugin = "0.32.1"
