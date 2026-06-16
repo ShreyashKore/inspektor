@@ -5,7 +5,7 @@ import com.gyanoba.inspektor.data.HttpTransaction
 import com.gyanoba.inspektor.data.InspektorDataSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 object NoOpDataSource : InspektorDataSource {
     override suspend fun insertHttpTransaction(httpTransaction: HttpTransaction): Long {

@@ -1,7 +1,7 @@
 package com.gyanoba.inspektor.data.adapters
 
 import app.cash.sqldelight.ColumnAdapter
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 internal val instantAdapter = object : ColumnAdapter<Instant, Long> {
     override fun decode(databaseValue: Long): Instant = Instant.fromEpochMilliseconds(databaseValue)

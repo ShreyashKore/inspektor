@@ -7,7 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 
 internal interface InspektorDataSource {
