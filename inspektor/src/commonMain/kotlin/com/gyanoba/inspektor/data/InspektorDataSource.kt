@@ -3,6 +3,7 @@ package com.gyanoba.inspektor.data
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOne
+import app.cash.sqldelight.coroutines.mapToOneOrNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
@@ -48,13 +49,13 @@ internal class InspektorDataSourceImpl(
             }
         }
 
-    override fun getTransactionFlow(id: Long): Flow<HttpTransaction> =
+    override fun getTransactionFlow(id: Long): Flow<HttpTransaction?> =
         db.httpTransactionQueries.getById(id).asFlow()
-            .mapToOne(Dispatchers.IO)
+            .mapToOneOrNull(Dispatchers.IO)
 
-    override suspend fun getTransaction(id: Long): HttpTransaction =
+    override suspend fun getTransaction(id: Long): HttpTransaction? =
         db.httpTransactionQueries.getById(id)
-            .executeAsOne()
+            .executeAsOneOrNull()
 
     override suspend fun updateHttpTransaction(httpTransaction: HttpTransaction): Unit =
         withContext(Dispatchers.IO) {

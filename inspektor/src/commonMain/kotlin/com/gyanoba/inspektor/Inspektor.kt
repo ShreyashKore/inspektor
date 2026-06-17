@@ -99,6 +99,7 @@ public class InspektorConfig internal constructor() {
             if (value < 5.minutes) {
                 throw IllegalArgumentException("Retention duration must be at least 5 minutes")
             }
+            field = value
         }
 
     /** Shows a notification when a request is sent. */
