@@ -83,6 +83,7 @@ Constraints for this module:
 - It contributes **no** AndroidManifest entries, resources, assets or `androidx.startup` initializers. Its Android namespace is `com.gyanoba.inspektor.noop` (deliberately different from `:inspektor`) so the two can never collide.
 - **Any public API change to `:inspektor` must be mirrored here**, otherwise consumers' code stops compiling when they swap variants. Run `./gradlew apiDump` and diff `inspektor/api/*` against `inspektor-no-op/api/*` to check.
 - `src/commonTest/kotlin/NoOpInspektorTest.kt` is the behavioural contract: request/response pass through untouched, the body is re-readable, and user-supplied `filter` / `sanitizeHeader` predicates are never invoked. Keep those tests passing.
+- The `:sample` app exercises both artifacts via Android `dev`/`prod` product flavors. Because the sample calls `install(Inspektor)` from `commonMain`, the swap is done with a `dependencySubstitution` on `prod*` configurations (see the bottom of `sample/build.gradle.kts`), not `prodImplementation` — KMP metadata compilation cannot express a per-flavor dependency. `./gradlew :sample:assembleDebug` builds both flavors, so CI catches API drift between the two modules.
 
 ### HAR export (`har/Har.kt`)
 

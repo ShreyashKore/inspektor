@@ -61,11 +61,46 @@ all still compile and run in both variants — they just do nothing in the no-op
 Because the no-op artifact contains no Activity, no `ContentProvider`, no resources and no
 `androidx.startup` initializer, it contributes nothing to your merged manifest either. Its only
 dependency is `ktor-client-core`, which your project already has, so it adds no transitive
-dependencies of its own. For reference, the release AAR is under 10 KB, versus roughly 1 MB for the
-real library before its transitive dependencies are counted.
+dependencies of its own.
 
 The iOS `-lsqlite3` linker flag is only required for the real library; the no-op artifact needs no
 platform setup at all.
+
+#### What it saves
+
+The `:sample` module in this repo is built in both configurations (`dev` uses the real library,
+`prod` uses the no-op). Comparing the two release APKs, without R8/minification:
+
+| | dev (real) | prod (no-op) | saved |
+|---|---:|---:|---:|
+| **APK on disk** | **14.09 MiB** | **9.95 MiB** | **4.13 MiB (29%)** |
+| dex (uncompressed) | 30.1 MB | 28.0 MB | 2.08 MB |
+| bundled `.dylib` / `.dll` | 6.26 MB | 0 | 6.26 MB |
+| assets | 212 KB | 151 KB | 61 KB |
+
+The `prod` APK contains no Inspektor implementation whatsoever — no `InspektorDatabase`, no UI
+screens, no override repository, no retention manager, no HAR export, and none of SQLDelight, KStore
+or JsonTree. Only the API stubs (`InspektorConfig`, `LogLevel`, `openInspektor`) survive. Its merged
+manifest has no `MainActivity`, no `InspektorFileProvider` and no `ContextInitializer` entry.
+
+Your own savings will differ: much of the dex delta above is Compose UI that the sample app already
+uses elsewhere, and R8 will strip some of the rest in a real release build.
+
+#### Using it from Kotlin Multiplatform shared code
+
+If you call `install(Inspektor)` or `openInspektor()` from `commonMain`, the API must be on the
+common compile classpath for *every* target, so a per-variant `devImplementation` cannot express it.
+Substitute the module for the production variants instead — see `sample/build.gradle.kts`:
+
+```kotlin
+configurations.matching { it.name.startsWith("prod") }.configureEach {
+    resolutionStrategy.dependencySubstitution {
+        substitute(module("com.gyanoba.inspektor:inspektor"))
+            .using(module("com.gyanoba.inspektor:inspektor-no-op:latest-version"))
+            .because("Inspektor must not ship in production builds")
+    }
+}
+```
 
 ## Usage
 

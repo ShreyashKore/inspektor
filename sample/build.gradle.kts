@@ -98,6 +98,13 @@ android {
         manifest.srcFile("src/androidMain/AndroidManifest.xml")
         res.srcDirs("src/androidMain/res")
     }
+    // Demonstrates shipping Inspektor in dev builds only. `dev` gets the real library, `prod` gets
+    // the no-op artifact -- see the dependency substitution below.
+    flavorDimensions += "environment"
+    productFlavors {
+        create("dev") { dimension = "environment" }
+        create("prod") { dimension = "environment" }
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -107,6 +114,23 @@ android {
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.15"
+    }
+}
+
+// The shared code calls `install(Inspektor)` and `openInspektor()` from `commonMain`, so the API has
+// to be on the common compile classpath for every target -- KMP's metadata compilation cannot
+// express a per-Android-flavor dependency. Instead, the `prod*` variants resolve `:inspektor` to
+// `:inspektor-no-op`. This works precisely because the two expose an identical public API under the
+// same package; if they ever diverge, the prod variants stop compiling.
+//
+// A pure-Android consumer needs none of this and can just write:
+//   devImplementation("com.gyanoba.inspektor:inspektor:<version>")
+//   prodImplementation("com.gyanoba.inspektor:inspektor-no-op:<version>")
+configurations.matching { it.name.startsWith("prod") }.configureEach {
+    resolutionStrategy.dependencySubstitution {
+        substitute(project(":inspektor"))
+            .using(project(":inspektor-no-op"))
+            .because("Inspektor must not ship in production builds")
     }
 }
 
