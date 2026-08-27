@@ -69,7 +69,7 @@ jobs:
           find /Applications -name "Xcode*" -maxdepth 1 -mindepth 1
 
       - name: Unit tests
-        run: ./gradlew :inspektor:jvmTest
+        run: ./gradlew :inspektor:jvmTest :inspektor-no-op:jvmTest
 
   instrumentation-tests:
     name: Instrumentation tests

@@ -1,8 +1,7 @@
 public final class com/gyanoba/inspektor/ComposableSingletons$MainActivityKt {
 	public static final field INSTANCE Lcom/gyanoba/inspektor/ComposableSingletons$MainActivityKt;
-	public static field lambda-1 Lkotlin/jvm/functions/Function2;
 	public fun <init> ()V
-	public final fun getLambda-1$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-995830411$inspektor_release ()Lkotlin/jvm/functions/Function2;
 }
 
 public final class com/gyanoba/inspektor/InspektorConfig {
@@ -10,10 +9,14 @@ public final class com/gyanoba/inspektor/InspektorConfig {
 	public final fun filter (Lkotlin/jvm/functions/Function1;)V
 	public final fun getLevel ()Lcom/gyanoba/inspektor/LogLevel;
 	public final fun getMaxContentLength ()I
+	public final fun getRetentionDuration-UwyO8pc ()J
+	public final fun getShowNotifications ()Z
 	public final fun sanitizeHeader (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
 	public static synthetic fun sanitizeHeader$default (Lcom/gyanoba/inspektor/InspektorConfig;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
 	public final fun setLevel (Lcom/gyanoba/inspektor/LogLevel;)V
 	public final fun setMaxContentLength (I)V
+	public final fun setRetentionDuration-LRDsOJo (J)V
+	public final fun setShowNotifications (Z)V
 }
 
 public final class com/gyanoba/inspektor/InspektorKt {
@@ -45,142 +48,127 @@ public final class com/gyanoba/inspektor/MainActivity : androidx/activity/Compon
 public abstract interface annotation class com/gyanoba/inspektor/UnstableInspektorAPI : java/lang/annotation/Annotation {
 }
 
-public final class com/gyanoba/inspektor/data/Db_androidKt {
-	public static final fun setApplicationId (Ljava/lang/String;)V
+public final class com/gyanoba/inspektor/platform/InspektorFileProvider : androidx/core/content/FileProvider {
+	public static final field $stable I
+	public fun <init> ()V
 }
 
 public final class com/gyanoba/inspektor/ui/ComposableSingletons$AppKt {
 	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/ComposableSingletons$AppKt;
-	public static field lambda-1 Lkotlin/jvm/functions/Function2;
 	public fun <init> ()V
-	public final fun getLambda-1$inspektor_release ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/gyanoba/inspektor/ui/ComposableSingletons$TransactionDetailScreenKt {
-	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/ComposableSingletons$TransactionDetailScreenKt;
-	public static field lambda-1 Lkotlin/jvm/functions/Function2;
-	public static field lambda-2 Lkotlin/jvm/functions/Function2;
-	public static field lambda-3 Lkotlin/jvm/functions/Function2;
-	public static field lambda-4 Lkotlin/jvm/functions/Function2;
-	public fun <init> ()V
-	public final fun getLambda-1$inspektor_release ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda-2$inspektor_release ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda-3$inspektor_release ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda-4$inspektor_release ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/gyanoba/inspektor/ui/ComposableSingletons$TransactionListScreenKt {
-	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/ComposableSingletons$TransactionListScreenKt;
-	public static field lambda-1 Lkotlin/jvm/functions/Function2;
-	public static field lambda-10 Lkotlin/jvm/functions/Function2;
-	public static field lambda-11 Lkotlin/jvm/functions/Function3;
-	public static field lambda-12 Lkotlin/jvm/functions/Function3;
-	public static field lambda-13 Lkotlin/jvm/functions/Function2;
-	public static field lambda-2 Lkotlin/jvm/functions/Function2;
-	public static field lambda-3 Lkotlin/jvm/functions/Function4;
-	public static field lambda-4 Lkotlin/jvm/functions/Function2;
-	public static field lambda-5 Lkotlin/jvm/functions/Function2;
-	public static field lambda-6 Lkotlin/jvm/functions/Function2;
-	public static field lambda-7 Lkotlin/jvm/functions/Function2;
-	public static field lambda-8 Lkotlin/jvm/functions/Function2;
-	public static field lambda-9 Lkotlin/jvm/functions/Function2;
-	public fun <init> ()V
-	public final fun getLambda-1$inspektor_release ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda-10$inspektor_release ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda-11$inspektor_release ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda-12$inspektor_release ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda-13$inspektor_release ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda-2$inspektor_release ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda-3$inspektor_release ()Lkotlin/jvm/functions/Function4;
-	public final fun getLambda-4$inspektor_release ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda-5$inspektor_release ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda-6$inspektor_release ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda-7$inspektor_release ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda-8$inspektor_release ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda-9$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$69455912$inspektor_release ()Lkotlin/jvm/functions/Function2;
 }
 
 public final class com/gyanoba/inspektor/ui/components/ComposableSingletons$CodeBlockKt {
 	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/components/ComposableSingletons$CodeBlockKt;
-	public static field lambda-1 Lkotlin/jvm/functions/Function2;
-	public static field lambda-2 Lkotlin/jvm/functions/Function2;
-	public static field lambda-3 Lkotlin/jvm/functions/Function4;
-	public static field lambda-4 Lkotlin/jvm/functions/Function2;
 	public fun <init> ()V
-	public final fun getLambda-1$inspektor_release ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda-2$inspektor_release ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda-3$inspektor_release ()Lkotlin/jvm/functions/Function4;
-	public final fun getLambda-4$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-1239927136$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-436731255$inspektor_release ()Lkotlin/jvm/functions/Function4;
+	public final fun getLambda$1020749187$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$961756766$inspektor_release ()Lkotlin/jvm/functions/Function2;
 }
 
 public final class com/gyanoba/inspektor/ui/components/ComposableSingletons$DateTimePickerDialogKt {
 	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/components/ComposableSingletons$DateTimePickerDialogKt;
-	public static field lambda-1 Lkotlin/jvm/functions/Function3;
-	public static field lambda-2 Lkotlin/jvm/functions/Function3;
 	public fun <init> ()V
-	public final fun getLambda-1$inspektor_release ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda-2$inspektor_release ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$-2118076150$inspektor_release ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$1971418184$inspektor_release ()Lkotlin/jvm/functions/Function3;
 }
 
 public final class com/gyanoba/inspektor/ui/components/ComposableSingletons$SearchableTextKt {
 	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/components/ComposableSingletons$SearchableTextKt;
-	public static field lambda-1 Lkotlin/jvm/functions/Function2;
-	public static field lambda-2 Lkotlin/jvm/functions/Function3;
 	public fun <init> ()V
-	public final fun getLambda-1$inspektor_release ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda-2$inspektor_release ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$2075120564$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$316833362$inspektor_release ()Lkotlin/jvm/functions/Function3;
 }
 
 public final class com/gyanoba/inspektor/ui/components/ComposableSingletons$SimpleSearchBarKt {
 	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/components/ComposableSingletons$SimpleSearchBarKt;
-	public static field lambda-1 Lkotlin/jvm/functions/Function2;
-	public static field lambda-2 Lkotlin/jvm/functions/Function2;
 	public fun <init> ()V
-	public final fun getLambda-1$inspektor_release ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda-2$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-619771263$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$513107224$inspektor_release ()Lkotlin/jvm/functions/Function2;
 }
 
-public final class com/gyanoba/inspektor/ui/overriding/ComposableSingletons$EditOverrideScreenKt {
-	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/overriding/ComposableSingletons$EditOverrideScreenKt;
-	public static field lambda-1 Lkotlin/jvm/functions/Function2;
-	public static field lambda-10 Lkotlin/jvm/functions/Function2;
-	public static field lambda-2 Lkotlin/jvm/functions/Function2;
-	public static field lambda-3 Lkotlin/jvm/functions/Function3;
-	public static field lambda-4 Lkotlin/jvm/functions/Function2;
-	public static field lambda-5 Lkotlin/jvm/functions/Function3;
-	public static field lambda-6 Lkotlin/jvm/functions/Function2;
-	public static field lambda-7 Lkotlin/jvm/functions/Function2;
-	public static field lambda-8 Lkotlin/jvm/functions/Function2;
-	public static field lambda-9 Lkotlin/jvm/functions/Function2;
+public final class com/gyanoba/inspektor/ui/overriding/editoverride/ComposableSingletons$EditOverrideScreenKt {
+	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/overriding/editoverride/ComposableSingletons$EditOverrideScreenKt;
 	public fun <init> ()V
-	public final fun getLambda-1$inspektor_release ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda-10$inspektor_release ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda-2$inspektor_release ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda-3$inspektor_release ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda-4$inspektor_release ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda-5$inspektor_release ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda-6$inspektor_release ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda-7$inspektor_release ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda-8$inspektor_release ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda-9$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-1015070469$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-1754654621$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-817968307$inspektor_release ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$454235040$inspektor_release ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$821214464$inspektor_release ()Lkotlin/jvm/functions/Function2;
 }
 
-public final class com/gyanoba/inspektor/ui/overriding/ComposableSingletons$OverridesListScreenKt {
-	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/overriding/ComposableSingletons$OverridesListScreenKt;
-	public static field lambda-1 Lkotlin/jvm/functions/Function2;
-	public static field lambda-2 Lkotlin/jvm/functions/Function2;
-	public static field lambda-3 Lkotlin/jvm/functions/Function3;
-	public static field lambda-4 Lkotlin/jvm/functions/Function2;
-	public static field lambda-5 Lkotlin/jvm/functions/Function2;
-	public static field lambda-6 Lkotlin/jvm/functions/Function2;
-	public static field lambda-7 Lkotlin/jvm/functions/Function2;
+public final class com/gyanoba/inspektor/ui/overriding/editoverride/components/ComposableSingletons$MatchersSectionKt {
+	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/overriding/editoverride/components/ComposableSingletons$MatchersSectionKt;
 	public fun <init> ()V
-	public final fun getLambda-1$inspektor_release ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda-2$inspektor_release ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda-3$inspektor_release ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda-4$inspektor_release ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda-5$inspektor_release ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda-6$inspektor_release ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda-7$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-2021183845$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$667988059$inspektor_release ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/gyanoba/inspektor/ui/overriding/editoverride/components/ComposableSingletons$StatusRequestResponseEditKt {
+	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/overriding/editoverride/components/ComposableSingletons$StatusRequestResponseEditKt;
+	public fun <init> ()V
+	public final fun getLambda$-86038211$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$1034614036$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$346617306$inspektor_release ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/gyanoba/inspektor/ui/overriding/overrideslist/ComposableSingletons$OverridesListScreenKt {
+	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/overriding/overrideslist/ComposableSingletons$OverridesListScreenKt;
+	public fun <init> ()V
+	public final fun getLambda$-1028266868$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-266399788$inspektor_release ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$-369883989$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-670498050$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-869003682$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$629873915$inspektor_release ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/gyanoba/inspektor/ui/overriding/overrideslist/components/ComposableSingletons$OverrideRowKt {
+	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/overriding/overrideslist/components/ComposableSingletons$OverrideRowKt;
+	public fun <init> ()V
+	public final fun getLambda$-575566715$inspektor_release ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/gyanoba/inspektor/ui/transactiondetails/ComposableSingletons$TransactionDetailScreenKt {
+	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/transactiondetails/ComposableSingletons$TransactionDetailScreenKt;
+	public fun <init> ()V
+	public final fun getLambda$-1411799693$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-1575459853$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-1602283383$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$1473628576$inspektor_release ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/gyanoba/inspektor/ui/transactionlist/ComposableSingletons$TransactionListScreenKt {
+	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/transactionlist/ComposableSingletons$TransactionListScreenKt;
+	public fun <init> ()V
+	public final fun getLambda$-1185244457$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-1256317004$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-1823085745$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-2006968043$inspektor_release ()Lkotlin/jvm/functions/Function4;
+	public final fun getLambda$-224810472$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-307996044$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-384177096$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-455249643$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-781473665$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$1324599869$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$1425998700$inspektor_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$645340251$inspektor_release ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$684863060$inspektor_release ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/gyanoba/inspektor/ui/transactionlist/components/ComposableSingletons$DeleteDialogKt {
+	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/transactionlist/components/ComposableSingletons$DeleteDialogKt;
+	public fun <init> ()V
+	public final fun getLambda$-1226759405$inspektor_release ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$-1296407279$inspektor_release ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$-312677736$inspektor_release ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/gyanoba/inspektor/ui/transactionlist/components/ComposableSingletons$TransactionItemKt {
+	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/transactionlist/components/ComposableSingletons$TransactionItemKt;
+	public fun <init> ()V
+	public final fun getLambda$-1457624986$inspektor_release ()Lkotlin/jvm/functions/Function2;
 }
 

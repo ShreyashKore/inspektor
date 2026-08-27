@@ -8,7 +8,7 @@ Inspektor is a Kotlin Multiplatform HTTP inspection library for Ktor (think Chuc
 
 Targets: **Android, JVM (Desktop), and iOS** (iosArm64 + iosSimulatorArm64). The published artifact is `com.gyanoba.inspektor:inspektor`.
 
-The repo has two modules: `:inspektor` (the library) and `:sample` (a Compose Multiplatform demo app). `iosApp/` is the Xcode project for the sample.
+The repo has three modules: `:inspektor` (the library), `:inspektor-no-op` (an empty drop-in replacement, published as `com.gyanoba.inspektor:inspektor-no-op`), and `:sample` (a Compose Multiplatform demo app). `iosApp/` is the Xcode project for the sample.
 
 ## Commands
 
@@ -20,6 +20,7 @@ Use the Gradle wrapper (`./gradlew`). The toolchain expects **JDK 17**; the Andr
 
 # Run all library unit tests (CI runs only the JVM target)
 ./gradlew :inspektor:jvmTest
+./gradlew :inspektor-no-op:jvmTest
 
 # Run a single test class / method (JVM)
 ./gradlew :inspektor:jvmTest --tests "RetentionManagerTest"
@@ -71,6 +72,17 @@ Compose Multiplatform with `androidx.navigation.compose`. `ui/App.kt` is the `Na
 ### Platform structure (`expect`/`actual`)
 
 `commonMain` holds nearly all logic. Per-platform `actual`s live under `androidMain`, `jvmMain`, and `appleMain` (a hand-created source set shared by both iOS targets — see `dependsOn(commonMain)` wiring in `inspektor/build.gradle.kts`). Platform abstractions in `platform/`: `NotificationManager`, `FileSharer`, `FileUtils`, `AppName`, `Os`. Each has an `expect` in commonMain and actuals per target.
+
+### The no-op module (`:inspektor-no-op`)
+
+`:inspektor-no-op` mirrors `:inspektor`'s **public** API exactly — same package (`com.gyanoba.inspektor`), same `Inspektor` plugin, `InspektorConfig`, `LogLevel`, `UnstableInspektorAPI`, `openInspektor()` and `data.setApplicationId()` — with empty bodies. `Inspektor` is `createClientPlugin("Inspektor", ::InspektorConfig) {}` with no hooks at all, so it cannot read, buffer, persist or log anything. Consumers use it as `releaseImplementation` / `prodImplementation` and keep the real library on the debug/dev variant.
+
+Constraints for this module:
+
+- It depends on **`ktor-client-core` only**. Never add Compose, SQLDelight, kstore, serialization, coroutines or any platform dependency here — the whole point is that it drags nothing into a release binary.
+- It contributes **no** AndroidManifest entries, resources, assets or `androidx.startup` initializers. Its Android namespace is `com.gyanoba.inspektor.noop` (deliberately different from `:inspektor`) so the two can never collide.
+- **Any public API change to `:inspektor` must be mirrored here**, otherwise consumers' code stops compiling when they swap variants. Run `./gradlew apiDump` and diff `inspektor/api/*` against `inspektor-no-op/api/*` to check.
+- `src/commonTest/kotlin/NoOpInspektorTest.kt` is the behavioural contract: request/response pass through untouched, the body is re-readable, and user-supplied `filter` / `sanitizeHeader` predicates are never invoked. Keep those tests passing.
 
 ### HAR export (`har/Har.kt`)
 

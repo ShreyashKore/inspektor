@@ -32,6 +32,41 @@ dependencies {
 }
 ```
 
+### Keeping Inspektor out of production builds
+
+Inspektor bundles a database, a Compose UI and everything needed to inspect traffic, so you almost
+certainly do not want it in your release binary. A companion artifact,
+`com.gyanoba.inspektor:inspektor-no-op`, exists for exactly that: it exposes the **same public API**
+under the same package, but every part of it is empty. The Ktor plugin installs no hooks, so
+requests and responses are passed straight through — nothing is read, buffered, persisted or logged,
+and no UI, database, notification or Compose code is shipped at all.
+
+Depend on the real library only in the variant you debug with, and on the no-op everywhere else:
+
+```kotlin
+dependencies {
+    // Android build types
+    debugImplementation("com.gyanoba.inspektor:inspektor:latest-version")
+    releaseImplementation("com.gyanoba.inspektor:inspektor-no-op:latest-version")
+
+    // ...or Android product flavors
+    devImplementation("com.gyanoba.inspektor:inspektor:latest-version")
+    prodImplementation("com.gyanoba.inspektor:inspektor-no-op:latest-version")
+}
+```
+
+Your code does not change. `install(Inspektor) { ... }`, `openInspektor()` and `setApplicationId()`
+all still compile and run in both variants — they just do nothing in the no-op one.
+
+Because the no-op artifact contains no Activity, no `ContentProvider`, no resources and no
+`androidx.startup` initializer, it contributes nothing to your merged manifest either. Its only
+dependency is `ktor-client-core`, which your project already has, so it adds no transitive
+dependencies of its own. For reference, the release AAR is under 10 KB, versus roughly 1 MB for the
+real library before its transitive dependencies are counted.
+
+The iOS `-lsqlite3` linker flag is only required for the real library; the no-op artifact needs no
+platform setup at all.
+
 ## Usage
 
 To use Inspektor, install the plugin in your `HttpClient` configuration:

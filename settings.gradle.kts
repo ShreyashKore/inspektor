@@ -19,4 +19,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "inspektor"
 include(":inspektor")
+include(":inspektor-no-op")
 include(":sample")
