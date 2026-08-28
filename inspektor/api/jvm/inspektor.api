@@ -1,9 +1,3 @@
-public final class com/gyanoba/inspektor/ComposableSingletons$Inspektor_jvmKt {
-	public static final field INSTANCE Lcom/gyanoba/inspektor/ComposableSingletons$Inspektor_jvmKt;
-	public fun <init> ()V
-	public final fun getLambda$-1803024150$inspektor ()Lkotlin/jvm/functions/Function2;
-}
-
 public final class com/gyanoba/inspektor/InspektorConfig {
 	public static final field $stable I
 	public final fun filter (Lkotlin/jvm/functions/Function1;)V
@@ -43,126 +37,167 @@ public final class com/gyanoba/inspektor/LogLevel : java/lang/Enum {
 public abstract interface annotation class com/gyanoba/inspektor/UnstableInspektorAPI : java/lang/annotation/Annotation {
 }
 
+public final class com/gyanoba/inspektor/data/Db_jvmKt {
+	public static final fun setApplicationId (Ljava/lang/String;)V
+}
+
+public final class com/gyanoba/inspektor/data/GetAllLatestWithLimit {
+	public static final field $stable I
+	public fun <init> (JLkotlin/time/Instant;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/String;J)V
+	public final fun component1 ()J
+	public final fun component10 ()Ljava/lang/Long;
+	public final fun component11 ()Ljava/lang/Long;
+	public final fun component12 ()Ljava/lang/String;
+	public final fun component13 ()J
+	public final fun component2 ()Lkotlin/time/Instant;
+	public final fun component3 ()Ljava/lang/Long;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun component8 ()Ljava/lang/String;
+	public final fun component9 ()Ljava/lang/Long;
+	public final fun copy (JLkotlin/time/Instant;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/String;J)Lcom/gyanoba/inspektor/data/GetAllLatestWithLimit;
+	public static synthetic fun copy$default (Lcom/gyanoba/inspektor/data/GetAllLatestWithLimit;JLkotlin/time/Instant;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/String;JILjava/lang/Object;)Lcom/gyanoba/inspektor/data/GetAllLatestWithLimit;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Ljava/lang/String;
+	public final fun getHost ()Ljava/lang/String;
+	public final fun getId ()J
+	public final fun getMethod ()Ljava/lang/String;
+	public final fun getPath ()Ljava/lang/String;
+	public final fun getProtocol ()Ljava/lang/String;
+	public final fun getRequestDate ()Lkotlin/time/Instant;
+	public final fun getRequestPayloadSize ()Ljava/lang/Long;
+	public final fun getResponseCode ()Ljava/lang/Long;
+	public final fun getResponsePayloadSize ()Ljava/lang/Long;
+	public final fun getScheme ()Ljava/lang/String;
+	public final fun getTookMs ()Ljava/lang/Long;
+	public fun hashCode ()I
+	public final fun isOverriddenNum ()J
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/gyanoba/inspektor/data/HttpTransaction {
+	public static final field $stable I
+	public fun <init> (JLjava/lang/String;Lkotlin/time/Instant;Lkotlin/time/Instant;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;Ljava/util/Set;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;Ljava/util/Set;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/Boolean;Ljava/util/Set;Ljava/lang/String;Ljava/lang/Long;Ljava/util/Set;Ljava/lang/String;)V
+	public final fun component1 ()J
+	public final fun component10 ()Ljava/lang/String;
+	public final fun component11 ()Ljava/lang/String;
+	public final fun component12 ()Ljava/lang/String;
+	public final fun component13 ()Ljava/lang/Long;
+	public final fun component14 ()Ljava/lang/String;
+	public final fun component15 ()Ljava/util/Set;
+	public final fun component16 ()Ljava/lang/Long;
+	public final fun component17 ()Ljava/lang/String;
+	public final fun component18 ()Ljava/lang/Boolean;
+	public final fun component19 ()Ljava/lang/Long;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component20 ()Ljava/lang/String;
+	public final fun component21 ()Ljava/lang/String;
+	public final fun component22 ()Ljava/lang/Long;
+	public final fun component23 ()Ljava/lang/String;
+	public final fun component24 ()Ljava/util/Set;
+	public final fun component25 ()Ljava/lang/Long;
+	public final fun component26 ()Ljava/lang/String;
+	public final fun component27 ()Ljava/lang/Boolean;
+	public final fun component28 ()Ljava/util/Set;
+	public final fun component29 ()Ljava/lang/String;
+	public final fun component3 ()Lkotlin/time/Instant;
+	public final fun component30 ()Ljava/lang/Long;
+	public final fun component31 ()Ljava/util/Set;
+	public final fun component32 ()Ljava/lang/String;
+	public final fun component4 ()Lkotlin/time/Instant;
+	public final fun component5 ()Ljava/lang/Long;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun component8 ()Ljava/lang/String;
+	public final fun component9 ()Ljava/lang/String;
+	public final fun copy (JLjava/lang/String;Lkotlin/time/Instant;Lkotlin/time/Instant;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;Ljava/util/Set;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;Ljava/util/Set;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/Boolean;Ljava/util/Set;Ljava/lang/String;Ljava/lang/Long;Ljava/util/Set;Ljava/lang/String;)Lcom/gyanoba/inspektor/data/HttpTransaction;
+	public static synthetic fun copy$default (Lcom/gyanoba/inspektor/data/HttpTransaction;JLjava/lang/String;Lkotlin/time/Instant;Lkotlin/time/Instant;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;Ljava/util/Set;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;Ljava/util/Set;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/Boolean;Ljava/util/Set;Ljava/lang/String;Ljava/lang/Long;Ljava/util/Set;Ljava/lang/String;ILjava/lang/Object;)Lcom/gyanoba/inspektor/data/HttpTransaction;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Ljava/lang/String;
+	public final fun getHost ()Ljava/lang/String;
+	public final fun getId ()J
+	public final fun getMethod ()Ljava/lang/String;
+	public final fun getOriginalRequestBody ()Ljava/lang/String;
+	public final fun getOriginalRequestHeaders ()Ljava/util/Set;
+	public final fun getOriginalResponseBody ()Ljava/lang/String;
+	public final fun getOriginalResponseCode ()Ljava/lang/Long;
+	public final fun getOriginalResponseHeaders ()Ljava/util/Set;
+	public final fun getPath ()Ljava/lang/String;
+	public final fun getProtocol ()Ljava/lang/String;
+	public final fun getRequestBody ()Ljava/lang/String;
+	public final fun getRequestContentType ()Ljava/lang/String;
+	public final fun getRequestDate ()Lkotlin/time/Instant;
+	public final fun getRequestHeaders ()Ljava/util/Set;
+	public final fun getRequestHeadersSize ()Ljava/lang/Long;
+	public final fun getRequestPayloadSize ()Ljava/lang/Long;
+	public final fun getResponseBody ()Ljava/lang/String;
+	public final fun getResponseCipherSuite ()Ljava/lang/String;
+	public final fun getResponseCode ()Ljava/lang/Long;
+	public final fun getResponseContentType ()Ljava/lang/String;
+	public final fun getResponseDate ()Lkotlin/time/Instant;
+	public final fun getResponseHeaders ()Ljava/util/Set;
+	public final fun getResponseHeadersSize ()Ljava/lang/Long;
+	public final fun getResponseMessage ()Ljava/lang/String;
+	public final fun getResponsePayloadSize ()Ljava/lang/Long;
+	public final fun getResponseTlsVersion ()Ljava/lang/String;
+	public final fun getScheme ()Ljava/lang/String;
+	public final fun getTookMs ()Ljava/lang/Long;
+	public final fun getUrl ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isRequestBodyEncoded ()Ljava/lang/Boolean;
+	public final fun isResponseBodyEncoded ()Ljava/lang/Boolean;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/gyanoba/inspektor/data/HttpTransaction$Adapter {
+	public static final field $stable I
+	public fun <init> (Lapp/cash/sqldelight/ColumnAdapter;Lapp/cash/sqldelight/ColumnAdapter;Lapp/cash/sqldelight/ColumnAdapter;Lapp/cash/sqldelight/ColumnAdapter;Lapp/cash/sqldelight/ColumnAdapter;Lapp/cash/sqldelight/ColumnAdapter;)V
+	public final fun getOriginalRequestHeadersAdapter ()Lapp/cash/sqldelight/ColumnAdapter;
+	public final fun getOriginalResponseHeadersAdapter ()Lapp/cash/sqldelight/ColumnAdapter;
+	public final fun getRequestDateAdapter ()Lapp/cash/sqldelight/ColumnAdapter;
+	public final fun getRequestHeadersAdapter ()Lapp/cash/sqldelight/ColumnAdapter;
+	public final fun getResponseDateAdapter ()Lapp/cash/sqldelight/ColumnAdapter;
+	public final fun getResponseHeadersAdapter ()Lapp/cash/sqldelight/ColumnAdapter;
+}
+
+public final class com/gyanoba/inspektor/data/HttpTransactionQueries : app/cash/sqldelight/TransacterImpl {
+	public static final field $stable I
+	public fun <init> (Lapp/cash/sqldelight/db/SqlDriver;Lcom/gyanoba/inspektor/data/HttpTransaction$Adapter;)V
+	public final fun delete (J)Lapp/cash/sqldelight/db/QueryResult;
+	public final fun deleteAll ()Lapp/cash/sqldelight/db/QueryResult;
+	public final fun deleteBefore (Lkotlin/time/Instant;)Lapp/cash/sqldelight/db/QueryResult;
+	public final fun getAll ()Lapp/cash/sqldelight/Query;
+	public final fun getAll (Lkotlin/jvm/functions/FunctionN;)Lapp/cash/sqldelight/Query;
+	public final fun getAllCount ()Lapp/cash/sqldelight/Query;
+	public final fun getAllLatest ()Lapp/cash/sqldelight/Query;
+	public final fun getAllLatest (Lkotlin/jvm/functions/FunctionN;)Lapp/cash/sqldelight/Query;
+	public final fun getAllLatestForDateRange (Lkotlin/time/Instant;Lkotlin/time/Instant;)Lapp/cash/sqldelight/Query;
+	public final fun getAllLatestForDateRange (Lkotlin/time/Instant;Lkotlin/time/Instant;Lkotlin/jvm/functions/FunctionN;)Lapp/cash/sqldelight/Query;
+	public final fun getAllLatestWithLimit (Lkotlin/time/Instant;Lkotlin/time/Instant;Ljava/lang/String;Ljava/lang/String;)Lapp/cash/sqldelight/Query;
+	public final fun getAllLatestWithLimit (Lkotlin/time/Instant;Lkotlin/time/Instant;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function13;)Lapp/cash/sqldelight/Query;
+	public final fun getById (J)Lapp/cash/sqldelight/Query;
+	public final fun getById (JLkotlin/jvm/functions/FunctionN;)Lapp/cash/sqldelight/Query;
+	public final fun getLast ()Lapp/cash/sqldelight/Query;
+	public final fun getLast (Lkotlin/jvm/functions/FunctionN;)Lapp/cash/sqldelight/Query;
+	public final fun insert (Lcom/gyanoba/inspektor/data/HttpTransaction;)Lapp/cash/sqldelight/db/QueryResult;
+	public final fun insertOrReplace (Lcom/gyanoba/inspektor/data/HttpTransaction;)Lapp/cash/sqldelight/db/QueryResult;
+	public final fun lastInsertRowId ()Lapp/cash/sqldelight/ExecutableQuery;
+	public final fun update (Ljava/lang/Long;Lkotlin/time/Instant;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;Ljava/util/Set;Ljava/util/Set;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;J)Lapp/cash/sqldelight/db/QueryResult;
+}
+
+public abstract interface class com/gyanoba/inspektor/data/InspektorDatabase : app/cash/sqldelight/Transacter {
+	public static final field Companion Lcom/gyanoba/inspektor/data/InspektorDatabase$Companion;
+	public abstract fun getHttpTransactionQueries ()Lcom/gyanoba/inspektor/data/HttpTransactionQueries;
+}
+
+public final class com/gyanoba/inspektor/data/InspektorDatabase$Companion {
+	public final fun getSchema ()Lapp/cash/sqldelight/db/SqlSchema;
+	public final fun invoke (Lapp/cash/sqldelight/db/SqlDriver;Lcom/gyanoba/inspektor/data/HttpTransaction$Adapter;)Lcom/gyanoba/inspektor/data/InspektorDatabase;
+}
+
 public final class com/gyanoba/inspektor/platform/NotificationManager_jvmKt {
 	public static final fun composeDesktopResourcesPath ()Ljava/lang/String;
-}
-
-public final class com/gyanoba/inspektor/ui/ComposableSingletons$AppKt {
-	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/ComposableSingletons$AppKt;
-	public fun <init> ()V
-	public final fun getLambda$69455912$inspektor ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/gyanoba/inspektor/ui/components/ComposableSingletons$CodeBlockKt {
-	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/components/ComposableSingletons$CodeBlockKt;
-	public fun <init> ()V
-	public final fun getLambda$-1239927136$inspektor ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-436731255$inspektor ()Lkotlin/jvm/functions/Function4;
-	public final fun getLambda$1020749187$inspektor ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$961756766$inspektor ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/gyanoba/inspektor/ui/components/ComposableSingletons$DateTimePickerDialogKt {
-	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/components/ComposableSingletons$DateTimePickerDialogKt;
-	public fun <init> ()V
-	public final fun getLambda$-2118076150$inspektor ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$1971418184$inspektor ()Lkotlin/jvm/functions/Function3;
-}
-
-public final class com/gyanoba/inspektor/ui/components/ComposableSingletons$SearchableTextKt {
-	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/components/ComposableSingletons$SearchableTextKt;
-	public fun <init> ()V
-	public final fun getLambda$2075120564$inspektor ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$316833362$inspektor ()Lkotlin/jvm/functions/Function3;
-}
-
-public final class com/gyanoba/inspektor/ui/components/ComposableSingletons$SimpleSearchBarKt {
-	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/components/ComposableSingletons$SimpleSearchBarKt;
-	public fun <init> ()V
-	public final fun getLambda$-619771263$inspektor ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$513107224$inspektor ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/gyanoba/inspektor/ui/overriding/editoverride/ComposableSingletons$EditOverrideScreenKt {
-	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/overriding/editoverride/ComposableSingletons$EditOverrideScreenKt;
-	public fun <init> ()V
-	public final fun getLambda$-1015070469$inspektor ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-1754654621$inspektor ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-817968307$inspektor ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$454235040$inspektor ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$821214464$inspektor ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/gyanoba/inspektor/ui/overriding/editoverride/components/ComposableSingletons$MatchersSectionKt {
-	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/overriding/editoverride/components/ComposableSingletons$MatchersSectionKt;
-	public fun <init> ()V
-	public final fun getLambda$-2021183845$inspektor ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$667988059$inspektor ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/gyanoba/inspektor/ui/overriding/editoverride/components/ComposableSingletons$StatusRequestResponseEditKt {
-	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/overriding/editoverride/components/ComposableSingletons$StatusRequestResponseEditKt;
-	public fun <init> ()V
-	public final fun getLambda$-86038211$inspektor ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$1034614036$inspektor ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$346617306$inspektor ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/gyanoba/inspektor/ui/overriding/overrideslist/ComposableSingletons$OverridesListScreenKt {
-	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/overriding/overrideslist/ComposableSingletons$OverridesListScreenKt;
-	public fun <init> ()V
-	public final fun getLambda$-1028266868$inspektor ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-266399788$inspektor ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$-369883989$inspektor ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-670498050$inspektor ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-869003682$inspektor ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$629873915$inspektor ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/gyanoba/inspektor/ui/overriding/overrideslist/components/ComposableSingletons$OverrideRowKt {
-	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/overriding/overrideslist/components/ComposableSingletons$OverrideRowKt;
-	public fun <init> ()V
-	public final fun getLambda$-575566715$inspektor ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/gyanoba/inspektor/ui/transactiondetails/ComposableSingletons$TransactionDetailScreenKt {
-	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/transactiondetails/ComposableSingletons$TransactionDetailScreenKt;
-	public fun <init> ()V
-	public final fun getLambda$-1411799693$inspektor ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-1575459853$inspektor ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-1602283383$inspektor ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$1473628576$inspektor ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/gyanoba/inspektor/ui/transactionlist/ComposableSingletons$TransactionListScreenKt {
-	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/transactionlist/ComposableSingletons$TransactionListScreenKt;
-	public fun <init> ()V
-	public final fun getLambda$-1185244457$inspektor ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-1256317004$inspektor ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-1823085745$inspektor ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-2006968043$inspektor ()Lkotlin/jvm/functions/Function4;
-	public final fun getLambda$-224810472$inspektor ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-307996044$inspektor ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-384177096$inspektor ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-455249643$inspektor ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-781473665$inspektor ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$1324599869$inspektor ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$1425998700$inspektor ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$645340251$inspektor ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$684863060$inspektor ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/gyanoba/inspektor/ui/transactionlist/components/ComposableSingletons$DeleteDialogKt {
-	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/transactionlist/components/ComposableSingletons$DeleteDialogKt;
-	public fun <init> ()V
-	public final fun getLambda$-1226759405$inspektor ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$-1296407279$inspektor ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$-312677736$inspektor ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/gyanoba/inspektor/ui/transactionlist/components/ComposableSingletons$TransactionItemKt {
-	public static final field INSTANCE Lcom/gyanoba/inspektor/ui/transactionlist/components/ComposableSingletons$TransactionItemKt;
-	public fun <init> ()V
-	public final fun getLambda$-1457624986$inspektor ()Lkotlin/jvm/functions/Function2;
 }
 

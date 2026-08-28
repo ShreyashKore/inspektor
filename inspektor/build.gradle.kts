@@ -63,8 +63,6 @@ kotlin {
                 implementation(libs.lifecycle.runtime.compose)
                 implementation(libs.androidx.navigation.compose)
                 implementation(libs.sqlDelight.coroutines.extensions)
-                implementation(libs.paging.compose.common)
-                implementation(libs.androidx.paging3.extensions)
                 implementation(libs.kotlinx.atomicfu)
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.serialization.json)
@@ -72,7 +70,6 @@ kotlin {
                 implementation(libs.kotlinx.datetime)
                 implementation(libs.ktor.core)
                 implementation(libs.multiplatformSettings)
-                implementation(libs.ktor.client.logging)
                 implementation(libs.jsontree)
                 implementation(libs.kstore)
                 implementation(libs.kstore.file)
@@ -85,6 +82,7 @@ kotlin {
                 implementation(compose.uiTest)
                 implementation(libs.kotlinx.coroutines.test)
                 implementation(libs.ktor.client.mock)
+                implementation(libs.ktor.client.logging)
                 implementation(libs.ktor.client.content.negotiation)
                 implementation(libs.ktor.serialization.kotlinx.json)
             }
@@ -103,7 +101,6 @@ kotlin {
                 implementation(compose.uiTooling)
                 implementation(libs.androidx.activityCompose)
                 implementation(libs.kotlinx.coroutines.android)
-                implementation(libs.ktor.client.okhttp)
                 implementation(libs.sqlDelight.driver.android)
                 implementation(libs.androidx.startup.runtime)
             }
@@ -113,7 +110,6 @@ kotlin {
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation(libs.kotlinx.coroutines.swing)
-                implementation(libs.ktor.client.okhttp)
                 implementation(libs.sqlDelight.driver.sqlite)
             }
         }
@@ -123,7 +119,6 @@ kotlin {
             dependencies {
                 implementation(libs.stately.common)
                 implementation(libs.stately.iso.collections)
-                implementation(libs.ktor.client.darwin)
                 implementation(libs.sqlDelight.driver.native)
             }
         }

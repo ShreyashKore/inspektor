@@ -82,18 +82,3 @@ internal object ResponseReceiveHook :
         }
     }
 }
-
-
-internal object ReceiveAfterHook :
-    ClientHook<suspend ReceiveAfterHook.Context.(HttpResponse) -> Unit> {
-
-    class Context(private val context: PipelineContext<HttpResponse, Unit>) {
-        suspend fun proceedWith(response: HttpResponse) = context.proceedWith(response)
-    }
-
-    override fun install(client: HttpClient, handler: suspend Context.(HttpResponse) -> Unit) {
-        client.receivePipeline.intercept(HttpReceivePipeline.After) {
-            handler(Context(this), subject)
-        }
-    }
-}

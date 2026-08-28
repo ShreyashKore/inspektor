@@ -19,10 +19,16 @@ allprojects {
 
 apiValidation {
     ignoredProjects.addAll(listOf("sample"))
-    ignoredPackages.addAll(listOf("com.gyanoba.inspektor.data"))
-    ignoredClasses.add("**.ComposableSingletons$*Kt")
-    ignoredClasses.add("**.MainActivityKt") // If MainActivityKt also has unstable parts
-    ignoredClasses.add("**.AppKt")
+
+    // The Compose compiler emits a public `ComposableSingletons$<File>Kt` holder per file that
+    // contains composable lambdas. They are a compiler implementation detail -- their names encode
+    // the owning Gradle module, so they churn whenever code moves -- and nothing in `ui` is public
+    // API on purpose, so the whole package is excluded. `ignoredClasses` takes fully qualified
+    // names only (the `**.ComposableSingletons$*Kt` glob that used to be here never matched
+    // anything), hence the two entries below are spelled out.
+    ignoredPackages.add("com.gyanoba.inspektor.ui")
+    ignoredClasses.add("com.gyanoba.inspektor.ComposableSingletons\u0024Inspektor_jvmKt")
+    ignoredClasses.add("com.gyanoba.inspektor.ComposableSingletons\u0024Inspektor_androidKt")
 }
 
 buildscript {

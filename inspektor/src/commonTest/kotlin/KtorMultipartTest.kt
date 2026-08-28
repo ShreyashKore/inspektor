@@ -58,7 +58,8 @@ class KtorMultipartTest : TestBase() {
                 setBody(ByteArrayContent(byteArrayOf(9, 8, 7, 6)))
             }
             val request = response.request
-            println(db.httpTransactionQueries.getAll().executeAsList())
+            // The recorder inserts off the test dispatcher, so wait for the row before reading it.
+            request.attributes[ClientCallLogger].joinRequestLogged()
             val transaction = db.httpTransactionQueries.getLast().executeAsOne()
             assertEquals(request.method.value, transaction.method)
         }
