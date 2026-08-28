@@ -11,7 +11,7 @@ import com.gyanoba.inspektor.utils.ResponseReceiveHook
 import com.gyanoba.inspektor.utils.SendMonitoringHook
 import com.gyanoba.inspektor.utils.SendStateHook
 import com.gyanoba.inspektor.utils.approxByteCount
-import com.gyanoba.inspektor.utils.logErr
+import com.gyanoba.inspektor.utils.InspektorLog
 import com.gyanoba.inspektor.utils.observe
 import com.gyanoba.inspektor.utils.toHeaderMap
 import com.gyanoba.inspektor.utils.toInspektorRequest
@@ -388,7 +388,7 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
             val message = response.bodyAsChannel().tryReadText(charset, config.maxContentLength)
             message?.let { callLogger.addResponseBody(it) }
         } catch (e: Throwable) {
-            logErr(e, "Inspektor") { "Failed to read response body" }
+            InspektorLog.error(e, "Inspektor") { "Failed to read response body" }
         } finally {
             callLogger.closeResponseLog()
         }

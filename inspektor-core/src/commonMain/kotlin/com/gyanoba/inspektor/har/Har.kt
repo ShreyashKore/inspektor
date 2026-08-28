@@ -3,7 +3,10 @@ package com.gyanoba.inspektor.har
 import com.gyanoba.inspektor.UnstableInspektorAPI
 import com.gyanoba.inspektor.data.HttpTransaction
 import kotlinx.serialization.Serializable
+import kotlinx.io.Sink
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.io.encodeToSink
 
 /**
  *  Using Har as name space for dumping all Har related classes
@@ -13,103 +16,102 @@ import kotlinx.serialization.json.Json
  *
  *  [Specification](http://www.softwareishard.com/blog/har-12-spec/)
  * */
-@UnstableInspektorAPI
 @Serializable
-public data class Har(
-    public val log: Log,
+internal data class Har(
+    val log: Log,
 ) {
-    public companion object {
-        public const val HAR_VERSION: String = "1.2"
+    companion object {
+        const val HAR_VERSION: String = "1.2"
     }
 
     @Serializable
-    public data class Log(
-        public val version: String = HAR_VERSION,
-        public val creator: Creator,
-        public val entries: List<Entry>,
+    internal data class Log(
+        val version: String = HAR_VERSION,
+        val creator: Creator,
+        val entries: List<Entry>,
     )
 
     @Serializable
-    public data class Creator(
-        public val name: String,
-        public val version: String = HAR_VERSION,
+    internal data class Creator(
+        val name: String,
+        val version: String = HAR_VERSION,
     )
 
     @Serializable
-    public data class Entry(
-        public val startedDateTime: String,
-        public val time: Long,
-        public val request: Request,
-        public val response: Response,
-        public val cache: Cache,
-        public val timings: Timings
+    internal data class Entry(
+        val startedDateTime: String,
+        val time: Long,
+        val request: Request,
+        val response: Response,
+        val cache: Cache,
+        val timings: Timings
     )
 
     @Serializable
-    public data class Request(
-        public val method: String?,
-        public val url: String?,
-        public val httpVersion: String?,
-        public val cookies: List<String> = emptyList(),
-        public val headers: List<Header>,
-        public val queryString: List<QueryParameter> = emptyList(),
-        public val postData: PostData? = null,
-        public val headersSize: Long?,
-        public val bodySize: Long?,
+    internal data class Request(
+        val method: String?,
+        val url: String?,
+        val httpVersion: String?,
+        val cookies: List<String> = emptyList(),
+        val headers: List<Header>,
+        val queryString: List<QueryParameter> = emptyList(),
+        val postData: PostData? = null,
+        val headersSize: Long?,
+        val bodySize: Long?,
     )
 
     @Serializable
-    public data class Response(
-        public val status: Long?,
-        public val statusText: String?,
-        public val httpVersion: String?,
-        public val cookies: List<String> = emptyList(),
-        public val headers: List<Header>,
-        public val content: Content,
-        public val redirectURL: String? = null,
-        public val headersSize: Long?,
-        public val bodySize: Long?,
+    internal data class Response(
+        val status: Long?,
+        val statusText: String?,
+        val httpVersion: String?,
+        val cookies: List<String> = emptyList(),
+        val headers: List<Header>,
+        val content: Content,
+        val redirectURL: String? = null,
+        val headersSize: Long?,
+        val bodySize: Long?,
     )
 
     @Serializable
-    public data class Content(
-        public val size: Long?,
-        public val mimeType: String?,
-        public val text: String? = null,
-        public val encoding: String? = null,
+    internal data class Content(
+        val size: Long?,
+        val mimeType: String?,
+        val text: String? = null,
+        val encoding: String? = null,
     )
 
     @Serializable
-    public data class Header(
-        public val name: String,
-        public val value: String,
+    internal data class Header(
+        val name: String,
+        val value: String,
     )
 
     @Serializable
-    public data class QueryParameter(
-        public val name: String,
-        public val value: String,
+    internal data class QueryParameter(
+        val name: String,
+        val value: String,
     )
 
     @Serializable
-    public data class PostData(
-        public val mimeType: String?,
-        public val text: String?,
-        public val params: List<Param> = emptyList(),
+    internal data class PostData(
+        val mimeType: String?,
+        val text: String?,
+        val params: List<Param> = emptyList(),
     ) {
         @Serializable
-        public data class Param(
+        internal data class Param(
             val name: String, val value: String
         )
     }
 
     @Serializable
-    public data class Cache(
-        public val afterRequest: SecondaryRequest? = null,
-        public val beforeRequest: SecondaryRequest? = null,
+    internal data class Cache(
+        val afterRequest: SecondaryRequest? = null,
+        val beforeRequest: SecondaryRequest? = null,
     ) {
         @Serializable
-        public data class SecondaryRequest(
+        internal data class SecondaryRequest(
             val expires: String? = null,
             val lastAccess: String,
             val eTag: String,
@@ -118,20 +120,19 @@ public data class Har(
     }
 
     @Serializable
-    public data class Timings(
-        public val blocked: Long? = null,
-        public val dns: Long? = null,
-        public val ssl: Long? = null,
-        public val connect: Long? = null,
-        public val send: Long = 0,
-        public val wait: Long,
-        public val receive: Long = 0,
+    internal data class Timings(
+        val blocked: Long? = null,
+        val dns: Long? = null,
+        val ssl: Long? = null,
+        val connect: Long? = null,
+        val send: Long = 0,
+        val wait: Long,
+        val receive: Long = 0,
     )
 }
 
 
-@UnstableInspektorAPI
-public fun HttpTransaction.toHarEntry(): Har.Entry? {
+private fun HttpTransaction.toHarEntry(): Har.Entry? {
     val requestDate = this.requestDate ?: return null
 
     return Har.Entry(
@@ -174,20 +175,39 @@ public fun HttpTransaction.toHarEntry(): Har.Entry? {
 /**
  * Converts a list of [HttpTransaction] to a HAR log string.
  *
+ * Materialises the whole log in memory; prefer [writeHarLog] for anything large.
+ *
  * @param creatorName The name of the creator of the HAR log.
  * @return A string representation of the HAR log in JSON format.
  */
 @UnstableInspektorAPI
-public fun List<HttpTransaction>.toHarLogString(creatorName: String): String {
-    val log = Har.Log(
-        creator = Har.Creator(name = creatorName),
-        entries = this.mapNotNull { it.toHarEntry() },
-    )
-    return json.encodeToString(Har(log))
+public fun List<HttpTransaction>.toHarLogString(creatorName: String): String =
+    json.encodeToString(harOf(creatorName))
+
+/**
+ * Writes these transactions to [sink] as a HAR log, streaming rather than building the whole
+ * document in memory first.
+ *
+ * @param creatorName The name of the creator of the HAR log.
+ */
+@OptIn(ExperimentalSerializationApi::class)
+@UnstableInspektorAPI
+public fun List<HttpTransaction>.writeHarLog(sink: Sink, creatorName: String) {
+    json.encodeToSink(harOf(creatorName), sink)
 }
 
-@UnstableInspektorAPI
-public val json: Json = Json { encodeDefaults = true }
+private fun List<HttpTransaction>.harOf(creatorName: String) = Har(
+    Har.Log(
+        creator = Har.Creator(name = creatorName),
+        entries = mapNotNull { it.toHarEntry() },
+    )
+)
+
+/**
+ * Private on purpose: this is Inspektor's serializer configuration, not something a consumer should
+ * find in their namespace under a name as generic as `json`.
+ */
+private val json: Json = Json { encodeDefaults = true }
 
 /**
  * Splits the query string off [url] into HAR query parameters.

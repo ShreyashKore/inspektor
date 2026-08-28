@@ -64,7 +64,6 @@ kotlin {
                 implementation(libs.androidx.navigation.compose)
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.serialization.json)
-                implementation(libs.kotlinx.serialization.json.io)
                 implementation(libs.kotlinx.io.core)
                 implementation(libs.kotlinx.datetime)
                 implementation(libs.jsontree)

@@ -13,7 +13,7 @@ import com.gyanoba.inspektor.data.Override
 import com.gyanoba.inspektor.data.OverrideAction
 import com.gyanoba.inspektor.data.OverrideRepository
 import com.gyanoba.inspektor.data.UrlMatcher
-import com.gyanoba.inspektor.utils.logErr
+import com.gyanoba.inspektor.utils.InspektorLog
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -158,7 +158,7 @@ internal class EditOverrideViewModel(
             _events.emit(Event.OverrideSaved)
         } catch (e: Exception) {
             _events.emit(Event.Error(e.message ?: "Unknown error"))
-            logErr(e, "EditOverrideViewModel") { "Error saving override" }
+            InspektorLog.error(e, "EditOverrideViewModel") { "Error saving override" }
         } finally {
             isSaving = false
         }

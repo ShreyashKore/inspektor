@@ -4,7 +4,7 @@ import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.gyanoba.inspektor.UnstableInspektorAPI
 import com.gyanoba.inspektor.platform.getAppDataDir
-import com.gyanoba.inspektor.utils.log
+import com.gyanoba.inspektor.utils.InspektorLog
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.nio.file.Paths
@@ -36,7 +36,7 @@ public actual fun setApplicationId(applicationId: String) {
 internal var APPLICATION_ID: String? = null
     set(value) {
         if (field != null && field != value) {
-            log("Inspektor") {
+            InspektorLog.info("Inspektor") {
                 "Application ID has already been set to $field" +
                         "It should not be changed."
             }

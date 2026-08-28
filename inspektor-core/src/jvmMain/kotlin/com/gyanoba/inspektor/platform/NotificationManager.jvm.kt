@@ -1,6 +1,6 @@
 package com.gyanoba.inspektor.platform
 
-import com.gyanoba.inspektor.utils.log
+import com.gyanoba.inspektor.utils.InspektorLog
 import java.awt.Image
 import java.awt.SystemTray
 import java.awt.Toolkit
@@ -15,7 +15,7 @@ public actual fun NotificationManager(): NotificationManager {
 internal class NotificationManagerImpl : NotificationManager {
     override fun notify(title: String, message: String) {
         val os = System.getProperty("os.name") ?: run {
-            log(NotificationManager.TAG) { "Unable to determine OS" }
+            InspektorLog.info(NotificationManager.TAG) { "Unable to determine OS" }
             return
         }
 
@@ -36,7 +36,7 @@ internal class NotificationManagerImpl : NotificationManager {
             )
             builder.inheritIO().start()
         } else {
-            log(NotificationManager.TAG) { "Unable to show notifications on this OS $os" }
+            InspektorLog.info(NotificationManager.TAG) { "Unable to show notifications on this OS $os" }
         }
 
     }

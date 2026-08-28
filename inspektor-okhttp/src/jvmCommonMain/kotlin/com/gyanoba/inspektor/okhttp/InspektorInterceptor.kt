@@ -7,7 +7,7 @@ import com.gyanoba.inspektor.TransactionRecorder
 import com.gyanoba.inspektor.data.Override
 import com.gyanoba.inspektor.data.OverrideAction
 import com.gyanoba.inspektor.data.OverrideEngine
-import com.gyanoba.inspektor.utils.approxByteCount
+import com.gyanoba.inspektor.utils.approxHeaderByteCount
 import okhttp3.Headers
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -128,7 +128,7 @@ public class InspektorInterceptor internal constructor(
             path = request.url.encodedPath,
             scheme = request.url.scheme,
             method = request.method,
-            requestHeadersSize = headers.approxByteCount(),
+            requestHeadersSize = approxHeaderByteCount(headers),
             requestContentType = request.body?.contentType()?.typeAndSubType,
             requestPayloadSize = request.body?.contentLength()?.takeIf { it >= 0 },
             requestDate = Clock.System.now(),
@@ -163,7 +163,7 @@ public class InspektorInterceptor internal constructor(
             responseCode = response.code,
             responseContentType = response.body.contentType()?.typeAndSubType,
             responsePayloadSize = response.body.contentLength().takeIf { it >= 0 },
-            responseHeadersSize = headers.approxByteCount(),
+            responseHeadersSize = approxHeaderByteCount(headers),
             responseDate = Clock.System.now(),
         )
 

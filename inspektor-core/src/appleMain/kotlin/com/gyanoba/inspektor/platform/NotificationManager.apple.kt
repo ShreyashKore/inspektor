@@ -1,6 +1,6 @@
 package com.gyanoba.inspektor.platform
 
-import com.gyanoba.inspektor.utils.logErr
+import com.gyanoba.inspektor.utils.InspektorLog
 import platform.Foundation.NSError
 import platform.UserNotifications.UNAuthorizationOptionAlert
 import platform.UserNotifications.UNAuthorizationOptionBadge
@@ -40,13 +40,13 @@ internal class NotificationManagerImpl : NotificationManager {
             )
             notificationCenter.addNotificationRequest(request) { error ->
                 if (error != null) {
-                    logErr(error.toKotlinThrowable(), NotificationManager.TAG) {
+                    InspektorLog.error(error.toKotlinThrowable(), NotificationManager.TAG) {
                         "Error adding notification request: $error"
                     }
                 }
             }
         } catch (e: IllegalStateException) {
-            logErr(e, NotificationManager.TAG)
+            InspektorLog.error(e, NotificationManager.TAG)
         }
     }
 }

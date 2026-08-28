@@ -12,7 +12,7 @@ import io.ktor.utils.io.core.readText
 import io.ktor.utils.io.readRemaining
 
 /** Delegates to core, so Ktor and every other integration report the same header size. */
-internal fun Headers.approxByteCount(): Long = toHeaderMap().approxByteCount()
+internal fun Headers.approxByteCount(): Long = approxHeaderByteCount(toHeaderMap())
 
 
 internal suspend inline fun ByteReadChannel.tryReadText(

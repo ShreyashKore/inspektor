@@ -5,7 +5,7 @@ import com.gyanoba.inspektor.data.MutableHttpTransaction
 import com.gyanoba.inspektor.data.toImmutable
 import com.gyanoba.inspektor.platform.NotificationManager
 import com.gyanoba.inspektor.utils.HeaderSanitizer
-import com.gyanoba.inspektor.utils.logErr
+import com.gyanoba.inspektor.utils.InspektorLog
 import com.gyanoba.inspektor.utils.sanitize
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.CoroutineDispatcher
@@ -178,7 +178,7 @@ public class TransactionRecorder internal constructor(
         try {
             transactionLog.id = dataSource.insertHttpTransaction(transactionLog.toImmutable())
         } catch (e: Throwable) {
-            logErr(e, TAG) { "Failed to log request: $e" }
+            InspektorLog.error(e, TAG) { "Failed to log request: $e" }
         } finally {
             requestLoggedMonitor.complete()
         }
@@ -191,7 +191,7 @@ public class TransactionRecorder internal constructor(
         try {
             dataSource.updateHttpTransaction(transactionLog.toImmutable())
         } catch (e: Throwable) {
-            logErr(e, TAG) { "Failed to log response" }
+            InspektorLog.error(e, TAG) { "Failed to log response" }
         } finally {
             responseLoggedMonitor.complete()
         }

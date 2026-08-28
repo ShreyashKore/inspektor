@@ -20,9 +20,11 @@ public class HeaderSanitizer(
  *
  * Called from [com.gyanoba.inspektor.TransactionRecorder], i.e. on the store's side of the
  * integration boundary -- so a new integration cannot forget to sanitize.
+ *
+ * Internal: an extension on `Map<String, List<String>>` would otherwise show up in completion on
+ * every such map a consumer owns.
  */
-@UnstableInspektorAPI
-public fun Map<String, List<String>>.sanitize(
+internal fun Map<String, List<String>>.sanitize(
     headerSanitizers: List<HeaderSanitizer>,
 ): Map<String, List<String>> {
     if (headerSanitizers.isEmpty()) return this

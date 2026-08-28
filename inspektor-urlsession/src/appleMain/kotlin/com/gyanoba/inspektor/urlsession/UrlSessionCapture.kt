@@ -5,7 +5,7 @@ import com.gyanoba.inspektor.LogLevel
 import com.gyanoba.inspektor.RetentionManager
 import com.gyanoba.inspektor.TransactionRecorder
 import com.gyanoba.inspektor.data.OverrideEngine
-import com.gyanoba.inspektor.utils.approxByteCount
+import com.gyanoba.inspektor.utils.approxHeaderByteCount
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.Foundation.HTTPBody
 import platform.Foundation.HTTPMethod
@@ -66,7 +66,7 @@ internal class UrlSessionCapture(private val config: InspektorUrlSessionConfig) 
             path = view.path,
             scheme = request.URL?.scheme,
             method = view.method,
-            requestHeadersSize = headers.approxByteCount(),
+            requestHeadersSize = approxHeaderByteCount(headers),
             requestContentType = headers.contentType(),
             requestPayloadSize = request.HTTPBody?.length?.toLong(),
             requestDate = Clock.System.now(),
@@ -111,7 +111,7 @@ internal class UrlSessionCapture(private val config: InspektorUrlSessionConfig) 
             responseCode = http?.statusCode?.toInt(),
             responseContentType = headers.contentType() ?: response.MIMEType,
             responsePayloadSize = response.expectedContentLength.takeIf { it >= 0 },
-            responseHeadersSize = headers.approxByteCount(),
+            responseHeadersSize = approxHeaderByteCount(headers),
             responseDate = Clock.System.now(),
         )
         if (core.level.headers) capture.recorder.addResponseHeaders(headers)

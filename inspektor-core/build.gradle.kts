@@ -55,6 +55,10 @@ kotlin {
                 implementation(libs.kotlinx.atomicfu)
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.serialization.json)
+                // HAR export streams straight to a sink instead of building the
+                // whole document as a String first.
+                implementation(libs.kotlinx.serialization.json.io)
+                implementation(libs.kotlinx.io.core)
                 implementation(libs.kotlinx.datetime)
                 implementation(libs.kstore)
                 implementation(libs.kstore.file)
@@ -119,3 +123,4 @@ sqldelight {
         }
     }
 }
+

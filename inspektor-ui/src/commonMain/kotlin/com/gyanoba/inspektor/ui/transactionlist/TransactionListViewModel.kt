@@ -6,9 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gyanoba.inspektor.data.HttpTransaction
 import com.gyanoba.inspektor.data.InspektorDataSource
-import com.gyanoba.inspektor.har.Har
-import com.gyanoba.inspektor.har.json
-import com.gyanoba.inspektor.har.toHarEntry
+import com.gyanoba.inspektor.har.writeHarLog
 import com.gyanoba.inspektor.platform.FileSharer
 import com.gyanoba.inspektor.platform.Os
 import com.gyanoba.inspektor.platform.currentOs
@@ -33,8 +31,6 @@ import kotlinx.io.IOException
 import kotlinx.io.buffered
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.json.io.encodeToSink
 import kotlin.time.Duration.Companion.days
 
 
@@ -121,21 +117,17 @@ private fun CharSequence.isDigitsOnly(): Boolean {
 }
 
 
-@OptIn(ExperimentalSerializationApi::class)
 internal suspend fun createLogFile(
     filePath: String,
     transactions: List<HttpTransaction>
 ) = withContext(Dispatchers.IO) {
     val path = Path(filePath)
     try {
-        val log = Har.Log(
-            creator = Har.Creator(name = "Inspektor"),
-            entries = transactions.mapNotNull { it.toHarEntry() },
-        )
-        print("Creating HAR log with ${log.entries.size} entries at $filePath")
+        print("Creating HAR log with ${transactions.size} transactions at $filePath")
         SystemFileSystem.createDirectories(path.parent!!)
+        // Streams into the sink; the HAR document is never materialised as a String.
         SystemFileSystem.sink(path).buffered().use {
-            json.encodeToSink(Har(log), it)
+            transactions.writeHarLog(it, creatorName = "Inspektor")
         }
         println("Successfully wrote text to $filePath")
     } catch (e: IOException) {

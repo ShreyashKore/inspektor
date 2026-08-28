@@ -58,7 +58,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.gyanoba.inspektor.utils.log
+import com.gyanoba.inspektor.utils.InspektorLog
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -238,7 +238,7 @@ internal class SearchableTextState(
 
     fun updateFocusedSearchResult(index: Int) {
         if (index !in searchResults.indices) {
-            log("SearchableText") { "Invalid index $index, searchResults size: ${searchResults.size}" }
+            InspektorLog.info("SearchableText") { "Invalid index $index, searchResults size: ${searchResults.size}" }
             return
         }
         focusedSearchResultIndex = index

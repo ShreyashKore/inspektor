@@ -49,12 +49,13 @@ public enum class HttpMethod {
     }
 }
 
+// Unreferenced today, and internal before the split. Kept internal so it stays out of the
+// published API until something actually uses it.
 @Serializable
-@UnstableInspektorAPI
-public data class Replacement(
-    public val statusCode: Int? = null,
-    public val headers: Map<String, List<String>> = emptyMap(),
-    public val body: String? = null,
+internal data class Replacement(
+    val statusCode: Int? = null,
+    val headers: Map<String, List<String>> = emptyMap(),
+    val body: String? = null,
 )
 
 @Serializable

@@ -1,7 +1,7 @@
 package com.gyanoba.inspektor
 
 import com.gyanoba.inspektor.data.InspektorDataSource
-import com.gyanoba.inspektor.utils.log
+import com.gyanoba.inspektor.utils.InspektorLog
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -58,12 +58,12 @@ public class RetentionManager(
         try {
             val currentTime = clock.now()
             val deleteBefore = currentTime - retentionDuration
-            log("RetentionManager") {
+            InspektorLog.info("RetentionManager") {
                 "Cleaning up transactions older than $deleteBefore (retention duration: $retentionDuration)"
             }
             dataSource.deleteBefore(deleteBefore)
         } catch (e: Exception) {
-            log("RetentionManager") { "Error during cleanup: ${e.message}" }
+            InspektorLog.info("RetentionManager") { "Error during cleanup: ${e.message}" }
         }
     }
 

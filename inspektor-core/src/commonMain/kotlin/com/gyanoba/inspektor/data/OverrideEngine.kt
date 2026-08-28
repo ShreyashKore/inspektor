@@ -35,8 +35,7 @@ public class OverrideEngine(
 }
 
 /** True when this matcher accepts [request]. */
-@UnstableInspektorAPI
-public fun Matcher.matches(request: InspektorRequest): Boolean = when (this) {
+internal fun Matcher.matches(request: InspektorRequest): Boolean = when (this) {
     is UrlMatcher -> url == request.url
     is HostMatcher -> host == request.host
     is PathMatcher -> path == request.path
