@@ -14,6 +14,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import kotlinx.coroutines.test.runTest
 import utils.TestBase
+import utils.createTempDbDriver
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -148,7 +149,7 @@ class LogLevelTest : TestBase() {
 
 
     private fun createTestDb(): InspektorDatabase {
-        val driver = DriverFactory.createTempDbDriver()
+        val driver = createTempDbDriver()
         return InspektorDatabase(
             driver, HttpTransaction.Adapter(
                 requestDateAdapter = instantAdapter,

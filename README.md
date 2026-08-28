@@ -73,10 +73,9 @@ The `:sample` module in this repo is built in both configurations (`dev` uses th
 
 | | dev (real) | prod (no-op) | saved |
 |---|---:|---:|---:|
-| **APK on disk** | **14.09 MiB** | **9.95 MiB** | **4.13 MiB (29%)** |
-| dex (uncompressed) | 30.1 MB | 28.0 MB | 2.08 MB |
-| bundled `.dylib` / `.dll` | 6.26 MB | 0 | 6.26 MB |
-| assets | 212 KB | 151 KB | 61 KB |
+| **APK on disk** | **10.58 MiB** | **9.96 MiB** | **0.62 MiB (5.9%)** |
+| dex (uncompressed) | 29.8 MB | 28.0 MB | 1.81 MB |
+| assets | 213 KB | 151 KB | 62 KB |
 
 The `prod` APK contains no Inspektor implementation whatsoever — no `InspektorDatabase`, no UI
 screens, no override repository, no retention manager, no HAR export, and none of SQLDelight, KStore
@@ -84,7 +83,8 @@ or JsonTree. Only the API stubs (`InspektorConfig`, `LogLevel`, `openInspektor`)
 manifest has no `MainActivity`, no `InspektorFileProvider` and no `ContextInitializer` entry.
 
 Your own savings will differ: much of the dex delta above is Compose UI that the sample app already
-uses elsewhere, and R8 will strip some of the rest in a real release build.
+uses elsewhere, and R8 will strip some of the rest in a real release build. The saving is larger for
+an app that does not otherwise use Compose, SQLDelight or KStore.
 
 #### Using it from Kotlin Multiplatform shared code
 
