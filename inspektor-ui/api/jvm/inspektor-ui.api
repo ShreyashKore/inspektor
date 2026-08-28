@@ -1,0 +1,4 @@
+public final class com/gyanoba/inspektor/Inspektor_jvmKt {
+	public static final fun openInspektor ()V
+}
+

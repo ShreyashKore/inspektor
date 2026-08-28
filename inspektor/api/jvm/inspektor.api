@@ -1,5 +1,4 @@
 public final class com/gyanoba/inspektor/InspektorConfig {
-	public static final field $stable I
 	public final fun filter (Lkotlin/jvm/functions/Function1;)V
 	public final fun getLevel ()Lcom/gyanoba/inspektor/LogLevel;
 	public final fun getMaxContentLength ()I
@@ -15,9 +14,5 @@ public final class com/gyanoba/inspektor/InspektorConfig {
 
 public final class com/gyanoba/inspektor/InspektorKt {
 	public static final fun getInspektor ()Lio/ktor/client/plugins/api/ClientPlugin;
-}
-
-public final class com/gyanoba/inspektor/Inspektor_jvmKt {
-	public static final fun openInspektor ()V
 }
 

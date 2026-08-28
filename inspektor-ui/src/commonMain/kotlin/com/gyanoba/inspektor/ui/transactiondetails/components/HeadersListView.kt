@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.gyanoba.inspektor.inspektor.generated.resources.Res
+import com.gyanoba.inspektor.ui.generated.resources.Res
 import com.gyanoba.inspektor.ui.components.ExpandableKeyValue
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable

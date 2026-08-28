@@ -1,11 +1,4 @@
-public final class com/gyanoba/inspektor/ComposableSingletons$MainActivityKt {
-	public static final field INSTANCE Lcom/gyanoba/inspektor/ComposableSingletons$MainActivityKt;
-	public fun <init> ()V
-	public final fun getLambda$-995830411$inspektor_release ()Lkotlin/jvm/functions/Function2;
-}
-
 public final class com/gyanoba/inspektor/InspektorConfig {
-	public static final field $stable I
 	public final fun filter (Lkotlin/jvm/functions/Function1;)V
 	public final fun getLevel ()Lcom/gyanoba/inspektor/LogLevel;
 	public final fun getMaxContentLength ()I
@@ -21,19 +14,5 @@ public final class com/gyanoba/inspektor/InspektorConfig {
 
 public final class com/gyanoba/inspektor/InspektorKt {
 	public static final fun getInspektor ()Lio/ktor/client/plugins/api/ClientPlugin;
-}
-
-public final class com/gyanoba/inspektor/Inspektor_androidKt {
-	public static final fun openInspektor ()V
-}
-
-public final class com/gyanoba/inspektor/MainActivity : androidx/activity/ComponentActivity {
-	public static final field $stable I
-	public fun <init> ()V
-}
-
-public final class com/gyanoba/inspektor/platform/InspektorFileProvider : androidx/core/content/FileProvider {
-	public static final field $stable I
-	public fun <init> ()V
 }
 

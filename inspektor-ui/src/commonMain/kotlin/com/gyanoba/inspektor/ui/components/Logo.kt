@@ -5,8 +5,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.gyanoba.inspektor.inspektor.generated.resources.Res
-import com.gyanoba.inspektor.inspektor.generated.resources.inspektor
+import com.gyanoba.inspektor.ui.generated.resources.Res
+import com.gyanoba.inspektor.ui.generated.resources.inspektor
 import org.jetbrains.compose.resources.painterResource
 
 @Composable

@@ -2,6 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application>
+        <!--
+          The viewer's own entries. `:inspektor-core` contributes the androidx.startup
+          `<meta-data>` separately, because storage needs a Context whether or not this module is
+          present.
+        -->
         <provider
             android:name="com.gyanoba.inspektor.platform.InspektorFileProvider"
             android:authorities="${applicationId}.inspektor.file_provider"

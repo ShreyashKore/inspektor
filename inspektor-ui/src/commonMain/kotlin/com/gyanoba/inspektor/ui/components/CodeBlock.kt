@@ -35,11 +35,11 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
-import com.gyanoba.inspektor.inspektor.generated.resources.Res
-import com.gyanoba.inspektor.inspektor.generated.resources.format_indent_increase
-import com.gyanoba.inspektor.inspektor.generated.resources.round_content_copy
-import com.gyanoba.inspektor.inspektor.generated.resources.round_done
-import com.gyanoba.inspektor.inspektor.generated.resources.wrap_text
+import com.gyanoba.inspektor.ui.generated.resources.Res
+import com.gyanoba.inspektor.ui.generated.resources.format_indent_increase
+import com.gyanoba.inspektor.ui.generated.resources.round_content_copy
+import com.gyanoba.inspektor.ui.generated.resources.round_done
+import com.gyanoba.inspektor.ui.generated.resources.wrap_text
 import com.sebastianneubauer.jsontree.JsonTree
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

@@ -400,5 +400,3 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
 private fun ClientPluginBuilder<InspektorConfig>.shouldNotLog(attributes: Attributes): Boolean {
     return pluginConfig.level == LogLevel.NONE || attributes.contains(DisableLogging)
 }
-
-public expect fun openInspektor()

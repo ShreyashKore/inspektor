@@ -29,6 +29,7 @@ apiValidation {
     ignoredPackages.add("com.gyanoba.inspektor.ui")
     ignoredClasses.add("com.gyanoba.inspektor.ComposableSingletons\u0024Inspektor_jvmKt")
     ignoredClasses.add("com.gyanoba.inspektor.ComposableSingletons\u0024Inspektor_androidKt")
+    ignoredClasses.add("com.gyanoba.inspektor.ComposableSingletons\u0024MainActivityKt")
 }
 
 buildscript {
