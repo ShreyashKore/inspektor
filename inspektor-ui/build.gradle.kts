@@ -31,7 +31,14 @@ kotlin {
     val appleTargets = listOf(iosArm64, iosSimulatorArm64)
 
     appleTargets.forEach { target ->
-        target.binaries.framework { baseName = "InspektorUi" }
+        target.binaries.framework {
+            baseName = "InspektorUi"
+            // SQLDelight's native driver binds to the system SQLite. Kotlin/Native does not add
+            // the library automatically, so every framework we link here needs it -- and so does a
+            // consumer's own framework, which is why the README asks for `-lsqlite3` in Xcode's
+            // Other Linker Flags.
+            linkerOpts("-lsqlite3")
+        }
     }
 
     sourceSets {
