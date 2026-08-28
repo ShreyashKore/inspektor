@@ -18,6 +18,7 @@ napier = "2.7.1"
 kotlinx-datetime = "0.8.0"
 kermit = "2.1.0"
 ktor = "3.5.0"
+okhttp = "5.3.2"
 pagingComposeCommon = "3.3.0-alpha02-0.5.1"
 sqlDelight = "2.3.2"
 sqlDelightCoroutinesExtensions = "2.3.2"
@@ -68,6 +69,9 @@ kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-t
 ktor-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+okhttp-mockwebserver = { module = "com.squareup.okhttp3:mockwebserver3", version.ref = "okhttp" }
+okhttp-mockwebserver-junit4 = { module = "com.squareup.okhttp3:mockwebserver3-junit4", version.ref = "okhttp" }
 ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor" }
 ktor-client-curl = { module = "io.ktor:ktor-client-curl", version.ref = "ktor" }
 ktor-client-winhttp = { module = "io.ktor:ktor-client-winhttp", version.ref = "ktor" }

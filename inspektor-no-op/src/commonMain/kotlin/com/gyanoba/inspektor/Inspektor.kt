@@ -9,23 +9,6 @@ import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.minutes
 
 /**
- * No-op counterpart of `com.gyanoba.inspektor.LogLevel`.
- *
- * Kept so that consumer code configuring `level` still compiles against this artifact. The value is
- * never read.
- */
-public enum class LogLevel(
-    public val info: Boolean = false,
-    public val headers: Boolean = false,
-    public val body: Boolean = false,
-) {
-    NONE,
-    INFO(info = true),
-    HEADERS(info = true, headers = true),
-    BODY(info = true, headers = true, body = true)
-}
-
-/**
  * A configuration for the [Inspektor] plugin.
  *
  * Every option is accepted and then discarded. Nothing here allocates a data source, a repository
@@ -99,10 +82,3 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
  * Opens the Inspektor UI. No-op — this artifact ships no UI.
  */
 public expect fun openInspektor()
-
-@Retention(AnnotationRetention.BINARY)
-@RequiresOptIn(
-    message = "This API is unstable and may be removed in the future.",
-    level = RequiresOptIn.Level.ERROR,
-)
-public annotation class UnstableInspektorAPI

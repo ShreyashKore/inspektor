@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -40,12 +41,15 @@ kotlin {
             export(project(":inspektor-core"))
             export(project(":inspektor-ui"))
             export(project(":inspektor-ktor"))
-            // SQLDelight's native driver binds to the system SQLite. Kotlin/Native does not add
-            // the library automatically, so every framework we link here needs it -- and so does a
-            // consumer's own framework, which is why the README asks for `-lsqlite3` in Xcode's
-            // Other Linker Flags.
-            linkerOpts("-lsqlite3")
         }
+    }
+
+
+    // SQLDelight's native driver binds to the system SQLite and Kotlin/Native does not add the
+    // library on its own, so every native binary -- frameworks and test executables alike --
+    // needs it. Consumers need the same flag in Xcode's Other Linker Flags.
+    targets.withType<KotlinNativeTarget>().configureEach {
+        binaries.configureEach { linkerOpts("-lsqlite3") }
     }
 
     sourceSets {

@@ -74,7 +74,22 @@ jobs:
           find /Applications -name "Xcode*" -maxdepth 1 -mindepth 1
 
       - name: Unit tests
-        run: ./gradlew :inspektor:jvmTest :inspektor-no-op:jvmTest
+        run: >
+          ./gradlew
+          :inspektor-core:jvmTest
+          :inspektor-ktor:jvmTest
+          :inspektor-okhttp:jvmTest
+          :inspektor-no-op:jvmTest
+          :inspektor-okhttp-no-op:jvmTest
+
+      # The first iOS tests in the repo. They run on the simulator, are hermetic (a stub
+      # URLProtocol stands in for the network) and need the `-lsqlite3` linker flag the native
+      # modules now set on every binary.
+      - name: iOS unit tests
+        run: >
+          ./gradlew
+          :inspektor-urlsession:iosSimulatorArm64Test
+          :inspektor-urlsession-no-op:iosSimulatorArm64Test
 
   instrumentation-tests:
     name: Instrumentation tests

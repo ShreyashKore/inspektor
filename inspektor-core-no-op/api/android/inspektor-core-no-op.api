@@ -1,0 +1,30 @@
+public final class com/gyanoba/inspektor/InspektorRequest {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getHeaders ()Ljava/util/Map;
+	public final fun getHost ()Ljava/lang/String;
+	public final fun getMethod ()Ljava/lang/String;
+	public final fun getPath ()Ljava/lang/String;
+	public final fun getUrl ()Ljava/lang/String;
+}
+
+public final class com/gyanoba/inspektor/LogLevel : java/lang/Enum {
+	public static final field BODY Lcom/gyanoba/inspektor/LogLevel;
+	public static final field HEADERS Lcom/gyanoba/inspektor/LogLevel;
+	public static final field INFO Lcom/gyanoba/inspektor/LogLevel;
+	public static final field NONE Lcom/gyanoba/inspektor/LogLevel;
+	public final fun getBody ()Z
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getHeaders ()Z
+	public final fun getInfo ()Z
+	public static fun valueOf (Ljava/lang/String;)Lcom/gyanoba/inspektor/LogLevel;
+	public static fun values ()[Lcom/gyanoba/inspektor/LogLevel;
+}
+
+public abstract interface annotation class com/gyanoba/inspektor/UnstableInspektorAPI : java/lang/annotation/Annotation {
+}
+
+public final class com/gyanoba/inspektor/data/Db_androidKt {
+	public static final fun setApplicationId (Ljava/lang/String;)V
+}
+

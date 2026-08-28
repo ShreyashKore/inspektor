@@ -18,7 +18,16 @@ allprojects {
 }
 
 apiValidation {
-    ignoredProjects.addAll(listOf("sample", "inspektor-test-fixtures"))
+    ignoredProjects.addAll(
+        listOf(
+            "sample",
+            "inspektor-test-fixtures",
+            // Kotlin/Native only: the validator reads JVM and Android class files,
+            // and this module has neither target.
+            "inspektor-urlsession",
+            "inspektor-urlsession-no-op",
+        )
+    )
 
     // The Compose compiler emits a public `ComposableSingletons$<File>Kt` holder per file that
     // contains composable lambdas. They are a compiler implementation detail -- their names encode

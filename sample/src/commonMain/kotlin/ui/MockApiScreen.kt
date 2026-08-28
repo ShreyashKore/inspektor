@@ -28,6 +28,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.gyanoba.inspektor.openInspektor
 import com.gyanoba.inspektor.sample.data.MockApi
+import com.gyanoba.inspektor.sample.data.PlatformHttpDemo
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,6 +74,7 @@ fun MockApiScreen(
             ButtonGroupLayout("Json Placeholer") {
                 Button(onClick = openTodoListScreen) { Text("Todo List Screen") }
             }
+            PlatformClientButtons()
             Spacer(Modifier.height(80.dp))
         }
     }
@@ -119,6 +123,19 @@ fun ButtonGroupLayout(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             content()
+        }
+    }
+}
+/**
+ * Calls made with the platform's own HTTP client instead of Ktor -- OkHttp on Android and desktop,
+ * `NSURLSession` on iOS. They land in the same Inspektor store as the Ktor calls above.
+ */
+@Composable
+fun PlatformClientButtons() {
+    val scope = rememberCoroutineScope()
+    ButtonGroupLayout("Platform Client (${PlatformHttpDemo.clientName})") {
+        Button(onClick = { scope.launch { runCatching { PlatformHttpDemo.fetchTodo(1) } } }) {
+            Text("GET todo")
         }
     }
 }

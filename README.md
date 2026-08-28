@@ -14,23 +14,50 @@
 > This library is **not stable**, and the API may change. It is not advised to use it in
 > production projects.
 
-Inspektor is an HTTP inspection library for Ktor. It allows you to view HTTP requests and responses,
-including basic information, headers, and bodies. Please note that this library is not stable, and
-the API may change. Users are not advised to use it in production projects.
+Inspektor is an on-device HTTP inspector for Kotlin Multiplatform. It records every request and
+response your app makes -- basic information, headers and bodies -- into a local database, shows
+them in a Compose Multiplatform UI, and lets you *override* requests and responses for testing. It
+works with **Ktor**, **OkHttp** and **NSURLSession**, all writing into the same store and the same
+UI. Please note that this library is not stable, and the API may change. Users are not advised to
+use it in production projects.
 
 Here's an [introductory article](https://medium.com/@koreshreyash/inspektor-multiplatform-http-inspection-library-for-ktor-6c78ae5e5661) for those who are interested.
 
 ![Screenshots](images/screenshots.png)
 
-## Installation
+## Artifacts
 
-Add the following dependency to your `build.gradle.kts` file:
+Pick the integration for the HTTP client you actually use; each one brings the storage layer with
+it, and the ones that need a UI bring that too.
+
+| Artifact | What it is | Targets |
+|---|---|---|
+| `inspektor` | Umbrella: the Ktor plugin + the viewer. Unchanged coordinates and API. | android, jvm, iOS |
+| `inspektor-ktor` | The Ktor client plugin on its own | android, jvm, iOS |
+| `inspektor-okhttp` | An OkHttp `Interceptor` | android, jvm |
+| `inspektor-urlsession` | `NSURLSession` capture (covers Alamofire, Moya, Get, ...) | iOS |
+| `inspektor-ui` | The Compose Multiplatform viewer and `openInspektor()` | android, jvm, iOS |
+| `inspektor-core` | Storage, recorder, override engine, HAR export. No client, no UI. | android, jvm, iOS |
+
+`inspektor` still means what it always did, so existing setups keep working unchanged:
 
 ```kotlin
 dependencies {
     implementation("com.gyanoba.inspektor:inspektor:latest-version")
 }
 ```
+
+For an OkHttp-only Android app, take the interceptor and the viewer and skip Ktor entirely:
+
+```kotlin
+dependencies {
+    implementation("com.gyanoba.inspektor:inspektor-okhttp:latest-version")
+    implementation("com.gyanoba.inspektor:inspektor-ui:latest-version")
+}
+```
+
+Every artifact is released together and must be kept at the same version -- they share
+`inspektor-core`, and a mismatched pair fails in confusing ways.
 
 ### Keeping Inspektor out of production builds
 
@@ -40,6 +67,17 @@ certainly do not want it in your release binary. A companion artifact,
 under the same package, but every part of it is empty. The Ktor plugin installs no hooks, so
 requests and responses are passed straight through — nothing is read, buffered, persisted or logged,
 and no UI, database, notification or Compose code is shipped at all.
+
+There is one no-op twin per integration entry point, because that is what your code names:
+
+| Real | No-op twin |
+|---|---|
+| `inspektor` | `inspektor-no-op` |
+| `inspektor-okhttp` | `inspektor-okhttp-no-op` |
+| `inspektor-urlsession` | `inspektor-urlsession-no-op` |
+
+(`inspektor-core` and `inspektor-ui` need none -- nothing in your code names them, and they simply
+stop being pulled in.)
 
 Depend on the real library only in the variant you debug with, and on the no-op everywhere else:
 
@@ -52,6 +90,10 @@ dependencies {
     // ...or Android product flavors
     devImplementation("com.gyanoba.inspektor:inspektor:latest-version")
     prodImplementation("com.gyanoba.inspektor:inspektor-no-op:latest-version")
+
+    // ...and the same for the OkHttp integration
+    debugImplementation("com.gyanoba.inspektor:inspektor-okhttp:latest-version")
+    releaseImplementation("com.gyanoba.inspektor:inspektor-okhttp-no-op:latest-version")
 }
 ```
 
@@ -104,7 +146,9 @@ configurations.matching { it.name.startsWith("prod") }.configureEach {
 
 ## Usage
 
-To use Inspektor, install the plugin in your `HttpClient` configuration:
+### Ktor
+
+Install the plugin in your `HttpClient` configuration:
 
 ```kotlin
 // For Android this is enough
@@ -116,6 +160,63 @@ suspend fun apiCall() {
     client.get("http://example.com")
 }
 ```
+
+### OkHttp
+
+Add the interceptor while building your client:
+
+```kotlin
+val client = OkHttpClient.Builder()
+    .installInspektor {
+        level = LogLevel.BODY
+        sanitizeHeader { header -> header == "Authorization" }
+    }
+    .build()
+```
+
+`installInspektor` takes an `InterceptorMode`, and the choice matters:
+
+- `InterceptorMode.APPLICATION` (the default) registers an *application* interceptor. It fires
+  exactly once per call and sees the request as your app wrote it -- but it reports a cache hit as
+  if it were a network call, and it does not see the individual hops of a redirect chain.
+- `InterceptorMode.NETWORK` registers a *network* interceptor. It sees real wire traffic, including
+  `Content-Encoding` and every redirect hop -- but it does not fire at all on a cache hit, and it
+  fires more than once per call when there are redirects or retries.
+
+Only a network interceptor has a connection, so the TLS version and cipher suite are recorded in
+that position only.
+
+Request bodies are read non-destructively; duplex and one-shot bodies are skipped rather than
+consumed, so your actual request is never affected.
+
+### NSURLSession (iOS)
+
+Build your session with Inspektor's delegate. This is the recommended path -- it captures faithfully
+and changes nothing globally:
+
+```kotlin
+val session = inspektorUrlSession(forwardTo = myOwnDelegate) {
+    level = LogLevel.BODY
+}
+session.dataTaskWithRequest(request).resume()
+```
+
+One limit is worth knowing up front: **URLSession calls no delegate method at all for a task created
+with `dataTask(with:completionHandler:)`** -- not even `didCompleteWithError` -- so those calls
+cannot be seen from a delegate. Use delegate-driven tasks, or the opt-in `URLProtocol`:
+
+```kotlin
+// Must run before the app makes its first request.
+InspektorUrlProtocol.register {
+    level = LogLevel.BODY
+}
+```
+
+`InspektorUrlProtocol` is zero-configuration and does capture completion-handler tasks, but it has
+real costs: requests made before registration are invisible; it never sees `AVPlayer` traffic,
+background sessions or WebSockets; registration is global and mutable and changes caching semantics;
+and it re-issues each request through its own session, so a streamed download is buffered rather
+than delivered incrementally. Prefer the delegate unless you cannot use it.
 
 For ios you need to add the following `-lsqlite3` to the Other Linker flags under Build Settings.
 See more details [here](https://github.com/cashapp/sqldelight/issues/1442#issuecomment-523435492)
@@ -192,7 +293,8 @@ Inspektor supports exporting the logs in HAR format. You can export the logs by 
 - [x] Request-Response overriding functionality
 - [ ] Pause and allow editing Request and Response
 - [x] HAR export for detailed analysis
-- [ ] More HTTP client support (OkHttp maybe?)
+- [x] More HTTP client support -- OkHttp and NSURLSession
+- [ ] React Native package
 
 ## License
 

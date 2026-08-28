@@ -56,6 +56,7 @@ public final class com/gyanoba/inspektor/RetentionManager {
 	public synthetic fun <init> (JLcom/gyanoba/inspektor/data/InspektorDataSource;Lkotlin/time/Clock;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (JLcom/gyanoba/inspektor/data/InspektorDataSource;Lkotlin/time/Clock;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun checkAndCleanUp (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun checkAndCleanUpAsync ()Lkotlinx/coroutines/Job;
 }
 
 public final class com/gyanoba/inspektor/TransactionRecorder {
@@ -1177,6 +1178,10 @@ public final class com/gyanoba/inspektor/utils/HeaderSanitizer {
 
 public final class com/gyanoba/inspektor/utils/HeaderSanitizerKt {
 	public static final fun sanitize (Ljava/util/Map;Ljava/util/List;)Ljava/util/Map;
+}
+
+public final class com/gyanoba/inspektor/utils/HeaderUtilsKt {
+	public static final fun approxByteCount (Ljava/util/Map;)J
 }
 
 public final class com/gyanoba/inspektor/utils/InternalLoggerKt {

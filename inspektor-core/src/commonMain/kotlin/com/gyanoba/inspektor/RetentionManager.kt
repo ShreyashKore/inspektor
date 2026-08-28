@@ -2,6 +2,12 @@ package com.gyanoba.inspektor
 
 import com.gyanoba.inspektor.data.InspektorDataSource
 import com.gyanoba.inspektor.utils.log
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlin.time.Clock
@@ -29,6 +35,13 @@ public class RetentionManager(
         in 0.minutes..60.minutes -> 1.minutes
         else -> 10.minutes
     }
+
+    /**
+     * Fire-and-forget [checkAndCleanUp], for integrations that run on blocking threads -- an
+     * OkHttp interceptor or a URLSession delegate callback cannot suspend.
+     */
+    @OptIn(DelicateCoroutinesApi::class)
+    public fun checkAndCleanUpAsync(): Job = GlobalScope.launch(Dispatchers.IO) { checkAndCleanUp() }
 
     public suspend fun checkAndCleanUp() {
         val currentTime = clock.now()
