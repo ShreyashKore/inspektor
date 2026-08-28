@@ -90,6 +90,14 @@ kotlin {
             }
         }
 
+        val androidUnitTest by getting {
+            dependencies {
+                // Android unit tests run on the host JVM, so they need the JDBC driver for the
+                // in-memory test database. Test-only: it never reaches the published AAR.
+                implementation(libs.sqlDelight.driver.sqlite)
+            }
+        }
+
         val androidMain by getting {
             dependencies {
                 implementation(compose.uiTooling)
@@ -97,7 +105,6 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.android)
                 implementation(libs.ktor.client.okhttp)
                 implementation(libs.sqlDelight.driver.android)
-                implementation(libs.sqlDelight.driver.sqlite)
                 implementation(libs.androidx.startup.runtime)
             }
         }

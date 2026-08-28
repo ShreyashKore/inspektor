@@ -1,0 +1,38 @@
+public final class com/gyanoba/inspektor/InspektorConfig {
+	public final fun filter (Lkotlin/jvm/functions/Function1;)V
+	public final fun getLevel ()Lcom/gyanoba/inspektor/LogLevel;
+	public final fun getMaxContentLength ()I
+	public final fun getRetentionDuration-UwyO8pc ()J
+	public final fun getShowNotifications ()Z
+	public final fun sanitizeHeader (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun sanitizeHeader$default (Lcom/gyanoba/inspektor/InspektorConfig;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public final fun setLevel (Lcom/gyanoba/inspektor/LogLevel;)V
+	public final fun setMaxContentLength (I)V
+	public final fun setRetentionDuration-LRDsOJo (J)V
+	public final fun setShowNotifications (Z)V
+}
+
+public final class com/gyanoba/inspektor/InspektorKt {
+	public static final fun getInspektor ()Lio/ktor/client/plugins/api/ClientPlugin;
+}
+
+public final class com/gyanoba/inspektor/Inspektor_jvmKt {
+	public static final fun openInspektor ()V
+}
+
+public final class com/gyanoba/inspektor/LogLevel : java/lang/Enum {
+	public static final field BODY Lcom/gyanoba/inspektor/LogLevel;
+	public static final field HEADERS Lcom/gyanoba/inspektor/LogLevel;
+	public static final field INFO Lcom/gyanoba/inspektor/LogLevel;
+	public static final field NONE Lcom/gyanoba/inspektor/LogLevel;
+	public final fun getBody ()Z
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getHeaders ()Z
+	public final fun getInfo ()Z
+	public static fun valueOf (Ljava/lang/String;)Lcom/gyanoba/inspektor/LogLevel;
+	public static fun values ()[Lcom/gyanoba/inspektor/LogLevel;
+}
+
+public abstract interface annotation class com/gyanoba/inspektor/UnstableInspektorAPI : java/lang/annotation/Annotation {
+}
+

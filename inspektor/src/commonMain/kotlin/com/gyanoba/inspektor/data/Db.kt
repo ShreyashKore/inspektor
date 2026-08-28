@@ -9,8 +9,6 @@ internal const val DB_NAME = "com.gyanoba.inspektor.db"
 
 internal expect object DriverFactory {
     fun createDbDriver(): SqlDriver
-
-    fun createTempDbDriver(): SqlDriver
 }
 
 internal fun createDatabase(): InspektorDatabase {

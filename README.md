@@ -32,6 +32,76 @@ dependencies {
 }
 ```
 
+### Keeping Inspektor out of production builds
+
+Inspektor bundles a database, a Compose UI and everything needed to inspect traffic, so you almost
+certainly do not want it in your release binary. A companion artifact,
+`com.gyanoba.inspektor:inspektor-no-op`, exists for exactly that: it exposes the **same public API**
+under the same package, but every part of it is empty. The Ktor plugin installs no hooks, so
+requests and responses are passed straight through — nothing is read, buffered, persisted or logged,
+and no UI, database, notification or Compose code is shipped at all.
+
+Depend on the real library only in the variant you debug with, and on the no-op everywhere else:
+
+```kotlin
+dependencies {
+    // Android build types
+    debugImplementation("com.gyanoba.inspektor:inspektor:latest-version")
+    releaseImplementation("com.gyanoba.inspektor:inspektor-no-op:latest-version")
+
+    // ...or Android product flavors
+    devImplementation("com.gyanoba.inspektor:inspektor:latest-version")
+    prodImplementation("com.gyanoba.inspektor:inspektor-no-op:latest-version")
+}
+```
+
+Your code does not change. `install(Inspektor) { ... }`, `openInspektor()` and `setApplicationId()`
+all still compile and run in both variants — they just do nothing in the no-op one.
+
+Because the no-op artifact contains no Activity, no `ContentProvider`, no resources and no
+`androidx.startup` initializer, it contributes nothing to your merged manifest either. Its only
+dependency is `ktor-client-core`, which your project already has, so it adds no transitive
+dependencies of its own.
+
+The iOS `-lsqlite3` linker flag is only required for the real library; the no-op artifact needs no
+platform setup at all.
+
+#### What it saves
+
+The `:sample` module in this repo is built in both configurations (`dev` uses the real library,
+`prod` uses the no-op). Comparing the two release APKs, without R8/minification:
+
+| | dev (real) | prod (no-op) | saved |
+|---|---:|---:|---:|
+| **APK on disk** | **10.58 MiB** | **9.96 MiB** | **0.62 MiB (5.9%)** |
+| dex (uncompressed) | 29.8 MB | 28.0 MB | 1.81 MB |
+| assets | 213 KB | 151 KB | 62 KB |
+
+The `prod` APK contains no Inspektor implementation whatsoever — no `InspektorDatabase`, no UI
+screens, no override repository, no retention manager, no HAR export, and none of SQLDelight, KStore
+or JsonTree. Only the API stubs (`InspektorConfig`, `LogLevel`, `openInspektor`) survive. Its merged
+manifest has no `MainActivity`, no `InspektorFileProvider` and no `ContextInitializer` entry.
+
+Your own savings will differ: much of the dex delta above is Compose UI that the sample app already
+uses elsewhere, and R8 will strip some of the rest in a real release build. The saving is larger for
+an app that does not otherwise use Compose, SQLDelight or KStore.
+
+#### Using it from Kotlin Multiplatform shared code
+
+If you call `install(Inspektor)` or `openInspektor()` from `commonMain`, the API must be on the
+common compile classpath for *every* target, so a per-variant `devImplementation` cannot express it.
+Substitute the module for the production variants instead — see `sample/build.gradle.kts`:
+
+```kotlin
+configurations.matching { it.name.startsWith("prod") }.configureEach {
+    resolutionStrategy.dependencySubstitution {
+        substitute(module("com.gyanoba.inspektor:inspektor"))
+            .using(module("com.gyanoba.inspektor:inspektor-no-op:latest-version"))
+            .because("Inspektor must not ship in production builds")
+    }
+}
+```
+
 ## Usage
 
 To use Inspektor, install the plugin in your `HttpClient` configuration:

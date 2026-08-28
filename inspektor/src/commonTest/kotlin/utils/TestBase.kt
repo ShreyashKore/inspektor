@@ -53,7 +53,7 @@ abstract class TestBase {
     }
 
     private fun createTestDb(): InspektorDatabase {
-        val driver = DriverFactory.createTempDbDriver()
+        val driver = createTempDbDriver()
         return InspektorDatabase(
             driver, HttpTransaction.Adapter(
                 requestDateAdapter = instantAdapter,

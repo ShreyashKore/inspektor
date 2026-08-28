@@ -33,6 +33,7 @@ import io.ktor.client.plugins.observer.ResponseObserver
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.request
 import io.ktor.client.utils.buildHeaders
 import io.ktor.http.ContentType
@@ -47,7 +48,6 @@ import io.ktor.util.Attributes
 import io.ktor.util.toMap
 import io.ktor.utils.io.ByteChannel
 import io.ktor.utils.io.ByteReadChannel
-import io.ktor.utils.io.InternalAPI
 import io.ktor.utils.io.KtorDsl
 import io.ktor.utils.io.charsets.Charsets
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -149,7 +149,7 @@ public class InspektorConfig internal constructor() {
     }
 }
 
-@OptIn(InternalAPI::class, DelicateCoroutinesApi::class, UnstableInspektorAPI::class)
+@OptIn( DelicateCoroutinesApi::class, UnstableInspektorAPI::class)
 public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
     "Inspektor", ::InspektorConfig,
 ) {
@@ -333,9 +333,10 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
                     OverrideAction.Type.FixedResponse, OverrideAction.Type.FixedRequestResponse -> {
                         var originalBody: String? = null
                         val originalHeaders = mutableMapOf<String, List<String>>()
+                        val originalChannel = response.bodyAsChannel()
 
                         val newBody: String? = override.action.responseBody?.takeIf { it.isNotEmpty() }?.let { newBodyString ->
-                            originalBody = response.rawContent.tryReadText(
+                            originalBody = originalChannel.tryReadText(
                                 response.charset() ?: Charsets.UTF_8, pluginConfig.maxContentLength
                             )?.run {
                                 substring(0..minOf(lastIndex, pluginConfig.maxContentLength))
@@ -374,7 +375,7 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
                         }
                         proceedWith(
                             response.call.replaceResponse(headers = newHeaders ?: response.headers) {
-                                newBody?.let(::ByteReadChannel) ?: rawContent
+                                newBody?.let(::ByteReadChannel) ?: originalChannel
                             }.response
                         )
                     }
@@ -412,7 +413,7 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
         val callLogger = response.call.attributes[ClientCallLogger]
         try {
             val charset = response.contentType()?.charset() ?: Charsets.UTF_8
-            val message = response.rawContent.tryReadText(charset, pluginConfig.maxContentLength)
+            val message = response.bodyAsChannel().tryReadText(charset, pluginConfig.maxContentLength)
             message?.let { callLogger.addResponseBody(it) }
         } catch (e: Throwable) {
             logErr(e, "Inspektor") { "Failed to read response body" }
@@ -449,8 +450,9 @@ internal fun Matcher.matches(response: HttpResponse): Boolean {
 
 public expect fun openInspektor()
 
+@Retention(AnnotationRetention.BINARY)
 @RequiresOptIn(
     message = "This API is unstable and may be removed in the future.",
-    level = RequiresOptIn.Level.ERROR
+    level = RequiresOptIn.Level.ERROR,
 )
 public annotation class UnstableInspektorAPI
