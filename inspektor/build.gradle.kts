@@ -2,8 +2,6 @@ import org.gradle.kotlin.dsl.invoke
 import org.jetbrains.compose.ExperimentalComposeLibrary
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -11,8 +9,6 @@ plugins {
     alias(libs.plugins.compose)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlinx.serialization)
-    alias(libs.plugins.sqlDelight)
-    alias(libs.plugins.atomifu)
     alias(libs.plugins.vanniktech)
     alias(libs.plugins.mokkery)
 }
@@ -49,6 +45,7 @@ kotlin {
         all {
             languageSettings {
                 optIn("org.jetbrains.compose.resources.ExperimentalResourceApi")
+                optIn("com.gyanoba.inspektor.UnstableInspektorAPI")
             }
         }
         val commonMain by getting {
@@ -58,25 +55,22 @@ kotlin {
                 implementation(compose.material3)
                 implementation(compose.components.resources)
                 implementation(compose.components.uiToolingPreview)
+                api(project(":inspektor-core"))
                 implementation(libs.material.icons.core)
                 implementation(libs.lifecycle.viewmodel.compose)
                 implementation(libs.lifecycle.runtime.compose)
                 implementation(libs.androidx.navigation.compose)
-                implementation(libs.sqlDelight.coroutines.extensions)
-                implementation(libs.kotlinx.atomicfu)
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.kotlinx.serialization.json.io)
                 implementation(libs.kotlinx.datetime)
                 implementation(libs.ktor.core)
-                implementation(libs.multiplatformSettings)
                 implementation(libs.jsontree)
-                implementation(libs.kstore)
-                implementation(libs.kstore.file)
             }
         }
         val commonTest by getting {
             dependencies {
+                implementation(project(":inspektor-test-fixtures"))
                 implementation(libs.kotlin.test)
                 @OptIn(ExperimentalComposeLibrary::class)
                 implementation(compose.uiTest)
@@ -88,20 +82,11 @@ kotlin {
             }
         }
 
-        val androidUnitTest by getting {
-            dependencies {
-                // Android unit tests run on the host JVM, so they need the JDBC driver for the
-                // in-memory test database. Test-only: it never reaches the published AAR.
-                implementation(libs.sqlDelight.driver.sqlite)
-            }
-        }
-
         val androidMain by getting {
             dependencies {
                 implementation(compose.uiTooling)
                 implementation(libs.androidx.activityCompose)
                 implementation(libs.kotlinx.coroutines.android)
-                implementation(libs.sqlDelight.driver.android)
                 implementation(libs.androidx.startup.runtime)
             }
         }
@@ -110,7 +95,6 @@ kotlin {
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation(libs.kotlinx.coroutines.swing)
-                implementation(libs.sqlDelight.driver.sqlite)
             }
         }
 
@@ -119,7 +103,6 @@ kotlin {
             dependencies {
                 implementation(libs.stately.common)
                 implementation(libs.stately.iso.collections)
-                implementation(libs.sqlDelight.driver.native)
             }
         }
         val appleTest by creating
@@ -140,21 +123,3 @@ android {
     }
 }
 
-fun Project.linkSqlite() {
-    project.extensions.findByType(KotlinMultiplatformExtension::class.java)?.apply {
-        targets
-            .filterIsInstance<KotlinNativeTarget>()
-            .flatMap { it.binaries }
-            .forEach { compilationUnit -> compilationUnit.linkerOpts("-lsqlite3") }
-    }
-}
-
-//linkSqlite()
-
-sqldelight {
-    databases {
-        create("InspektorDatabase") {
-            packageName.set("com.gyanoba.inspektor.data")
-        }
-    }
-}

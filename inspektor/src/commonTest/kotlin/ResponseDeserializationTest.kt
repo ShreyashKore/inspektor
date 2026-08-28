@@ -1,6 +1,5 @@
 import com.gyanoba.inspektor.ClientCallLogger
 import com.gyanoba.inspektor.Inspektor
-import com.gyanoba.inspektor.IsTest
 import com.gyanoba.inspektor.LogLevel
 import com.gyanoba.inspektor.UnstableInspektorAPI
 import com.gyanoba.inspektor.data.HttpMethod
@@ -41,7 +40,6 @@ class ResponseDeserializationTest {
     }
 
     init {
-        IsTest = true
         @OptIn(UnstableInspektorAPI::class)
         setApplicationId("com.test.inspektor")
     }

@@ -1,11 +1,6 @@
 import com.gyanoba.inspektor.ClientCallLogger
 import com.gyanoba.inspektor.DisableLogging
 import com.gyanoba.inspektor.LogLevel
-import com.gyanoba.inspektor.data.DriverFactory
-import com.gyanoba.inspektor.data.HttpTransaction
-import com.gyanoba.inspektor.data.InspektorDatabase
-import com.gyanoba.inspektor.data.adapters.instantAdapter
-import com.gyanoba.inspektor.data.adapters.setMapEntryAdapter
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.engine.mock.respondOk
 import io.ktor.client.request.post
@@ -14,7 +9,6 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import kotlinx.coroutines.test.runTest
 import utils.TestBase
-import utils.createTempDbDriver
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -147,19 +141,5 @@ class LogLevelTest : TestBase() {
         }
     }
 
-
-    private fun createTestDb(): InspektorDatabase {
-        val driver = createTempDbDriver()
-        return InspektorDatabase(
-            driver, HttpTransaction.Adapter(
-                requestDateAdapter = instantAdapter,
-                responseDateAdapter = instantAdapter,
-                requestHeadersAdapter = setMapEntryAdapter,
-                responseHeadersAdapter = setMapEntryAdapter,
-                originalResponseHeadersAdapter = setMapEntryAdapter,
-                originalRequestHeadersAdapter = setMapEntryAdapter,
-            )
-        )
-    }
 
 }

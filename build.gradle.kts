@@ -18,7 +18,7 @@ allprojects {
 }
 
 apiValidation {
-    ignoredProjects.addAll(listOf("sample"))
+    ignoredProjects.addAll(listOf("sample", "inspektor-test-fixtures"))
 
     // The Compose compiler emits a public `ComposableSingletons$<File>Kt` holder per file that
     // contains composable lambdas. They are a compiler implementation detail -- their names encode

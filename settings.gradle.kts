@@ -19,5 +19,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "inspektor"
 include(":inspektor")
+include(":inspektor-core")
+include(":inspektor-test-fixtures")
 include(":inspektor-no-op")
 include(":sample")

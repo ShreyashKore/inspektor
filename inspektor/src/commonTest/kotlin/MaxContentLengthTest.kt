@@ -1,7 +1,6 @@
 import com.gyanoba.inspektor.ClientCallLogger
 import com.gyanoba.inspektor.Inspektor
 import com.gyanoba.inspektor.InspektorConfig
-import com.gyanoba.inspektor.IsTest
 import com.gyanoba.inspektor.LogLevel
 import com.gyanoba.inspektor.UnstableInspektorAPI
 import com.gyanoba.inspektor.data.Override
@@ -28,7 +27,6 @@ import kotlin.test.assertTrue
 class MaxContentLengthTest {
 
     init {
-        IsTest = true
         @OptIn(UnstableInspektorAPI::class)
         setApplicationId("com.test.inspektor")
     }

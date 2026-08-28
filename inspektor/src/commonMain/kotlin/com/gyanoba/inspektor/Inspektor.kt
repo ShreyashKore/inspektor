@@ -1,19 +1,11 @@
 package com.gyanoba.inspektor
 
 import androidx.annotation.VisibleForTesting
-import com.gyanoba.inspektor.data.HostMatcher
-import com.gyanoba.inspektor.data.HttpRequest
 import com.gyanoba.inspektor.data.InspektorDataSource
-import com.gyanoba.inspektor.data.InspektorDataSourceImpl
-import com.gyanoba.inspektor.data.Matcher
 import com.gyanoba.inspektor.data.OverrideAction
+import com.gyanoba.inspektor.data.OverrideEngine
 import com.gyanoba.inspektor.data.OverrideRepository
-import com.gyanoba.inspektor.data.OverrideRepositoryImpl
-import com.gyanoba.inspektor.data.PathMatcher
-import com.gyanoba.inspektor.data.UrlMatcher
-import com.gyanoba.inspektor.data.UrlRegexMatcher
 import com.gyanoba.inspektor.platform.NotificationManager
-import com.gyanoba.inspektor.utils.HeaderSanitizer
 import com.gyanoba.inspektor.utils.ReceiveStateHook
 import com.gyanoba.inspektor.utils.ResponseReceiveHook
 import com.gyanoba.inspektor.utils.SendMonitoringHook
@@ -21,18 +13,18 @@ import com.gyanoba.inspektor.utils.SendStateHook
 import com.gyanoba.inspektor.utils.approxByteCount
 import com.gyanoba.inspektor.utils.logErr
 import com.gyanoba.inspektor.utils.observe
-import com.gyanoba.inspektor.utils.sanitizeHeaders
+import com.gyanoba.inspektor.utils.toHeaderMap
+import com.gyanoba.inspektor.utils.toInspektorRequest
 import com.gyanoba.inspektor.utils.tryReadText
 import com.gyanoba.inspektor.utils.typeAndSubType
+import io.ktor.client.call.replaceResponse
 import io.ktor.client.plugins.api.ClientPlugin
 import io.ktor.client.plugins.api.ClientPluginBuilder
 import io.ktor.client.plugins.api.createClientPlugin
-import io.ktor.client.call.replaceResponse
 import io.ktor.client.plugins.observer.ResponseHandler
 import io.ktor.client.plugins.observer.ResponseObserver
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.setBody
-import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.request
 import io.ktor.client.utils.buildHeaders
@@ -53,88 +45,95 @@ import io.ktor.utils.io.charsets.Charsets
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.days
-import kotlin.time.Duration.Companion.minutes
 
-internal val ClientCallLogger = AttributeKey<HttpClientCallLogger>("CallLogger")
+internal val ClientCallLogger = AttributeKey<TransactionRecorder>("CallLogger")
 internal val DisableLogging = AttributeKey<Unit>("DisableLogging")
 
-public enum class LogLevel(
-    public val info: Boolean = false,
-    public val headers: Boolean = false,
-    public val body: Boolean = false,
-) {
-    NONE,
-    INFO(info = true),
-    HEADERS(info = true, headers = true),
-    BODY(info = true, headers = true, body = true)
-}
-
-internal var IsTest = false
+private const val NOTIFICATION_TITLE = "Recording Ktor Activity"
 
 /**
  * A configuration for the [Inspektor] plugin.
+ *
+ * Every setting is stored on a shared [InspektorCoreConfig]; this class only adds the Ktor-typed
+ * conveniences (a `filter` over `HttpRequestBuilder`) that existing consumers already write.
  */
 @KtorDsl
 public class InspektorConfig internal constructor() {
-    internal var filters = mutableListOf<(HttpRequestBuilder) -> Boolean>()
-    internal val headerSanitizers = mutableListOf<HeaderSanitizer>()
+    internal val core = InspektorCoreConfig()
 
     /**
      * Specifies the logging level.
      */
-    public var level: LogLevel = LogLevel.BODY
+    public var level: LogLevel
+        get() = core.level
+        set(value) {
+            core.level = value
+        }
 
     /** The maximum size of the request/response body to log. */
-    public var maxContentLength: Int = 250_000
+    public var maxContentLength: Int
+        get() = core.maxContentLength
+        set(value) {
+            core.maxContentLength = value
+        }
 
     @UnstableInspektorAPI
     /** The maximum duration for which logs are retained. */
-    public var retentionDuration: Duration = 30.days
+    public var retentionDuration: Duration
+        get() = core.retentionDuration
         set(value) {
-            if (value < 5.minutes) {
-                throw IllegalArgumentException("Retention duration must be at least 5 minutes")
-            }
-            field = value
+            core.retentionDuration = value
         }
 
     /** Shows a notification when a request is sent. */
     @UnstableInspektorAPI
-    public var showNotifications: Boolean = true
+    public var showNotifications: Boolean
+        get() = core.showNotifications
+        set(value) {
+            core.showNotifications = value
+        }
 
     /**
      * The data source to store the logs.
      */
     @VisibleForTesting
-    internal lateinit var dataSource: InspektorDataSource
+    internal var dataSource: InspektorDataSource
+        get() = core.dataSource
+        set(value) {
+            core.dataSource = value
+        }
 
     /**
      * The data source to store overrides.
      */
     @VisibleForTesting
-    internal lateinit var overrideRepository: OverrideRepository
+    internal var overrideRepository: OverrideRepository
+        get() = core.overrideRepository
+        set(value) {
+            core.overrideRepository = value
+        }
 
     @VisibleForTesting
-    internal lateinit var notificationManager: NotificationManager
-
-    init {
-        // temp change; TODO: inject these dependencies
-        if (!IsTest) {
-            dataSource = InspektorDataSourceImpl.Instance
-            overrideRepository = OverrideRepositoryImpl.Instance
-            notificationManager = NotificationManager()
+    internal var notificationManager: NotificationManager
+        get() = core.notificationManager
+        set(value) {
+            core.notificationManager = value
         }
-    }
+
+    internal val ktorFilters: MutableList<(HttpRequestBuilder) -> Boolean> = mutableListOf()
 
     /**
      * Allows you to filter log messages for calls matching a [predicate].
+     *
+     * Kept Ktor-typed so existing consumer source keeps compiling. It sits alongside the neutral
+     * `InspektorCoreConfig.filter`; a call is recorded when no filter of either kind is registered,
+     * or when any one of them accepts it.
      */
     public fun filter(predicate: (HttpRequestBuilder) -> Boolean) {
-        filters.add(predicate)
+        ktorFilters.add(predicate)
     }
 
     /**
@@ -145,95 +144,81 @@ public class InspektorConfig internal constructor() {
      * ```
      */
     public fun sanitizeHeader(placeholder: String = "***", predicate: (String) -> Boolean) {
-        headerSanitizers.add(HeaderSanitizer(placeholder, predicate))
+        core.sanitizeHeader(placeholder, predicate)
     }
 }
 
-@OptIn( DelicateCoroutinesApi::class, UnstableInspektorAPI::class)
+@OptIn(DelicateCoroutinesApi::class, UnstableInspektorAPI::class)
 public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
     "Inspektor", ::InspektorConfig,
 ) {
-    val inspektorDataSource = pluginConfig.dataSource
-    val notificationManager =
-        if (pluginConfig.showNotifications) pluginConfig.notificationManager else null
-
-    val retentionManger = RetentionManager(
-        retentionDuration = pluginConfig.retentionDuration,
-        dataSource = inspektorDataSource
-    )
-
-    val level: LogLevel = pluginConfig.level
+    val config = pluginConfig.core
+    val level: LogLevel = config.level
     if (level == LogLevel.NONE) return@createClientPlugin
 
-    val filters: List<(HttpRequestBuilder) -> Boolean> = pluginConfig.filters
-    val headerSanitizers: List<HeaderSanitizer> = pluginConfig.headerSanitizers
+    val ktorFilters = pluginConfig.ktorFilters
+    val recorders = config.recorderFactory(NOTIFICATION_TITLE)
+    val overrideEngine = OverrideEngine(config.overrideRepository)
+    val retentionManger = RetentionManager(
+        retentionDuration = config.retentionDuration,
+        dataSource = config.dataSource,
+    )
 
-    fun shouldBeLogged(request: HttpRequestBuilder): Boolean =
-        filters.isEmpty() || filters.any { it(request) }
+    fun shouldBeLogged(request: HttpRequestBuilder, view: InspektorRequest): Boolean =
+        if (ktorFilters.isEmpty() && !config.hasFilters) true
+        else ktorFilters.any { it(request) } || config.matchesAnyFilter(view)
 
     on(SendStateHook) { request ->
         if (level == LogLevel.NONE) return@on
-        if (!shouldBeLogged(request)) {
+
+        val inspektorRequest = request.toInspektorRequest()
+        if (!shouldBeLogged(request, inspektorRequest)) {
             request.attributes.put(DisableLogging, Unit)
             return@on
         }
 
-        val callLogger = HttpClientCallLogger(
-            inspektorDataSource, Dispatchers.IO, notificationManager
-        )
+        val callLogger = recorders.newRecorder()
         request.attributes.put(ClientCallLogger, callLogger)
         retentionManger.checkAndCleanUp()
 
-        val override = run {
-            val allOverrides = pluginConfig.overrideRepository.all
-            allOverrides.firstOrNull {
-                it.enabled && it.action.request && (it.type is HttpRequest && it.type.method.name.equals(
-                    request.method.value, true
-                )) && it.matchers.all { matcher ->
-                    matcher.matches(request)
-                }
-            }
-        }
+        val override = overrideEngine.findRequestOverride(inspektorRequest) ?: return@on
 
-        override?.let {
-            when (override.action.type) {
-                OverrideAction.Type.FixedRequest, OverrideAction.Type.FixedRequestResponse -> {
-                    var originalBody: String? = null
-                    override.action.requestBody?.takeIf { it.isNotEmpty() }?.let { newBody ->
-                        originalBody = (request.body as? TextContent)?.text?.run {
-                            substring(0..minOf(lastIndex, pluginConfig.maxContentLength))
-                        }
-                        request.setBody(
-                            TextContent(
-                                newBody, request.contentType() ?: ContentType.Text.Any
-                            )
+        when (override.action.type) {
+            OverrideAction.Type.FixedRequest, OverrideAction.Type.FixedRequestResponse -> {
+                var originalBody: String? = null
+                override.action.requestBody?.takeIf { it.isNotEmpty() }?.let { newBody ->
+                    originalBody = (request.body as? TextContent)?.text?.run {
+                        substring(0..minOf(lastIndex, config.maxContentLength))
+                    }
+                    request.setBody(
+                        TextContent(
+                            newBody, request.contentType() ?: ContentType.Text.Any
                         )
-                    }
-
-                    val originalHeaders = mutableMapOf<String, List<String>>()
-                    override.action.requestHeaders.takeIf { it.isNotEmpty() }?.let { overrideHeaders ->
-                        request.apply {
-                            overrideHeaders.forEach { overrideHeader ->
-                                val isOverriding = headers.contains(overrideHeader.key) && headers.getAll(overrideHeader.key) != overrideHeader.value
-                                if (isOverriding) {
-                                    val values = headers.getAll(overrideHeader.key)!!
-                                    originalHeaders[overrideHeader.key] = values
-                                }
-                                headers.apply {
-                                    remove(overrideHeader.key)
-                                    appendAll(overrideHeader.key, overrideHeader.value)
-                                }
-                            }
-                        }
-                    }
-
-                    callLogger.addOriginalRequest(
-                        headers = originalHeaders.entries, body = originalBody
                     )
                 }
 
-                else -> throw IllegalArgumentException("Unsupported action type")
+                val originalHeaders = mutableMapOf<String, List<String>>()
+                override.action.requestHeaders.takeIf { it.isNotEmpty() }?.let { overrideHeaders ->
+                    request.apply {
+                        overrideHeaders.forEach { overrideHeader ->
+                            val isOverriding = headers.contains(overrideHeader.key) &&
+                                headers.getAll(overrideHeader.key) != overrideHeader.value
+                            if (isOverriding) {
+                                val values = headers.getAll(overrideHeader.key)!!
+                                originalHeaders[overrideHeader.key] = values
+                            }
+                            headers.apply {
+                                remove(overrideHeader.key)
+                                appendAll(overrideHeader.key, overrideHeader.value)
+                            }
+                        }
+                    }
+                }
+
+                callLogger.addOriginalRequest(headers = originalHeaders, body = originalBody)
             }
+
+            else -> throw IllegalArgumentException("Unsupported action type")
         }
     }
 
@@ -257,9 +242,7 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
         )
 
         if (level.headers) {
-            callLogger.addRequestHeaders(
-                headers = request.headers.build().sanitizeHeaders(headerSanitizers).entries()
-            )
+            callLogger.addRequestHeaders(headers = request.headers.build().toHeaderMap())
         }
 
         val loggedContent = if (level.body) {
@@ -268,7 +251,7 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
                 val channel = ByteChannel()
                 var requestBody: String? = null
                 GlobalScope.launch(Dispatchers.Unconfined) {
-                    requestBody = channel.tryReadText(charset, pluginConfig.maxContentLength)
+                    requestBody = channel.tryReadText(charset, config.maxContentLength)
                 }.invokeOnCompletion {
                     requestBody?.let { callLogger.addRequestBody(it) }
                 }
@@ -308,24 +291,13 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
         )
 
         try {
-            val request = response.request
-            val override = run {
-                val allOverrides = pluginConfig.overrideRepository.all
-                allOverrides.firstOrNull {
-                    it.enabled && it.action.response && (it.type is HttpRequest && it.type.method.name.equals(
-                        request.method.value, true
-                    )) && it.matchers.all { matcher ->
-                        matcher.matches(response)
-                    }
-                }
-            }
-
+            val override = overrideEngine.findResponseOverride(
+                response.request.toInspektorRequest()
+            )
 
             if (override == null) {
                 if (level.headers) {
-                    callLogger.addResponseHeaders(
-                        headers = response.headers.sanitizeHeaders(headerSanitizers).entries()
-                    )
+                    callLogger.addResponseHeaders(headers = response.headers.toHeaderMap())
                 }
                 proceed()
             } else {
@@ -335,22 +307,24 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
                         val originalHeaders = mutableMapOf<String, List<String>>()
                         val originalChannel = response.bodyAsChannel()
 
-                        val newBody: String? = override.action.responseBody?.takeIf { it.isNotEmpty() }?.let { newBodyString ->
-                            originalBody = originalChannel.tryReadText(
-                                response.charset() ?: Charsets.UTF_8, pluginConfig.maxContentLength
-                            )?.run {
-                                substring(0..minOf(lastIndex, pluginConfig.maxContentLength))
+                        val newBody: String? = override.action.responseBody
+                            ?.takeIf { it.isNotEmpty() }?.let { newBodyString ->
+                                originalBody = originalChannel.tryReadText(
+                                    response.charset() ?: Charsets.UTF_8, config.maxContentLength
+                                )?.run {
+                                    substring(0..minOf(lastIndex, config.maxContentLength))
+                                }
+                                newBodyString
                             }
-                            newBodyString
-                        }
 
-                        val newHeaders =
-                            override.action.responseHeaders.takeIf { it.isNotEmpty() }?.let { overrideHeaders ->
+                        val newHeaders = override.action.responseHeaders.takeIf { it.isNotEmpty() }
+                            ?.let { overrideHeaders ->
                                 val responseHeaders = response.headers
                                 // before overriding headers, store the original headers
                                 overrideHeaders.forEach { overrideHeader ->
-                                    val isOverriding = responseHeaders.contains(overrideHeader.key) &&
-                                        responseHeaders.getAll(overrideHeader.key) != overrideHeader.value
+                                    val isOverriding =
+                                        responseHeaders.contains(overrideHeader.key) &&
+                                            responseHeaders.getAll(overrideHeader.key) != overrideHeader.value
                                     if (isOverriding) {
                                         val values = responseHeaders.getAll(overrideHeader.key)!!
                                         originalHeaders[overrideHeader.key] = values
@@ -364,13 +338,11 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
                             }
 
                         callLogger.addOriginalResponse(
-                            headers = originalHeaders.entries, body = originalBody
+                            headers = originalHeaders, body = originalBody
                         )
                         if (level.headers) {
                             callLogger.addResponseHeaders(
-                                headers = (newHeaders ?: response.headers).sanitizeHeaders(
-                                    headerSanitizers
-                                ).entries()
+                                headers = (newHeaders ?: response.headers).toHeaderMap()
                             )
                         }
                         proceedWith(
@@ -413,7 +385,7 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
         val callLogger = response.call.attributes[ClientCallLogger]
         try {
             val charset = response.contentType()?.charset() ?: Charsets.UTF_8
-            val message = response.bodyAsChannel().tryReadText(charset, pluginConfig.maxContentLength)
+            val message = response.bodyAsChannel().tryReadText(charset, config.maxContentLength)
             message?.let { callLogger.addResponseBody(it) }
         } catch (e: Throwable) {
             logErr(e, "Inspektor") { "Failed to read response body" }
@@ -429,30 +401,4 @@ private fun ClientPluginBuilder<InspektorConfig>.shouldNotLog(attributes: Attrib
     return pluginConfig.level == LogLevel.NONE || attributes.contains(DisableLogging)
 }
 
-internal fun Matcher.matches(request: HttpRequestBuilder): Boolean {
-    return when (this) {
-        is UrlMatcher -> url == request.url.toString()
-        is HostMatcher -> host == request.url.host
-        is PathMatcher -> path == request.url.encodedPath
-        is UrlRegexMatcher -> Regex(url).matches(request.url.toString())
-    }
-}
-
-internal fun Matcher.matches(response: HttpResponse): Boolean {
-    val request = response.request
-    return when (this) {
-        is UrlMatcher -> url == request.url.toString()
-        is HostMatcher -> host == request.url.host
-        is PathMatcher -> path == request.url.encodedPath
-        is UrlRegexMatcher -> Regex(url).matches(request.url.toString())
-    }
-}
-
 public expect fun openInspektor()
-
-@Retention(AnnotationRetention.BINARY)
-@RequiresOptIn(
-    message = "This API is unstable and may be removed in the future.",
-    level = RequiresOptIn.Level.ERROR,
-)
-public annotation class UnstableInspektorAPI
