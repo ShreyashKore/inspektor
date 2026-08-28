@@ -187,7 +187,7 @@ public fun List<HttpTransaction>.toHarLogString(creatorName: String): String {
 }
 
 @UnstableInspektorAPI
-val json: Json = Json { encodeDefaults = true }
+public val json: Json = Json { encodeDefaults = true }
 
 /**
  * Splits the query string off [url] into HAR query parameters.

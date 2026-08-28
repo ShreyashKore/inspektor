@@ -47,9 +47,9 @@ public class OverrideRepositoryImpl(
         store.plus(override.copy(id = newId))
     }
 
-    override suspend fun remove(vararg overrides: Override) = store.minus(*overrides)
+    override suspend fun remove(vararg overrides: Override): Unit = store.minus(*overrides)
 
-    override suspend fun update(override: Override) = store.update { overrideList ->
+    override suspend fun update(override: Override): Unit = store.update { overrideList ->
         overrideList?.map {
             if (it.id == override.id) override else it
         }

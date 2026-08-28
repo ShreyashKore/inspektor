@@ -21,7 +21,7 @@ public fun HttpTransaction.toCurlString(): String {
     }
 
     if (isRequestBodyEncoded != true && !requestBody.isNullOrEmpty()) {
-        curlCommand.append("  --data-raw '${requestBody!!.replace("'", "\\'")}' \\\n")
+        curlCommand.append("  --data-raw '${requestBody.replace("'", "\\'")}' \\\n")
     }
 
     return curlCommand.toString()

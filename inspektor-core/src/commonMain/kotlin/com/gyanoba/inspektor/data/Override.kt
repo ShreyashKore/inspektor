@@ -39,7 +39,7 @@ public enum class HttpMethod {
     Get, Post, Put, Delete, Patch, Head, Options, Trace, Connect, Custom, Any;
 
     public companion object {
-        public val currentlySupported = listOf(
+        public val currentlySupported: List<HttpMethod> = listOf(
             Get, Post, Put, Delete, Patch
         )
 
