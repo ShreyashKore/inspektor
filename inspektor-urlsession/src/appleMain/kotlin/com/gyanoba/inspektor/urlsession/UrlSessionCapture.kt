@@ -7,11 +7,15 @@ import com.gyanoba.inspektor.TransactionRecorder
 import com.gyanoba.inspektor.data.OverrideEngine
 import com.gyanoba.inspektor.utils.approxHeaderByteCount
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.UByteVar
+import kotlinx.cinterop.allocArray
+import kotlinx.cinterop.memScoped
 import platform.Foundation.HTTPBody
 import platform.Foundation.HTTPMethod
 import platform.Foundation.NSData
 import platform.Foundation.NSError
 import platform.Foundation.NSHTTPURLResponse
+import platform.Foundation.NSInputStream
 import platform.Foundation.NSMakeRange
 import platform.Foundation.NSMutableData
 import platform.Foundation.NSString
@@ -19,6 +23,7 @@ import platform.Foundation.NSURLRequest
 import platform.Foundation.NSURLResponse
 import platform.Foundation.NSUTF8StringEncoding
 import platform.Foundation.allHTTPHeaderFields
+import platform.Foundation.appendBytes
 import platform.Foundation.appendData
 import platform.Foundation.create
 import platform.Foundation.subdataWithRange
@@ -192,6 +197,31 @@ internal fun NSData.toText(): String? =
 
 internal fun NSData.decodeToText(max: Int): String? =
     (if (length.toLong() > max) prefix(max.toLong()) else this).toText()
+
+private const val STREAM_CHUNK = 16 * 1024
+
+/**
+ * Reads this stream to the end, opening and closing it, or returns null if a read fails part-way.
+ *
+ * A body stream can be read only once, so the caller owns the bytes this returns: whoever needs the
+ * body afterwards has to be handed them.
+ */
+@OptIn(ExperimentalForeignApi::class)
+internal fun NSInputStream.readFully(): NSData? = memScoped {
+    val buffer = allocArray<UByteVar>(STREAM_CHUNK)
+    val data = NSMutableData()
+    open()
+    try {
+        var read: Long
+        do {
+            read = read(buffer, STREAM_CHUNK.toULong())
+            if (read > 0) data.appendBytes(buffer, read.toULong())
+        } while (read > 0)
+        data.takeIf { read == 0L }
+    } finally {
+        close()
+    }
+}
 
 /** The first [byteCount] bytes of this data. */
 @OptIn(ExperimentalForeignApi::class)

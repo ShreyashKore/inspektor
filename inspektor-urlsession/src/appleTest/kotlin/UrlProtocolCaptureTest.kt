@@ -1,11 +1,15 @@
 import com.gyanoba.inspektor.LogLevel
+import com.gyanoba.inspektor.data.HttpTransaction
 import com.gyanoba.inspektor.data.InspektorDataSourceImpl
 import com.gyanoba.inspektor.data.OverrideRepositoryImpl
 import com.gyanoba.inspektor.platform.NotificationManager
 import com.gyanoba.inspektor.urlsession.InspektorUrlProtocol
+import com.gyanoba.inspektor.urlsession.readFully
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import platform.Foundation.HTTPBody
+import platform.Foundation.HTTPBodyStream
 import platform.Foundation.NSMutableURLRequest
 import platform.Foundation.NSString
 import platform.Foundation.NSUTF8StringEncoding
@@ -15,7 +19,11 @@ import platform.Foundation.NSURLRequest
 import platform.Foundation.NSURLSession
 import platform.Foundation.NSURLSessionConfiguration
 import platform.Foundation.dataTaskWithRequest
+import platform.Foundation.setHTTPBody
+import platform.Foundation.setHTTPMethod
+import platform.Foundation.setValue
 import utils.DbTestBase
+import kotlin.concurrent.AtomicReference
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -63,29 +71,62 @@ class UrlProtocolCaptureTest : DbTestBase() {
         return NSURLSession.sessionWithConfiguration(configuration)
     }
 
-    @Test
-    fun `a completion-handler task is captured unlike with the delegate`() = runBlocking {
+    /** Runs [request] through the protocol and returns what the app received. */
+    private fun call(request: NSURLRequest): String? = runBlocking {
         val handled = CompletableDeferred<String?>()
-        val request = NSMutableURLRequest(uRL = NSURL(string = "https://example.com/handler"))
         session().dataTaskWithRequest(request) { data, _, _ ->
             handled.complete(data?.let { NSString.create(data = it, encoding = NSUTF8StringEncoding)?.toString() })
         }.resume()
+        withTimeout(30.seconds) { handled.await() }
+    }
 
-        assertEquals("""{"ok":true}""", withTimeout(30.seconds) { handled.await() })
-
-        // The protocol records asynchronously; poll briefly for the finished row.
+    /** The protocol records asynchronously; poll briefly for the finished row. */
+    private fun awaitRow(): HttpTransaction {
         repeat(200) {
             val row = db.httpTransactionQueries.getAll().executeAsList().lastOrNull()
-            if (row?.responseCode != null && row.responseBody != null) {
-                assertEquals("GET", row.method)
-                assertEquals("/handler", row.path)
-                assertEquals(200L, row.responseCode)
-                assertEquals("""{"ok":true}""", row.responseBody)
-                return@runBlocking
-            }
+            if (row?.responseCode != null && row.responseBody != null) return row
             platform.posix.usleep(25_000u)
         }
         throw AssertionError("the URLProtocol recorded nothing")
+    }
+
+    @Test
+    fun `a completion-handler task is captured unlike with the delegate`() {
+        val request = NSMutableURLRequest(uRL = NSURL(string = "https://example.com/handler"))
+        assertEquals("""{"ok":true}""", call(request))
+
+        val row = awaitRow()
+        assertEquals("GET", row.method)
+        assertEquals("/handler", row.path)
+        assertEquals(200L, row.responseCode)
+        assertEquals("""{"ok":true}""", row.responseBody)
+    }
+
+    /**
+     * The URL loading system hands a protocol every body as `HTTPBodyStream`, never `HTTPBody` --
+     * even when the app set `HTTPBody` -- so the protocol has to read the stream to see the body,
+     * and must then still send the server all of it.
+     */
+    @Test
+    fun `a request body is recorded and still reaches the server`() {
+        val received = AtomicReference<String?>(null)
+        stubResponder.value = { forwarded ->
+            val body = forwarded.HTTPBody ?: forwarded.HTTPBodyStream?.readFully()
+            received.value = body?.let { NSString.create(data = it, encoding = NSUTF8StringEncoding)?.toString() }
+            Stub(code = 200, body = """{"ok":true}""")
+        }
+
+        val request = NSMutableURLRequest(uRL = NSURL(string = "https://example.com/upload"))
+        request.setHTTPMethod("POST")
+        request.setValue("application/json", forHTTPHeaderField = "Content-Type")
+        request.setHTTPBody("""{"hello":"world"}""".toNSData())
+        call(request)
+
+        assertEquals("""{"hello":"world"}""", received.value, "the server must get the whole body")
+        val row = awaitRow()
+        assertEquals("POST", row.method)
+        assertEquals("""{"hello":"world"}""", row.requestBody)
+        assertEquals(17L, row.requestPayloadSize)
     }
 
     @Test
