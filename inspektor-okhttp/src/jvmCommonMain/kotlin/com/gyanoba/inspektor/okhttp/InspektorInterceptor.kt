@@ -7,6 +7,7 @@ import com.gyanoba.inspektor.TransactionRecorder
 import com.gyanoba.inspektor.data.Override
 import com.gyanoba.inspektor.data.OverrideAction
 import com.gyanoba.inspektor.data.OverrideEngine
+import com.gyanoba.inspektor.utils.InspektorLog
 import com.gyanoba.inspektor.utils.approxHeaderByteCount
 import okhttp3.Headers
 import okhttp3.Interceptor
@@ -19,6 +20,7 @@ import okhttp3.ResponseBody.Companion.toResponseBody
 import kotlin.time.Clock
 
 private const val NOTIFICATION_TITLE = "Recording OkHttp Activity"
+private const val TAG = "Inspektor OkHttp"
 
 /**
  * Records every call through an [OkHttpClient] into Inspektor's store, and applies any matching
@@ -103,6 +105,16 @@ public class InspektorInterceptor internal constructor(
         var originalBody: String? = null
 
         override.action.requestBody?.takeIf { it.isNotEmpty() }?.let { newBody ->
+            // OkHttp rejects a body on GET and HEAD with an exception, which would escape this
+            // interceptor and, for an enqueued call, crash the app. Ktor does send one, so the same
+            // override is valid there; here the body is skipped and the headers still apply.
+            if (!request.permitsBody) {
+                InspektorLog.info(TAG) {
+                    "Override '${override.name ?: override.id}' sets a request body, which OkHttp " +
+                        "does not allow on ${request.method}; sending the request without it"
+                }
+                return@let
+            }
             val contentType = request.body?.contentType()
             originalBody = request.body?.peekText(core.maxContentLength)
             built = built.method(request.method, newBody.toRequestBody(contentType))
@@ -231,6 +243,10 @@ public class InspektorInterceptor internal constructor(
         null
     }
 }
+
+/** Mirrors OkHttp's internal `HttpMethod.permitsRequestBody`, which `Request.Builder` enforces. */
+private val Request.permitsBody: Boolean
+    get() = method != "GET" && method != "HEAD"
 
 private val OverrideAction.isFixedRequest: Boolean
     get() = type == OverrideAction.Type.FixedRequest ||

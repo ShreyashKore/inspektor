@@ -1,11 +1,18 @@
 import com.gyanoba.inspektor.LogLevel
+import com.gyanoba.inspektor.data.HttpMethod
+import com.gyanoba.inspektor.data.HttpRequest
 import com.gyanoba.inspektor.data.HttpTransaction
 import com.gyanoba.inspektor.data.InspektorDataSourceImpl
+import com.gyanoba.inspektor.data.Override
+import com.gyanoba.inspektor.data.OverrideAction
 import com.gyanoba.inspektor.data.OverrideRepositoryImpl
+import com.gyanoba.inspektor.data.PathMatcher
 import com.gyanoba.inspektor.okhttp.InterceptorMode
 import com.gyanoba.inspektor.okhttp.InspektorOkHttpConfig
 import com.gyanoba.inspektor.okhttp.installInspektor
 import com.gyanoba.inspektor.platform.NotificationManager
+import io.github.xxfast.kstore.extensions.plus
+import kotlinx.coroutines.runBlocking
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import okhttp3.OkHttpClient
@@ -180,6 +187,42 @@ class InspektorInterceptorTest : DbTestBase() {
         val transaction = awaitTransaction().single()
         assertNull(transaction.requestBody)
         assertEquals("POST", transaction.method)
+    }
+
+    /**
+     * The override editor defaults to GET and accepts a request body. OkHttp refuses a body on GET
+     * outright, so applying it threw out of `intercept()` -- and crashed the app for an enqueued
+     * call. The body is now skipped and the rest of the override still applies.
+     */
+    @Test
+    fun `a request override with a body on a GET still sends the request`() {
+        runBlocking {
+            store.plus(
+                Override(
+                    id = 0,
+                    type = HttpRequest(HttpMethod.Get),
+                    matchers = listOf(PathMatcher("/todos/1")),
+                    action = OverrideAction(
+                        type = OverrideAction.Type.FixedRequest,
+                        requestHeaders = mapOf("X-Overridden" to listOf("yes")),
+                        requestBody = "not allowed on GET",
+                    ),
+                )
+            )
+        }
+        server.enqueue(MockResponse.Builder().code(200).body("ok").build())
+
+        client().newCall(Request.Builder().url(server.url("/todos/1")).build()).execute().close()
+
+        val sent = server.takeRequest()
+        assertEquals("GET", sent.method)
+        assertEquals("yes", sent.headers["X-Overridden"])
+        assertEquals(0L, sent.bodySize)
+
+        val transaction = awaitTransaction().single()
+        assertEquals(200L, transaction.responseCode)
+        assertNull(transaction.requestBody)
+        assertTrue(transaction.requestHeaders.orEmpty().any { it.key == "X-Overridden" })
     }
 
     @Test
