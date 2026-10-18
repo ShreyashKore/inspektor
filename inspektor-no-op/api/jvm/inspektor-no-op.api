@@ -16,7 +16,3 @@ public final class com/gyanoba/inspektor/InspektorKt {
 	public static final fun getInspektor ()Lio/ktor/client/plugins/api/ClientPlugin;
 }
 
-public final class com/gyanoba/inspektor/Inspektor_jvmKt {
-	public static final fun openInspektor ()V
-}
-

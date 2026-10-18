@@ -81,6 +81,7 @@ jobs:
           :inspektor-okhttp:jvmTest
           :inspektor-no-op:jvmTest
           :inspektor-okhttp-no-op:jvmTest
+          :inspektor-ui-no-op:jvmTest
 
       # The first iOS tests in the repo. They run on the simulator, are hermetic (a stub
       # URLProtocol stands in for the network) and need the `-lsqlite3` linker flag the native

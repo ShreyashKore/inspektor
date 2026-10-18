@@ -56,6 +56,9 @@ dependencies {
 }
 ```
 
+That ships both in every build, release included; to keep them out, use the no-op twins described
+[below](#keeping-inspektor-out-of-production-builds).
+
 Every artifact is released together and must be kept at the same version -- they share
 `inspektor-core`, and a mismatched pair fails in confusing ways.
 
@@ -75,9 +78,12 @@ There is one no-op twin per integration entry point, because that is what your c
 | `inspektor` | `inspektor-no-op` |
 | `inspektor-okhttp` | `inspektor-okhttp-no-op` |
 | `inspektor-urlsession` | `inspektor-urlsession-no-op` |
+| `inspektor-ui` | `inspektor-ui-no-op` |
 
-(`inspektor-core` and `inspektor-ui` need none -- nothing in your code names them, and they simply
-stop being pulled in.)
+`inspektor-ui` has a twin because `openInspektor()` is a name your code calls; `inspektor-no-op`
+already includes it, so you only add it yourself alongside the OkHttp or URLSession twin.
+`inspektor-core` needs none of its own: the few core names your code uses (`LogLevel`,
+`setApplicationId()`) come with every no-op twin.
 
 Depend on the real library only in the variant you debug with, and on the no-op everywhere else:
 
@@ -91,9 +97,11 @@ dependencies {
     devImplementation("com.gyanoba.inspektor:inspektor:latest-version")
     prodImplementation("com.gyanoba.inspektor:inspektor-no-op:latest-version")
 
-    // ...and the same for the OkHttp integration
+    // ...and the same for the OkHttp integration and the viewer paired with it
     debugImplementation("com.gyanoba.inspektor:inspektor-okhttp:latest-version")
+    debugImplementation("com.gyanoba.inspektor:inspektor-ui:latest-version")
     releaseImplementation("com.gyanoba.inspektor:inspektor-okhttp-no-op:latest-version")
+    releaseImplementation("com.gyanoba.inspektor:inspektor-ui-no-op:latest-version")
 }
 ```
 
@@ -102,8 +110,9 @@ all still compile and run in both variants — they just do nothing in the no-op
 
 Because the no-op artifact contains no Activity, no `ContentProvider`, no resources and no
 `androidx.startup` initializer, it contributes nothing to your merged manifest either. Its only
-dependency is `ktor-client-core`, which your project already has, so it adds no transitive
-dependencies of its own.
+external dependency is `ktor-client-core`, which your project already has; the other two,
+`inspektor-core-no-op` and `inspektor-ui-no-op`, are empty declarations like itself, so it adds no
+transitive dependencies of its own.
 
 The iOS `-lsqlite3` linker flag is only required for the real library; the no-op artifact needs no
 platform setup at all.

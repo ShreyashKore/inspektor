@@ -16,6 +16,10 @@ version = project.properties["VERSION_NAME"]!!
 // depend on the real library only in their debug/dev variant and on this one in release/prod, so
 // that neither the inspection code nor its transitive dependencies ever reach a production binary.
 //
+// `openInspektor()` comes from `:inspektor-ui-no-op`, re-exported the same way `:inspektor` re-exports
+// `:inspektor-ui`, so an app that also pairs the viewer with OkHttp or URLSession gets exactly one
+// copy of it.
+//
 // Keep the public API here in sync with `:inspektor` - see the `api` directory of both modules.
 kotlin {
     explicitApiWarning()
@@ -33,6 +37,9 @@ kotlin {
         target.binaries {
             framework {
                 baseName = "inspektor"
+                // Without this, `openInspektor()` would be missing from the generated headers that a
+                // Swift consumer sees, now that it lives in a dependency.
+                export(project(":inspektor-ui-no-op"))
             }
         }
     }
@@ -43,6 +50,7 @@ kotlin {
                 // `LogLevel`, `UnstableInspektorAPI` and `setApplicationId` live in the shared
                 // no-op core so that this artifact and `inspektor-okhttp-no-op` can coexist.
                 api(project(":inspektor-core-no-op"))
+                api(project(":inspektor-ui-no-op"))
                 // Ktor is already on every consumer's classpath, so depending on the no-op
                 // artifact adds no code and no transitive dependencies of its own.
                 implementation(libs.ktor.core)
