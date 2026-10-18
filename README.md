@@ -33,7 +33,7 @@ it, and the ones that need a UI bring that too.
 | Artifact | What it is | Targets |
 |---|---|---|
 | `inspektor` | Umbrella: the Ktor plugin + the viewer. Unchanged coordinates and API. | android, jvm, iOS |
-| `inspektor-ktor` | The Ktor client plugin on its own | android, jvm, iOS |
+| `inspektor-ktor` | The Ktor client plugin on its own, without the viewer or Compose | android, jvm, iOS |
 | `inspektor-okhttp` | An OkHttp `Interceptor` | android, jvm |
 | `inspektor-urlsession` | `NSURLSession` capture (covers Alamofire, Moya, Get, ...) | iOS |
 | `inspektor-ui` | The Compose Multiplatform viewer and `openInspektor()` | android, jvm, iOS |

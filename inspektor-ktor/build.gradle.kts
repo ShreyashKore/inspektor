@@ -17,9 +17,11 @@ version = project.properties["VERSION_NAME"]!!
 // The Ktor client plugin: `install(Inspektor) { ... }`.
 //
 // Everything it does with the capture lives in `:inspektor-core`; this module owns only the
-// pipeline hooks, the non-destructive body tee and the Ktor-typed configuration. `:inspektor-ui` is
-// re-exported so that `install(Inspektor)` and `openInspektor()` keep arriving together, which is
-// what the umbrella artifact promised before the split.
+// pipeline hooks, the non-destructive body tee and the Ktor-typed configuration.
+//
+// It deliberately does not depend on `:inspektor-ui`: this is the headless Ktor artifact, for a
+// server, a CLI or any app that does not want Compose Multiplatform on its classpath. The umbrella
+// `:inspektor` is what keeps `install(Inspektor)` and `openInspektor()` arriving together.
 kotlin {
     explicitApiWarning()
     jvm()
@@ -60,7 +62,6 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 api(project(":inspektor-core"))
-                api(project(":inspektor-ui"))
                 api(libs.ktor.core)
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.androidx.annotation)
