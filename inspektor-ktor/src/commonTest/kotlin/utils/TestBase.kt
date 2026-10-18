@@ -1,6 +1,7 @@
 package utils
 
 import com.gyanoba.inspektor.Inspektor
+import com.gyanoba.inspektor.InspektorConfig
 import com.gyanoba.inspektor.LogLevel
 import com.gyanoba.inspektor.data.OverrideRepositoryImpl
 import com.gyanoba.inspektor.platform.NotificationManager
@@ -15,6 +16,7 @@ abstract class TestBase : DbTestBase() {
 
     protected fun createMockClient(
         logLevel: LogLevel = LogLevel.BODY,
+        configure: InspektorConfig.() -> Unit = {},
         block: MockRequestHandleScope.(HttpRequestData) -> HttpResponseData,
     ): HttpClient {
         return HttpClient(MockEngine { block(it) }) {
@@ -27,6 +29,7 @@ abstract class TestBase : DbTestBase() {
                         println("$title: $message")
                     }
                 }
+                configure()
             }
         }
     }

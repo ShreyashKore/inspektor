@@ -64,11 +64,12 @@ public class InspektorInterceptor internal constructor(
         val request = chain.request()
         if (level == LogLevel.NONE) return chain.proceed(request)
 
-        val view = request.toInspektorRequest()
-        if (!shouldRecord(request, view)) return chain.proceed(request)
+        if (!shouldRecord(request)) return chain.proceed(request)
 
         val recorder = recorders.newRecorder()
         retentionManager.checkAndCleanUpAsync()
+
+        val view = request.toInspektorRequest()
 
         val sendRequest = applyRequestOverride(request, recorder, view)
         recordRequest(sendRequest, recorder, level)
@@ -93,10 +94,9 @@ public class InspektorInterceptor internal constructor(
         }
     }
 
-    private fun shouldRecord(request: Request, view: InspektorRequest): Boolean {
+    private fun shouldRecord(request: Request): Boolean {
         val filters = config.requestFilters
-        if (filters.isEmpty() && !core.hasFilters) return true
-        return filters.any { it(request) } || core.matchesAnyFilter(view)
+        return filters.isEmpty() || filters.any { it(request) }
     }
 
     // ---- request ---------------------------------------------------------------------------

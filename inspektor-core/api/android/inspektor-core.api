@@ -2,14 +2,12 @@ public final class com/gyanoba/inspektor/InspektorCoreConfig {
 	public fun <init> ()V
 	public final fun filter (Lkotlin/jvm/functions/Function1;)V
 	public final fun getDataSource ()Lcom/gyanoba/inspektor/data/InspektorDataSource;
-	public final fun getHasFilters ()Z
 	public final fun getLevel ()Lcom/gyanoba/inspektor/LogLevel;
 	public final fun getMaxContentLength ()I
 	public final fun getNotificationManager ()Lcom/gyanoba/inspektor/platform/NotificationManager;
 	public final fun getOverrideRepository ()Lcom/gyanoba/inspektor/data/OverrideRepository;
 	public final fun getRetentionDuration-UwyO8pc ()J
 	public final fun getShowNotifications ()Z
-	public final fun matchesAnyFilter (Lcom/gyanoba/inspektor/InspektorRequest;)Z
 	public final fun recorderFactory (Ljava/lang/String;)Lcom/gyanoba/inspektor/RecorderFactory;
 	public final fun sanitizeHeader (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
 	public static synthetic fun sanitizeHeader$default (Lcom/gyanoba/inspektor/InspektorCoreConfig;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
