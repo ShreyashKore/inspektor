@@ -1,5 +1,6 @@
 import com.gyanoba.inspektor.LogLevel
 import com.gyanoba.inspektor.urlsession.InspektorUrlProtocol
+import com.gyanoba.inspektor.urlsession.InspektorUrlSessionConfig
 import com.gyanoba.inspektor.urlsession.inspektorUrlSession
 import com.gyanoba.inspektor.urlsession.inspektorUrlSessionDelegate
 import kotlinx.cinterop.ObjCObjectBase.OverrideInit
@@ -32,9 +33,11 @@ import platform.darwin.sel_registerName
 import kotlin.concurrent.AtomicInt
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.minutes
 
 /** Answers every request with an empty 200, so nothing here reaches the network. */
 private class EmptyOkProtocol : NSURLProtocol {
@@ -160,6 +163,24 @@ class NoOpUrlSessionTest {
 
         assertNull(session.delegate, "no delegate should be installed when none was forwarded")
         session.finishTasksAndInvalidate()
+    }
+
+    /**
+     * Every real entry point rejects a retention under 5 minutes. A configuration that fails in the
+     * dev build must fail in the release build too, rather than surfacing only when someone flips
+     * variants.
+     */
+    @Test
+    fun `an invalid configuration is rejected as in the real artifact`() {
+        val invalid: InspektorUrlSessionConfig.() -> Unit = { retentionDuration = 1.minutes }
+
+        assertFailsWith<IllegalArgumentException> { inspektorUrlSession(configure = invalid) }
+        assertFailsWith<IllegalArgumentException> {
+            inspektorUrlSessionDelegate(configure = invalid)
+        }
+        assertFailsWith<IllegalArgumentException> {
+            InspektorUrlProtocol.register(configure = invalid)
+        }
     }
 
     @Test

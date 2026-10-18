@@ -11,8 +11,10 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.minutes
 
 /**
  * These tests are the contract of the no-op artifact: `installInspektor` must be completely inert.
@@ -70,6 +72,18 @@ class NoOpOkHttpTest {
         val recorded = server.takeRequest()!!
         assertEquals("ping", recorded.body!!.utf8())
         assertEquals("Bearer secret", recorded.headers["Authorization"])
+    }
+
+    /**
+     * The real `installInspektor` rejects a retention under 5 minutes. A configuration that fails
+     * in the dev build must fail in the release build too, rather than surfacing only when someone
+     * flips variants.
+     */
+    @Test
+    fun `an invalid configuration is rejected as in the real artifact`() {
+        assertFailsWith<IllegalArgumentException> {
+            OkHttpClient.Builder().installInspektor { retentionDuration = 1.minutes }
+        }
     }
 
     @Test

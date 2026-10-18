@@ -84,23 +84,38 @@ public class InspektorUrlSessionDelegate internal constructor(
     }
 }
 
-/** Builds a plain `NSURLSession`. Nothing is recorded. */
+/**
+ * Builds a plain `NSURLSession`. Nothing is recorded.
+ *
+ * [configure] still runs, on a configuration that is then discarded, so a setting the real
+ * artifact rejects is rejected here too.
+ */
 public fun inspektorUrlSession(
     configuration: NSURLSessionConfiguration = NSURLSessionConfiguration.defaultSessionConfiguration,
     delegateQueue: NSOperationQueue? = null,
     forwardTo: NSURLSessionDataDelegateProtocol? = null,
     configure: InspektorUrlSessionConfig.() -> Unit = {},
-): NSURLSession = NSURLSession.sessionWithConfiguration(
-    configuration = configuration,
-    delegate = forwardTo,
-    delegateQueue = delegateQueue,
-)
+): NSURLSession {
+    InspektorUrlSessionConfig().apply(configure)
+    return NSURLSession.sessionWithConfiguration(
+        configuration = configuration,
+        delegate = forwardTo,
+        delegateQueue = delegateQueue,
+    )
+}
 
-/** A delegate that records nothing and hands every callback to [forwardTo]. */
+/**
+ * A delegate that records nothing and hands every callback to [forwardTo].
+ *
+ * [configure] runs and is discarded, as in [inspektorUrlSession].
+ */
 public fun inspektorUrlSessionDelegate(
     forwardTo: NSURLSessionDataDelegateProtocol? = null,
     configure: InspektorUrlSessionConfig.() -> Unit = {},
-): InspektorUrlSessionDelegate = InspektorUrlSessionDelegate(forwardTo)
+): InspektorUrlSessionDelegate {
+    InspektorUrlSessionConfig().apply(configure)
+    return InspektorUrlSessionDelegate(forwardTo)
+}
 
 /**
  * A no-op stand-in for Inspektor's opt-in `URLProtocol`.
@@ -108,14 +123,18 @@ public fun inspektorUrlSessionDelegate(
  * [register] does not register anything, so the URL loading system is untouched.
  */
 public object InspektorUrlProtocol {
-    /** No-op -- nothing is registered, so no request is intercepted. */
-    @Suppress("UNUSED_PARAMETER")
+    /**
+     * No-op -- nothing is registered, so no request is intercepted.
+     *
+     * [configure] runs and is discarded, so a setting the real artifact rejects is rejected here
+     * too.
+     */
     public fun register(
-        loaderConfiguration: NSURLSessionConfiguration =
+        @Suppress("UNUSED_PARAMETER") loaderConfiguration: NSURLSessionConfiguration =
             NSURLSessionConfiguration.ephemeralSessionConfiguration,
         configure: InspektorUrlSessionConfig.() -> Unit = {},
     ) {
-        // No-op
+        InspektorUrlSessionConfig().apply(configure)
     }
 
     /** No-op. */
