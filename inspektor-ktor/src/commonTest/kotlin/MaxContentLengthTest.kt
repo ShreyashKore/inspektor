@@ -21,6 +21,7 @@ import io.ktor.http.headersOf
 import kotlinx.coroutines.runBlocking
 import utils.KStoreInMemoryCodec
 import utils.NoOpDataSource
+import utils.SignallingDataSource
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -34,9 +35,12 @@ class MaxContentLengthTest {
         storeOf<List<Override>>(codec = KStoreInMemoryCodec())
     }
 
+    /** Lets a test wait for the recorder's off-thread writes; nothing is actually stored. */
+    private val writes = SignallingDataSource(NoOpDataSource)
+
     private fun HttpClientConfig<MockEngineConfig>.installDefaultInspektor(config: InspektorConfig.() -> Unit) {
         install(Inspektor) {
-            this.dataSource = NoOpDataSource
+            this.dataSource = writes
             this.overrideRepository = OverrideRepositoryImpl(store)
             this.notificationManager = object : NotificationManager {
                 override fun notify(title: String, message: String) {
@@ -87,7 +91,7 @@ class MaxContentLengthTest {
             install(Inspektor) {
                 level = LogLevel.BODY
                 this.maxContentLength = maxContentLength
-                this.dataSource = NoOpDataSource
+                this.dataSource = writes
             }
             engine {
                 addHandler { request ->
@@ -102,7 +106,7 @@ class MaxContentLengthTest {
 
         val response = client.get("http://localhost/test")
         val logger = response.call.attributes[ClientCallLogger]
-        logger.joinResponseLogged()
+        writes.awaitResponseLogged()
         val responseBodySaved = logger.transaction.responseBody!!
         assertTrue(responseBodySaved.length <= maxContentLength)
     }

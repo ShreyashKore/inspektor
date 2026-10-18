@@ -74,8 +74,6 @@ public final class com/gyanoba/inspektor/TransactionRecorder {
 	public final fun closeRequestLog ()Lkotlinx/coroutines/Job;
 	public final fun closeResponseLog ()Lkotlinx/coroutines/Job;
 	public final fun getTransaction ()Lcom/gyanoba/inspektor/data/HttpTransaction;
-	public final fun joinRequestLogged (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public final fun joinResponseLogged (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public abstract interface annotation class com/gyanoba/inspektor/UnstableInspektorAPI : java/lang/annotation/Annotation {

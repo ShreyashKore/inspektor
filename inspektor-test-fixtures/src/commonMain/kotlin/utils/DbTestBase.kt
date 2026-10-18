@@ -1,6 +1,7 @@
 package utils
 
 import com.gyanoba.inspektor.UnstableInspektorAPI
+import com.gyanoba.inspektor.data.InspektorDataSourceImpl
 import com.gyanoba.inspektor.data.InspektorDatabase
 import com.gyanoba.inspektor.data.Override
 import com.gyanoba.inspektor.data.createInspektorDatabase
@@ -25,6 +26,23 @@ abstract class DbTestBase {
     val db: InspektorDatabase by lazy { createInspektorDatabase(createTempDbDriver()) }
 
     val store by lazy { storeOf<List<Override>>(codec = KStoreInMemoryCodec()) }
+
+    /**
+     * The real store over [db], signalling every write. Hand this to the integration under test,
+     * then [awaitRequestLogged] / [awaitResponseLogged] before reading the table.
+     *
+     * Named so that `dataSource = testDataSource` inside a config block cannot quietly become a
+     * self-assignment of the config's own `dataSource`.
+     */
+    val testDataSource: SignallingDataSource by lazy {
+        SignallingDataSource(InspektorDataSourceImpl(db))
+    }
+
+    /** Suspends until one more call's request has been written to [testDataSource]. */
+    suspend fun awaitRequestLogged(): Unit = testDataSource.awaitRequestLogged()
+
+    /** Suspends until one more call's response has been written to [testDataSource]. */
+    suspend fun awaitResponseLogged(): Unit = testDataSource.awaitResponseLogged()
 
     @BeforeTest
     fun createTestDir() {

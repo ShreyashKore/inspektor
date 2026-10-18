@@ -1,6 +1,5 @@
 import com.gyanoba.inspektor.LogLevel
 import com.gyanoba.inspektor.data.HttpTransaction
-import com.gyanoba.inspektor.data.InspektorDataSourceImpl
 import com.gyanoba.inspektor.data.OverrideRepositoryImpl
 import com.gyanoba.inspektor.platform.NotificationManager
 import com.gyanoba.inspektor.urlsession.InspektorUrlSessionConfig
@@ -104,7 +103,7 @@ class UrlSessionCaptureTest : DbTestBase() {
         configure: InspektorUrlSessionConfig.() -> Unit = {},
     ): InspektorUrlSessionDelegate = inspektorUrlSessionDelegate(forwardTo = forwardTo) {
         level = LogLevel.BODY
-        dataSource = InspektorDataSourceImpl(db)
+        dataSource = testDataSource
         overrideRepository = OverrideRepositoryImpl(store)
         notificationManager = object : NotificationManager {
             override fun notify(title: String, message: String) = Unit
@@ -150,7 +149,7 @@ class UrlSessionCaptureTest : DbTestBase() {
         task.resume()
         withTimeout(30.seconds) { signal.done.await() }
         // The recorder writes off the delegate queue; wait for the row rather than sleeping.
-        recording.lastRecorder?.joinResponseLogged()
+        if (recording.lastRecorder != null) awaitResponseLogged()
         recording
     }
 

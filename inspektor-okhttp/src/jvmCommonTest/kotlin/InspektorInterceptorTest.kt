@@ -2,8 +2,6 @@ import com.gyanoba.inspektor.LogLevel
 import com.gyanoba.inspektor.data.HttpMethod
 import com.gyanoba.inspektor.data.HttpRequest
 import com.gyanoba.inspektor.data.HttpTransaction
-import com.gyanoba.inspektor.data.InspektorDataSource
-import com.gyanoba.inspektor.data.InspektorDataSourceImpl
 import com.gyanoba.inspektor.data.Override
 import com.gyanoba.inspektor.data.OverrideAction
 import com.gyanoba.inspektor.data.OverrideRepositoryImpl
@@ -28,7 +26,6 @@ import okio.Pipe
 import okio.buffer
 import utils.DbTestBase
 import java.util.concurrent.Executors
-import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -41,19 +38,6 @@ import kotlin.test.assertTrue
 class InspektorInterceptorTest : DbTestBase() {
 
     private lateinit var server: MockWebServer
-
-    /** One permit per response log written; see [awaitTransaction]. */
-    private val responseLogs = Semaphore(0)
-
-    private val dataSource: InspektorDataSource by lazy {
-        val real = InspektorDataSourceImpl(db)
-        object : InspektorDataSource by real {
-            override suspend fun updateHttpTransaction(httpTransaction: HttpTransaction) {
-                real.updateHttpTransaction(httpTransaction)
-                responseLogs.release()
-            }
-        }
-    }
 
     @BeforeTest
     fun startServer() {
@@ -73,7 +57,7 @@ class InspektorInterceptorTest : DbTestBase() {
     ): OkHttpClient = OkHttpClient.Builder()
         .installInspektor(mode) {
             level = LogLevel.BODY
-            dataSource = this@InspektorInterceptorTest.dataSource
+            dataSource = testDataSource
             overrideRepository = OverrideRepositoryImpl(store)
             notificationManager = object : NotificationManager {
                 override fun notify(title: String, message: String) = Unit
@@ -90,10 +74,7 @@ class InspektorInterceptorTest : DbTestBase() {
      * before the response log -- which carries the body, recorded as the app reads it -- lands.
      */
     private fun awaitTransaction(expected: Int = 1): List<HttpTransaction> {
-        assertTrue(
-            responseLogs.tryAcquire(expected, 5, TimeUnit.SECONDS),
-            "expected $expected response log(s) to be written",
-        )
+        runBlocking { repeat(expected) { awaitResponseLogged() } }
         return db.httpTransactionQueries.getAll().executeAsList()
     }
 

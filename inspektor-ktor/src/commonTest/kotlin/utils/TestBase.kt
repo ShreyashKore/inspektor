@@ -2,7 +2,6 @@ package utils
 
 import com.gyanoba.inspektor.Inspektor
 import com.gyanoba.inspektor.LogLevel
-import com.gyanoba.inspektor.data.InspektorDataSourceImpl
 import com.gyanoba.inspektor.data.OverrideRepositoryImpl
 import com.gyanoba.inspektor.platform.NotificationManager
 import io.ktor.client.HttpClient
@@ -21,7 +20,7 @@ abstract class TestBase : DbTestBase() {
         return HttpClient(MockEngine { block(it) }) {
             install(Inspektor) {
                 level = logLevel
-                this.dataSource = InspektorDataSourceImpl(db)
+                this.dataSource = testDataSource
                 this.overrideRepository = OverrideRepositoryImpl(store)
                 this.notificationManager = object : NotificationManager {
                     override fun notify(title: String, message: String) {

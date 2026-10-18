@@ -57,8 +57,7 @@ public class InspektorUrlSessionDelegate internal constructor(
     /**
      * The recorder for the most recently completed task.
      *
-     * A test hook: the recorder writes asynchronously, and `joinResponseLogged()` on this is how
-     * the module's tests wait for the row instead of sleeping and hoping.
+     * A test hook: the module's tests check it to tell whether a call was recorded at all.
      */
     internal var lastRecorder: TransactionRecorder? = null
         private set
