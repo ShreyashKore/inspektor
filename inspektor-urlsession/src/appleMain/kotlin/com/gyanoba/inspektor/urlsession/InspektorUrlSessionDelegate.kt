@@ -1,6 +1,7 @@
 package com.gyanoba.inspektor.urlsession
 
 import com.gyanoba.inspektor.TransactionRecorder
+import kotlinx.cinterop.COpaquePointer
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.Foundation.NSData
 import platform.Foundation.NSError
@@ -32,8 +33,9 @@ import platform.darwin.sel_registerName
  * }
  * ```
  *
- * If the app already has its own delegate, pass it as [forwardTo] and every callback is forwarded
- * after recording.
+ * If the app already has its own delegate, pass it as [forwardTo] and it receives every callback it
+ * implements: the three data callbacks this records are forwarded after recording, and the rest --
+ * auth challenges, redirects, upload progress, metrics -- go to it untouched.
  *
  * ### Limits
  *
@@ -111,6 +113,31 @@ public class InspektorUrlSessionDelegate internal constructor(
             ?.URLSession(session, task, didCompleteWithError)
     }
 
+    // ---- forwarding ------------------------------------------------------------------------
+    //
+    // Only the three callbacks above carry anything worth recording, so only they are implemented
+    // here. Every other delegate method goes straight to [forwardTo] through Objective-C message
+    // forwarding: `respondsToSelector:` reports whatever [forwardTo] implements, and
+    // `forwardingTargetForSelector:` hands the message to it.
+    //
+    // Implementing those methods here and forwarding by hand would not be equivalent: a method
+    // that exists changes URLSession's behaviour even when all it does is defer. URLSession sends a
+    // server-trust challenge to the session-level handler only when the task-level one is
+    // missing, for instance, so a forwarding task-level handler would route around an app's
+    // certificate pinning.
+
+    override fun respondsToSelector(aSelector: COpaquePointer?): Boolean =
+        super.respondsToSelector(aSelector) || forwardTo?.respondsToSelector(aSelector) == true
+
+    override fun forwardingTargetForSelector(aSelector: COpaquePointer?): Any? {
+        val forwarded = forwardTo
+        return if (forwarded != null && forwarded.respondsToSelector(aSelector)) {
+            forwarded
+        } else {
+            super.forwardingTargetForSelector(aSelector)
+        }
+    }
+
     /** Starts recording this task the first time it is seen, and returns the in-flight capture. */
     private fun record(task: NSURLSessionTask): UrlSessionCapture.Capture? {
         inFlight.get(task)?.let { return it }
@@ -139,7 +166,7 @@ private fun Any.responds(selector: String): Boolean =
  *
  * @param configuration the session configuration; defaults to `NSURLSessionConfiguration.default`.
  * @param delegateQueue the queue delegate callbacks arrive on; null means a serial background queue.
- * @param forwardTo an existing delegate to forward every callback to after recording.
+ * @param forwardTo an existing delegate; it receives every callback it implements.
  */
 public fun inspektorUrlSession(
     configuration: NSURLSessionConfiguration = NSURLSessionConfiguration.defaultSessionConfiguration,

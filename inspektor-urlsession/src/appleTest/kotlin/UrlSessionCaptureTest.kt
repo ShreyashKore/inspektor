@@ -12,22 +12,30 @@ import kotlinx.coroutines.withTimeout
 import platform.Foundation.NSData
 import platform.Foundation.NSError
 import platform.Foundation.NSMutableURLRequest
+import platform.Foundation.NSURLAuthenticationChallenge
+import platform.Foundation.NSURLCredential
 import platform.Foundation.NSURL
 import platform.Foundation.NSURLSession
+import platform.Foundation.NSURLSessionAuthChallengeDisposition
+import platform.Foundation.NSURLSessionAuthChallengePerformDefaultHandling
 import platform.Foundation.NSURLSessionConfiguration
 import platform.Foundation.NSURLSessionDataDelegateProtocol
 import platform.Foundation.NSURLSessionDataTask
 import platform.Foundation.NSURLSessionTask
+import platform.Foundation.NSURLSessionTaskMetrics
 import platform.Foundation.dataTaskWithRequest
 import platform.Foundation.setHTTPBody
 import platform.Foundation.setHTTPMethod
 import platform.Foundation.setValue
 import platform.darwin.NSObject
+import platform.darwin.sel_registerName
 import utils.DbTestBase
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertSame
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -43,6 +51,31 @@ private class CompletionSignal : NSObject(), NSURLSessionDataDelegateProtocol {
         didCompleteWithError: NSError?,
     ) {
         done.complete(didCompleteWithError)
+    }
+}
+
+/**
+ * An app delegate that implements only callbacks Inspektor does not record itself: a challenge
+ * handler (what certificate pinning hangs off) and metrics.
+ */
+private class PinningDelegate : NSObject(), NSURLSessionDataDelegateProtocol {
+    val metrics: CompletableDeferred<NSURLSessionTaskMetrics> = CompletableDeferred()
+
+    override fun URLSession(
+        session: NSURLSession,
+        task: NSURLSessionTask,
+        didReceiveChallenge: NSURLAuthenticationChallenge,
+        completionHandler: (NSURLSessionAuthChallengeDisposition, NSURLCredential?) -> Unit,
+    ) {
+        completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, null)
+    }
+
+    override fun URLSession(
+        session: NSURLSession,
+        task: NSURLSessionTask,
+        didFinishCollectingMetrics: NSURLSessionTaskMetrics,
+    ) {
+        metrics.complete(didFinishCollectingMetrics)
     }
 }
 
@@ -67,9 +100,9 @@ class UrlSessionCaptureTest : DbTestBase() {
     }
 
     private fun delegate(
-        signal: CompletionSignal,
+        forwardTo: NSURLSessionDataDelegateProtocol,
         configure: InspektorUrlSessionConfig.() -> Unit = {},
-    ): InspektorUrlSessionDelegate = inspektorUrlSessionDelegate(forwardTo = signal) {
+    ): InspektorUrlSessionDelegate = inspektorUrlSessionDelegate(forwardTo = forwardTo) {
         level = LogLevel.BODY
         dataSource = InspektorDataSourceImpl(db)
         overrideRepository = OverrideRepositoryImpl(store)
@@ -150,6 +183,28 @@ class UrlSessionCaptureTest : DbTestBase() {
             task.resume()
             assertNull(withTimeout(30.seconds) { signal.done.await() })
         }
+    }
+
+    @Test
+    fun `callbacks Inspektor does not record still reach the app's delegate`() {
+        val app = PinningDelegate()
+        runBlocking {
+            session(delegate(app)).dataTaskWithRequest(request("https://example.com/metrics")).resume()
+            assertNotNull(withTimeout(30.seconds) { app.metrics.await() })
+        }
+    }
+
+    @Test
+    fun `URLSession sees the app's challenge handler only when it has one`() {
+        val challenge = sel_registerName("URLSession:task:didReceiveChallenge:completionHandler:")
+
+        val app = PinningDelegate()
+        val pinned = delegate(app)
+        assertTrue(pinned.respondsToSelector(challenge), "pinning must not be bypassed")
+        assertSame<Any?>(app, pinned.forwardingTargetForSelector(challenge))
+
+        // Answering yes without a handler behind it would replace default trust evaluation.
+        assertFalse(delegate(CompletionSignal()).respondsToSelector(challenge))
     }
 
     @Test
