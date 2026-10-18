@@ -3,6 +3,7 @@ package com.gyanoba.inspektor.urlsession
 import com.gyanoba.inspektor.InspektorRequest
 import com.gyanoba.inspektor.LogLevel
 import com.gyanoba.inspektor.UnstableInspektorAPI
+import kotlinx.cinterop.COpaquePointer
 import platform.Foundation.NSOperationQueue
 import platform.Foundation.NSURLRequest
 import platform.Foundation.NSURLSession
@@ -61,13 +62,27 @@ public class InspektorUrlSessionConfig internal constructor() {
 /**
  * A no-op stand-in for Inspektor's URLSession proxy delegate.
  *
- * It implements no delegate method of its own, so `respondsToSelector:` reports false for all of
- * them and URLSession falls back to its default behaviour -- nothing is observed, buffered or
- * persisted.
+ * It implements no delegate method of its own, so nothing is observed, buffered or persisted.
+ * `respondsToSelector:` reports exactly what [forwardTo] implements, and `forwardingTargetForSelector:`
+ * sends those messages straight to it, so the app's own delegate gets the same callbacks it would
+ * without Inspektor. With no [forwardTo], URLSession falls back to its default behaviour.
  */
 public class InspektorUrlSessionDelegate internal constructor(
     private val forwardTo: NSURLSessionDataDelegateProtocol?,
-) : NSObject(), NSURLSessionDataDelegateProtocol
+) : NSObject(), NSURLSessionDataDelegateProtocol {
+
+    override fun respondsToSelector(aSelector: COpaquePointer?): Boolean =
+        super.respondsToSelector(aSelector) || forwardTo?.respondsToSelector(aSelector) == true
+
+    override fun forwardingTargetForSelector(aSelector: COpaquePointer?): Any? {
+        val forwarded = forwardTo
+        return if (forwarded != null && forwarded.respondsToSelector(aSelector)) {
+            forwarded
+        } else {
+            super.forwardingTargetForSelector(aSelector)
+        }
+    }
+}
 
 /** Builds a plain `NSURLSession`. Nothing is recorded. */
 public fun inspektorUrlSession(
@@ -81,7 +96,7 @@ public fun inspektorUrlSession(
     delegateQueue = delegateQueue,
 )
 
-/** A delegate that records nothing. */
+/** A delegate that records nothing and hands every callback to [forwardTo]. */
 public fun inspektorUrlSessionDelegate(
     forwardTo: NSURLSessionDataDelegateProtocol? = null,
     configure: InspektorUrlSessionConfig.() -> Unit = {},

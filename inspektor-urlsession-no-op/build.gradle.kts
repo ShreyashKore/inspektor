@@ -8,8 +8,9 @@ version = project.properties["VERSION_NAME"]!!
 
 // A drop-in, empty replacement for `:inspektor-urlsession`.
 //
-// It mirrors that module's public API and does nothing: no delegate method is implemented, no
-// URLProtocol is registered, and nothing is read or persisted.
+// It mirrors that module's public API and does nothing: no delegate method is implemented (the
+// app's own delegate, if one is passed, receives every callback directly), no URLProtocol is
+// registered, and nothing is read or persisted.
 //
 // Keep the public API here in sync with `:inspektor-urlsession`. Neither module can be checked by
 // binary-compatibility-validator, which reads JVM and Android class files and finds neither here,
