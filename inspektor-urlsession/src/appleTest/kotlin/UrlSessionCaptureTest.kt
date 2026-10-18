@@ -29,6 +29,7 @@ import platform.Foundation.setValue
 import platform.darwin.NSObject
 import platform.darwin.sel_registerName
 import utils.DbTestBase
+import kotlin.concurrent.AtomicInt
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -87,6 +88,13 @@ private class PinningDelegate : NSObject(), NSURLSessionDataDelegateProtocol {
  */
 class UrlSessionCaptureTest : DbTestBase() {
 
+    /**
+     * How many calls started a recording. A recording begins with a `notify()`, synchronously on
+     * the delegate queue and before the app's delegate hears `didCompleteWithError`, so once a call
+     * has completed this says for certain whether it was recorded.
+     */
+    private val recordingsStarted = AtomicInt(0)
+
     @BeforeTest
     fun resetStub() {
         db.httpTransactionQueries.deleteAll()
@@ -106,7 +114,9 @@ class UrlSessionCaptureTest : DbTestBase() {
         dataSource = testDataSource
         overrideRepository = OverrideRepositoryImpl(store)
         notificationManager = object : NotificationManager {
-            override fun notify(title: String, message: String) = Unit
+            override fun notify(title: String, message: String) {
+                recordingsStarted.incrementAndGet()
+            }
         }
         configure()
     }
@@ -149,7 +159,7 @@ class UrlSessionCaptureTest : DbTestBase() {
         task.resume()
         withTimeout(30.seconds) { signal.done.await() }
         // The recorder writes off the delegate queue; wait for the row rather than sleeping.
-        if (recording.lastRecorder != null) awaitResponseLogged()
+        if (recordingsStarted.value > 0) awaitResponseLogged()
         recording
     }
 
@@ -220,9 +230,9 @@ class UrlSessionCaptureTest : DbTestBase() {
 
     @Test
     fun `a filtered-out call is not recorded`() {
-        val recording = call("https://example.com/drop") { filter { it.path.startsWith("/keep") } }
+        call("https://example.com/drop") { filter { it.path.startsWith("/keep") } }
 
-        assertNull(recording.lastRecorder, "a filtered call must not allocate a recorder")
+        assertEquals(0, recordingsStarted.value, "a filtered call must not start a recording")
         assertTrue(db.httpTransactionQueries.getAll().executeAsList().isEmpty())
     }
 
@@ -273,7 +283,7 @@ class UrlSessionCaptureTest : DbTestBase() {
         }
 
         assertTrue(!signal.done.isCompleted, "URLSession skips the delegate for these tasks")
-        assertNull(recording.lastRecorder)
+        assertEquals(0, recordingsStarted.value)
         assertTrue(db.httpTransactionQueries.getAll().executeAsList().isEmpty())
     }
 }

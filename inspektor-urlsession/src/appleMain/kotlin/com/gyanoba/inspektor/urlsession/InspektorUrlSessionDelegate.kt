@@ -1,6 +1,5 @@
 package com.gyanoba.inspektor.urlsession
 
-import com.gyanoba.inspektor.TransactionRecorder
 import kotlinx.cinterop.COpaquePointer
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.Foundation.NSData
@@ -54,14 +53,6 @@ public class InspektorUrlSessionDelegate internal constructor(
 
     private val inFlight = CaptureRegistry()
 
-    /**
-     * The recorder for the most recently completed task.
-     *
-     * A test hook: the module's tests check it to tell whether a call was recorded at all.
-     */
-    internal var lastRecorder: TransactionRecorder? = null
-        private set
-
     override fun URLSession(
         session: NSURLSession,
         dataTask: NSURLSessionDataTask,
@@ -102,7 +93,6 @@ public class InspektorUrlSessionDelegate internal constructor(
             ?: task.originalRequest()?.let { capture.begin(it) }
 
         if (pending != null) {
-            lastRecorder = pending.recorder
             if (didCompleteWithError == null) {
                 (task.response as? NSHTTPURLResponse)?.let { capture.onResponse(pending, it) }
             }
