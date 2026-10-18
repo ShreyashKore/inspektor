@@ -19,13 +19,18 @@ internal class NotificationManagerImpl : NotificationManager {
 
     override fun notify(title: String, message: String) {
         val notificationCenter = UNUserNotificationCenter.currentNotificationCenter()
-        try {
-            // Requesting notification permissions
-            notificationCenter.requestAuthorizationWithOptions(options = UNAuthorizationOptionAlert + UNAuthorizationOptionBadge + UNAuthorizationOptionSound) { granted, error ->
-                if (!granted || error != null) throw IllegalStateException(
-                    error?.localizedDescription ?: "Error requesting notification permissions."
-                )
+        // The completion runs later, on a queue of the system's choosing, so nothing here can
+        // catch what it throws -- and a Kotlin exception escaping into an Objective-C block
+        // terminates the process. Failures are logged, never thrown.
+        notificationCenter.requestAuthorizationWithOptions(options = UNAuthorizationOptionAlert + UNAuthorizationOptionBadge + UNAuthorizationOptionSound) { granted, error ->
+            if (error != null) {
+                InspektorLog.error(error.toKotlinThrowable(), NotificationManager.TAG) {
+                    "Error requesting notification permissions: $error"
+                }
+                return@requestAuthorizationWithOptions
             }
+            // The user said no. That is their call, not an error, and there is nothing to post.
+            if (!granted) return@requestAuthorizationWithOptions
 
             val content = UNMutableNotificationContent().apply {
                 setTitle(title)
@@ -38,15 +43,13 @@ internal class NotificationManagerImpl : NotificationManager {
                 content,
                 null
             )
-            notificationCenter.addNotificationRequest(request) { error ->
-                if (error != null) {
-                    InspektorLog.error(error.toKotlinThrowable(), NotificationManager.TAG) {
-                        "Error adding notification request: $error"
+            notificationCenter.addNotificationRequest(request) { addError ->
+                if (addError != null) {
+                    InspektorLog.error(addError.toKotlinThrowable(), NotificationManager.TAG) {
+                        "Error adding notification request: $addError"
                     }
                 }
             }
-        } catch (e: IllegalStateException) {
-            InspektorLog.error(e, NotificationManager.TAG)
         }
     }
 }
