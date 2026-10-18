@@ -48,7 +48,7 @@ class LogLevelTest : TestBase() {
             headers.append("Content-Type", "text/plain")
             setBody("Request")
         }
-        response.call.attributes[ClientCallLogger].joinResponseLogged()
+        awaitResponseLogged()
         val transaction = db.httpTransactionQueries.getAll().executeAsOne()
 
         mapOf(
@@ -84,7 +84,7 @@ class LogLevelTest : TestBase() {
             headers.append("Content-Type", "text/plain")
             setBody("Request")
         }
-        response.call.attributes[ClientCallLogger].joinResponseLogged()
+        awaitResponseLogged()
         val transaction = db.httpTransactionQueries.getAll().executeAsOne()
 
         mapOf(
@@ -125,7 +125,7 @@ class LogLevelTest : TestBase() {
             headers.append("Content-Type", "text/plain")
             setBody("Request")
         }
-        response.call.attributes[ClientCallLogger].joinResponseLogged()
+        awaitResponseLogged()
 
         val transaction = db.httpTransactionQueries.getAll().executeAsOne()
 

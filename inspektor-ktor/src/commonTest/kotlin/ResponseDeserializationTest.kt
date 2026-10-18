@@ -31,6 +31,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import utils.KStoreInMemoryCodec
 import utils.NoOpDataSource
+import utils.SignallingDataSource
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -38,6 +39,9 @@ class ResponseDeserializationTest {
     private val store by lazy {
         storeOf<List<Override>>(codec = KStoreInMemoryCodec())
     }
+
+    /** Lets a test wait for the recorder's off-thread writes; nothing is actually stored. */
+    private val writes = SignallingDataSource(NoOpDataSource)
 
     init {
         @OptIn(UnstableInspektorAPI::class)
@@ -74,7 +78,7 @@ class ResponseDeserializationTest {
 
             install(Inspektor) {
                 level = LogLevel.BODY
-                dataSource = NoOpDataSource
+                dataSource = writes
                 overrideRepository = OverrideRepositoryImpl(store)
                 notificationManager = object : NotificationManager {
                     override fun notify(title: String, message: String) = Unit
@@ -85,7 +89,7 @@ class ResponseDeserializationTest {
         val response = client.get("http://localhost/todo")
         val todo: Todo = response.body()
 
-        response.call.attributes[ClientCallLogger].joinResponseLogged()
+        writes.awaitResponseLogged()
 
         assertEquals(Todo(id = 1, userId = 1, title = "Test Todo", completed = false), todo)
         assertEquals(
@@ -140,7 +144,7 @@ class ResponseDeserializationTest {
 
             install(Inspektor) {
                 level = LogLevel.BODY
-                dataSource = NoOpDataSource
+                dataSource = writes
                 overrideRepository = OverrideRepositoryImpl(store)
                 notificationManager = object : NotificationManager {
                     override fun notify(title: String, message: String) = Unit
@@ -151,7 +155,7 @@ class ResponseDeserializationTest {
         val response = client.get("http://localhost/todo")
         val todo: Todo = response.body()
 
-        response.call.attributes[ClientCallLogger].joinResponseLogged()
+        writes.awaitResponseLogged()
 
         assertEquals(Todo(id = 2, userId = 5, title = "Overridden Todo", completed = true), todo)
         assertEquals(

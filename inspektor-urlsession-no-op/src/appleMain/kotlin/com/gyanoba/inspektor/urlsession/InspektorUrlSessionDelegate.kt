@@ -3,6 +3,7 @@ package com.gyanoba.inspektor.urlsession
 import com.gyanoba.inspektor.InspektorRequest
 import com.gyanoba.inspektor.LogLevel
 import com.gyanoba.inspektor.UnstableInspektorAPI
+import kotlinx.cinterop.COpaquePointer
 import platform.Foundation.NSOperationQueue
 import platform.Foundation.NSURLRequest
 import platform.Foundation.NSURLSession
@@ -61,31 +62,60 @@ public class InspektorUrlSessionConfig internal constructor() {
 /**
  * A no-op stand-in for Inspektor's URLSession proxy delegate.
  *
- * It implements no delegate method of its own, so `respondsToSelector:` reports false for all of
- * them and URLSession falls back to its default behaviour -- nothing is observed, buffered or
- * persisted.
+ * It implements no delegate method of its own, so nothing is observed, buffered or persisted.
+ * `respondsToSelector:` reports exactly what [forwardTo] implements, and `forwardingTargetForSelector:`
+ * sends those messages straight to it, so the app's own delegate gets the same callbacks it would
+ * without Inspektor. With no [forwardTo], URLSession falls back to its default behaviour.
  */
 public class InspektorUrlSessionDelegate internal constructor(
     private val forwardTo: NSURLSessionDataDelegateProtocol?,
-) : NSObject(), NSURLSessionDataDelegateProtocol
+) : NSObject(), NSURLSessionDataDelegateProtocol {
 
-/** Builds a plain `NSURLSession`. Nothing is recorded. */
+    override fun respondsToSelector(aSelector: COpaquePointer?): Boolean =
+        super.respondsToSelector(aSelector) || forwardTo?.respondsToSelector(aSelector) == true
+
+    override fun forwardingTargetForSelector(aSelector: COpaquePointer?): Any? {
+        val forwarded = forwardTo
+        return if (forwarded != null && forwarded.respondsToSelector(aSelector)) {
+            forwarded
+        } else {
+            super.forwardingTargetForSelector(aSelector)
+        }
+    }
+}
+
+/**
+ * Builds a plain `NSURLSession`. Nothing is recorded.
+ *
+ * [configure] still runs, on a configuration that is then discarded, so a setting the real
+ * artifact rejects is rejected here too.
+ */
 public fun inspektorUrlSession(
     configuration: NSURLSessionConfiguration = NSURLSessionConfiguration.defaultSessionConfiguration,
     delegateQueue: NSOperationQueue? = null,
     forwardTo: NSURLSessionDataDelegateProtocol? = null,
     configure: InspektorUrlSessionConfig.() -> Unit = {},
-): NSURLSession = NSURLSession.sessionWithConfiguration(
-    configuration = configuration,
-    delegate = forwardTo,
-    delegateQueue = delegateQueue,
-)
+): NSURLSession {
+    InspektorUrlSessionConfig().apply(configure)
+    return NSURLSession.sessionWithConfiguration(
+        configuration = configuration,
+        delegate = forwardTo,
+        delegateQueue = delegateQueue,
+    )
+}
 
-/** A delegate that records nothing. */
+/**
+ * A delegate that records nothing and hands every callback to [forwardTo].
+ *
+ * [configure] runs and is discarded, as in [inspektorUrlSession].
+ */
 public fun inspektorUrlSessionDelegate(
     forwardTo: NSURLSessionDataDelegateProtocol? = null,
     configure: InspektorUrlSessionConfig.() -> Unit = {},
-): InspektorUrlSessionDelegate = InspektorUrlSessionDelegate(forwardTo)
+): InspektorUrlSessionDelegate {
+    InspektorUrlSessionConfig().apply(configure)
+    return InspektorUrlSessionDelegate(forwardTo)
+}
 
 /**
  * A no-op stand-in for Inspektor's opt-in `URLProtocol`.
@@ -93,14 +123,18 @@ public fun inspektorUrlSessionDelegate(
  * [register] does not register anything, so the URL loading system is untouched.
  */
 public object InspektorUrlProtocol {
-    /** No-op -- nothing is registered, so no request is intercepted. */
-    @Suppress("UNUSED_PARAMETER")
+    /**
+     * No-op -- nothing is registered, so no request is intercepted.
+     *
+     * [configure] runs and is discarded, so a setting the real artifact rejects is rejected here
+     * too.
+     */
     public fun register(
-        loaderConfiguration: NSURLSessionConfiguration =
+        @Suppress("UNUSED_PARAMETER") loaderConfiguration: NSURLSessionConfiguration =
             NSURLSessionConfiguration.ephemeralSessionConfiguration,
         configure: InspektorUrlSessionConfig.() -> Unit = {},
     ) {
-        // No-op
+        InspektorUrlSessionConfig().apply(configure)
     }
 
     /** No-op. */

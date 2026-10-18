@@ -73,12 +73,15 @@ public class InspektorInterceptor internal constructor() : Interceptor {
 }
 
 /**
- * Adds the no-op interceptor to this client.
+ * Adds nothing to this client: the builder is returned exactly as it was.
  *
- * Registering it is safe and free -- it forwards every call straight through.
+ * [configure] still runs, on a configuration that is then discarded, so a setting the real
+ * artifact rejects is rejected here too. Predicates it registers are dropped, never invoked.
  */
-@Suppress("UNUSED_PARAMETER")
 public fun OkHttpClient.Builder.installInspektor(
-    mode: InterceptorMode = InterceptorMode.APPLICATION,
+    @Suppress("UNUSED_PARAMETER") mode: InterceptorMode = InterceptorMode.APPLICATION,
     configure: InspektorOkHttpConfig.() -> Unit = {},
-): OkHttpClient.Builder = this
+): OkHttpClient.Builder {
+    InspektorOkHttpConfig().apply(configure)
+    return this
+}

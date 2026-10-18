@@ -128,9 +128,8 @@ public class InspektorConfig internal constructor() {
     /**
      * Allows you to filter log messages for calls matching a [predicate].
      *
-     * Kept Ktor-typed so existing consumer source keeps compiling. It sits alongside the neutral
-     * `InspektorCoreConfig.filter`; a call is recorded when no filter of either kind is registered,
-     * or when any one of them accepts it.
+     * Kept Ktor-typed so existing consumer source keeps compiling. A call is recorded when no
+     * filter is registered, or when any registered filter accepts it.
      */
     public fun filter(predicate: (HttpRequestBuilder) -> Boolean) {
         ktorFilters.add(predicate)
@@ -164,15 +163,13 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
         dataSource = config.dataSource,
     )
 
-    fun shouldBeLogged(request: HttpRequestBuilder, view: InspektorRequest): Boolean =
-        if (ktorFilters.isEmpty() && !config.hasFilters) true
-        else ktorFilters.any { it(request) } || config.matchesAnyFilter(view)
+    fun shouldBeLogged(request: HttpRequestBuilder): Boolean =
+        ktorFilters.isEmpty() || ktorFilters.any { it(request) }
 
     on(SendStateHook) { request ->
         if (level == LogLevel.NONE) return@on
 
-        val inspektorRequest = request.toInspektorRequest()
-        if (!shouldBeLogged(request, inspektorRequest)) {
+        if (!shouldBeLogged(request)) {
             request.attributes.put(DisableLogging, Unit)
             return@on
         }
@@ -181,6 +178,7 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
         request.attributes.put(ClientCallLogger, callLogger)
         retentionManger.checkAndCleanUp()
 
+        val inspektorRequest = request.toInspektorRequest()
         val override = overrideEngine.findRequestOverride(inspektorRequest) ?: return@on
 
         when (override.action.type) {

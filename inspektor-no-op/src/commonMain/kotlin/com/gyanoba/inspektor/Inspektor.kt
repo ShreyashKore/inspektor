@@ -77,8 +77,3 @@ public val Inspektor: ClientPlugin<InspektorConfig> = createClientPlugin(
 ) {
     // Intentionally empty. No hooks, no interceptors, no response observer.
 }
-
-/**
- * Opens the Inspektor UI. No-op — this artifact ships no UI.
- */
-public expect fun openInspektor()

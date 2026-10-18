@@ -16,8 +16,9 @@ version = project.properties["VERSION_NAME"]!!
 // below.
 //
 // `api(...)` rather than `implementation(...)` is what makes that work: the split must not change
-// anything on an existing consumer's compile classpath. `:inspektor-ktor` already re-exports
-// `:inspektor-core` and `:inspektor-ui`, but they are named explicitly here so that the umbrella's
+// anything on an existing consumer's compile classpath. `:inspektor-ui` in particular reaches
+// consumers only through this line -- `:inspektor-ktor` is headless on purpose -- and
+// `:inspektor-core` is named too, although `:inspektor-ktor` re-exports it, so that the umbrella's
 // contract does not depend on that staying true.
 kotlin {
     explicitApiWarning()

@@ -99,15 +99,9 @@ public class InspektorCoreConfig {
         headerSanitizers.add(HeaderSanitizer(placeholder, predicate))
     }
 
-    /** True when at least one neutral filter has been registered. */
-    public val hasFilters: Boolean get() = filters.isNotEmpty()
-
-    /** True when any registered neutral filter accepts [request]. */
-    public fun matchesAnyFilter(request: InspektorRequest): Boolean = filters.any { it(request) }
-
     /** True when no filter was registered, or when at least one accepts [request]. */
     public fun shouldRecord(request: InspektorRequest): Boolean =
-        filters.isEmpty() || matchesAnyFilter(request)
+        filters.isEmpty() || filters.any { it(request) }
 
     /** Builds the recorder factory an integration should use for this configuration. */
     public fun recorderFactory(notificationTitle: String): RecorderFactory = RecorderFactory(

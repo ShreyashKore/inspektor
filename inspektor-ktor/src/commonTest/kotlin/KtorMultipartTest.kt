@@ -1,4 +1,3 @@
-import com.gyanoba.inspektor.ClientCallLogger
 import io.ktor.client.engine.mock.respondOk
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
@@ -36,7 +35,7 @@ class KtorMultipartTest : TestBase() {
                 ))
             }
             val request = response.request
-            request.attributes[ClientCallLogger].joinRequestLogged()
+            awaitRequestLogged()
             val transaction = db.httpTransactionQueries.getLast().executeAsOne()
             assertEquals(request.method.value, transaction.method)
         }
@@ -59,7 +58,7 @@ class KtorMultipartTest : TestBase() {
             }
             val request = response.request
             // The recorder inserts off the test dispatcher, so wait for the row before reading it.
-            request.attributes[ClientCallLogger].joinRequestLogged()
+            awaitRequestLogged()
             val transaction = db.httpTransactionQueries.getLast().executeAsOne()
             assertEquals(request.method.value, transaction.method)
         }

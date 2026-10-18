@@ -1,4 +1,3 @@
-import com.gyanoba.inspektor.ClientCallLogger
 import com.gyanoba.inspektor.LogLevel
 import com.gyanoba.inspektor.data.HostMatcher
 import com.gyanoba.inspektor.data.HttpMethod
@@ -108,7 +107,7 @@ class OverridingTest : TestBase() {
             headers.append("Custom", "Request-Header")
             setBody("Request")
         }
-        response.call.attributes[ClientCallLogger].joinResponseLogged()
+        awaitResponseLogged()
 
         return db.httpTransactionQueries.getAll().executeAsOne()
     }
@@ -205,7 +204,7 @@ class OverridingTest : TestBase() {
             headers.append("Custom", "Request-Header")
             setBody("Request")
         }
-        response.call.attributes[ClientCallLogger].joinResponseLogged()
+        awaitResponseLogged()
 
         val transaction = db.httpTransactionQueries.getAll().executeAsOne()
         assertEquals("Request-Header", transaction.requestHeaders?.firstOrNull { it.key == "Custom" }?.value?.first())

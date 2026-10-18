@@ -5,8 +5,8 @@ import com.gyanoba.inspektor.LogLevel
 import com.gyanoba.inspektor.RetentionManager
 import com.gyanoba.inspektor.TransactionRecorder
 import com.gyanoba.inspektor.data.Override
-import com.gyanoba.inspektor.data.OverrideAction
 import com.gyanoba.inspektor.data.OverrideEngine
+import com.gyanoba.inspektor.utils.InspektorLog
 import com.gyanoba.inspektor.utils.approxHeaderByteCount
 import okhttp3.Headers
 import okhttp3.Interceptor
@@ -15,10 +15,13 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
+import okhttp3.ResponseBody.Companion.asResponseBody
 import okhttp3.ResponseBody.Companion.toResponseBody
+import okio.buffer
 import kotlin.time.Clock
 
 private const val NOTIFICATION_TITLE = "Recording OkHttp Activity"
+private const val TAG = "Inspektor OkHttp"
 
 /**
  * Records every call through an [OkHttpClient] into Inspektor's store, and applies any matching
@@ -36,6 +39,10 @@ private const val NOTIFICATION_TITLE = "Recording OkHttp Activity"
  *
  * Only a network interceptor has a connection, so TLS version and cipher suite are recorded in
  * that position only.
+ *
+ * The response body is recorded as the app reads it, never read ahead of it, so a streamed
+ * response reaches the app as it arrives. The flip side: a body the app closes unread is recorded
+ * without one.
  *
  * Everything here is deliberately blocking-safe: [TransactionRecorder] never suspends, and
  * retention cleanup is fired and forgotten.
@@ -57,11 +64,12 @@ public class InspektorInterceptor internal constructor(
         val request = chain.request()
         if (level == LogLevel.NONE) return chain.proceed(request)
 
-        val view = request.toInspektorRequest()
-        if (!shouldRecord(request, view)) return chain.proceed(request)
+        if (!shouldRecord(request)) return chain.proceed(request)
 
         val recorder = recorders.newRecorder()
         retentionManager.checkAndCleanUpAsync()
+
+        val view = request.toInspektorRequest()
 
         val sendRequest = applyRequestOverride(request, recorder, view)
         recordRequest(sendRequest, recorder, level)
@@ -76,17 +84,19 @@ public class InspektorInterceptor internal constructor(
         }
 
         recordTls(chain, recorder)
+        // On success `recordResponse` closes the response log itself: at once, or after the app
+        // has finished with the body.
         return try {
             recordResponse(response, recorder, level, view)
-        } finally {
+        } catch (cause: Throwable) {
             recorder.closeResponseLog()
+            throw cause
         }
     }
 
-    private fun shouldRecord(request: Request, view: InspektorRequest): Boolean {
+    private fun shouldRecord(request: Request): Boolean {
         val filters = config.requestFilters
-        if (filters.isEmpty() && !core.hasFilters) return true
-        return filters.any { it(request) } || core.matchesAnyFilter(view)
+        return filters.isEmpty() || filters.any { it(request) }
     }
 
     // ---- request ---------------------------------------------------------------------------
@@ -97,12 +107,21 @@ public class InspektorInterceptor internal constructor(
         view: InspektorRequest,
     ): Request {
         val override = overrideEngine.findRequestOverride(view) ?: return request
-        if (!override.action.isFixedRequest) return request
 
         var built = request.newBuilder()
         var originalBody: String? = null
 
         override.action.requestBody?.takeIf { it.isNotEmpty() }?.let { newBody ->
+            // OkHttp rejects a body on GET and HEAD with an exception, which would escape this
+            // interceptor and, for an enqueued call, crash the app. Ktor does send one, so the same
+            // override is valid there; here the body is skipped and the headers still apply.
+            if (!request.permitsBody) {
+                InspektorLog.info(TAG) {
+                    "Override '${override.name ?: override.id}' sets a request body, which OkHttp " +
+                        "does not allow on ${request.method}; sending the request without it"
+                }
+                return@let
+            }
             val contentType = request.body?.contentType()
             originalBody = request.body?.peekText(core.maxContentLength)
             built = built.method(request.method, newBody.toRequestBody(contentType))
@@ -168,14 +187,43 @@ public class InspektorInterceptor internal constructor(
         )
 
         val override = overrideEngine.findResponseOverride(view)
-            ?.takeIf { it.action.isFixedResponse }
 
         if (override == null) {
             if (level.headers) recorder.addResponseHeaders(headers)
-            if (level.body) peekResponseBody(response)?.let(recorder::addResponseBody)
-            return response
+            return captureResponseBody(response, recorder, level)
         }
         return applyResponseOverride(response, recorder, level, override, headers)
+    }
+
+    /**
+     * Hands the app a body that records itself as it is read, and closes the response log when it
+     * is done. See [CapturingSource] for why the interceptor must not read the body itself.
+     */
+    private fun captureResponseBody(
+        response: Response,
+        recorder: TransactionRecorder,
+        level: LogLevel,
+    ): Response {
+        val body = response.body
+        // A body-less response (HEAD, 204, 304) is empty by definition, and apps routinely never
+        // close it -- waiting on it would leave the row without its response forever.
+        if (!level.body || body.contentLength() == 0L) {
+            recorder.closeResponseLog()
+            return response
+        }
+
+        val contentType = body.contentType()
+        val charset = contentType?.charset() ?: Charsets.UTF_8
+        val limit = core.maxContentLength.toLong()
+        val source = CapturingSource(body.source(), limit) { captured, failure ->
+            // Nothing captured means the app closed the body unread, not that it was empty.
+            if (captured.size > 0) recorder.addResponseBody(captured.readString(charset))
+            failure?.let(recorder::addResponseException)
+            recorder.closeResponseLog()
+        }
+        return response.newBuilder()
+            .body(source.buffer().asResponseBody(contentType, body.contentLength()))
+            .build()
     }
 
     private fun applyResponseOverride(
@@ -207,8 +255,10 @@ public class InspektorInterceptor internal constructor(
         if (level.headers) recorder.addResponseHeaders(effectiveHeaders)
 
         if (newBodyText == null) {
-            if (level.body) peekResponseBody(response)?.let(recorder::addResponseBody)
-            return newHeaders?.let { response.newBuilder().headers(it).build() } ?: response
+            val withHeaders = newHeaders
+                ?.let { response.newBuilder().headers(it).build() }
+                ?: response
+            return captureResponseBody(withHeaders, recorder, level)
         }
 
         if (level.body) recorder.addResponseBody(newBodyText)
@@ -221,10 +271,15 @@ public class InspektorInterceptor internal constructor(
             .build()
         // The original body was only peeked, never consumed; close it now that it is unreachable.
         response.body.close()
+        recorder.closeResponseLog()
         return replaced
     }
 
-    /** `peekBody` exists precisely for this: it never consumes the body the consumer will read. */
+    /**
+     * Reads the original body of a response an override replaces. It blocks until
+     * `maxContentLength` bytes or the end of the stream, which is acceptable only because the app
+     * never sees this body.
+     */
     private fun peekResponseBody(response: Response): String? = try {
         response.peekBody(core.maxContentLength.toLong()).string()
     } catch (_: Throwable) {
@@ -232,13 +287,9 @@ public class InspektorInterceptor internal constructor(
     }
 }
 
-private val OverrideAction.isFixedRequest: Boolean
-    get() = type == OverrideAction.Type.FixedRequest ||
-        type == OverrideAction.Type.FixedRequestResponse
-
-private val OverrideAction.isFixedResponse: Boolean
-    get() = type == OverrideAction.Type.FixedResponse ||
-        type == OverrideAction.Type.FixedRequestResponse
+/** Mirrors OkHttp's internal `HttpMethod.permitsRequestBody`, which `Request.Builder` enforces. */
+private val Request.permitsBody: Boolean
+    get() = method != "GET" && method != "HEAD"
 
 /**
  * Adds Inspektor to this client.

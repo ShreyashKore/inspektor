@@ -1,6 +1,8 @@
 package com.gyanoba.inspektor.urlsession
 
 import kotlinx.cinterop.ObjCObjectBase.OverrideInit
+import platform.Foundation.HTTPBody
+import platform.Foundation.HTTPBodyStream
 import platform.Foundation.NSCachedURLResponse
 import platform.Foundation.NSError
 import platform.Foundation.NSMutableURLRequest
@@ -11,8 +13,11 @@ import platform.Foundation.NSURLProtocolMeta
 import platform.Foundation.NSURLRequest
 import platform.Foundation.NSURLSession
 import platform.Foundation.NSURLSessionConfiguration
+import platform.Foundation.NSURLErrorDomain
+import platform.Foundation.NSURLErrorUnknown
 import platform.Foundation.NSURLSessionDataTask
 import platform.Foundation.dataTaskWithRequest
+import platform.Foundation.setHTTPBody
 import kotlin.concurrent.AtomicReference
 
 private const val HANDLED_KEY = "com.gyanoba.inspektor.handled"
@@ -31,6 +36,8 @@ private const val HANDLED_KEY = "com.gyanoba.inspektor.handled"
  *   stored with `NSURLCacheStorageNotAllowed`.
  * - It re-issues each request through its own session and hands the response back in one piece, so
  *   a streamed download is buffered in memory rather than delivered incrementally.
+ * - At `LogLevel.BODY` an upload is read into memory before it is re-issued, because the body
+ *   stream the loading system hands a protocol can be read only once.
  *
  * ```kotlin
  * InspektorUrlProtocol.register {
@@ -58,7 +65,25 @@ public class InspektorUrlProtocol : NSURLProtocol {
         // Without this the re-issued request would be picked up by this same protocol again.
         NSURLProtocol.setProperty(true, HANDLED_KEY, forwarded)
 
-        val pending = capture?.begin(original)
+        // The loading system gives a protocol every body as `HTTPBodyStream`, never as `HTTPBody`,
+        // even when the app set `HTTPBody` -- so reading `HTTPBody` alone records no request body.
+        // The stream can be read only once: read it here, and re-issue the request with the bytes.
+        if (capture?.level?.body == true && original.HTTPBody == null) {
+            val stream = original.HTTPBodyStream
+            if (stream != null) {
+                val body = stream.readFully()
+                if (body == null) {
+                    // Part of the body is already consumed, so there is no request left to send.
+                    val error = stream.streamError
+                        ?: NSError.errorWithDomain(NSURLErrorDomain, NSURLErrorUnknown, null)
+                    client()?.URLProtocol(this, didFailWithError = error)
+                    return
+                }
+                forwarded.setHTTPBody(body)
+            }
+        }
+
+        val pending = capture?.begin(forwarded)
 
         task = session?.dataTaskWithRequest(forwarded) { data, response, error ->
             val client = client()

@@ -68,7 +68,6 @@ public class TransactionRecorder internal constructor(
         get() = transactionLog.toImmutable()
 
     private val requestLoggedMonitor = Job()
-    private val responseLoggedMonitor = Job()
 
     private val requestLogged = atomic(false)
     private val responseLogged = atomic(false)
@@ -192,14 +191,6 @@ public class TransactionRecorder internal constructor(
             dataSource.updateHttpTransaction(transactionLog.toImmutable())
         } catch (e: Throwable) {
             InspektorLog.error(e, TAG) { "Failed to log response" }
-        } finally {
-            responseLoggedMonitor.complete()
         }
     }
-
-    /** Suspends until the row exists. Intended for tests, which otherwise race the insert. */
-    public suspend fun joinRequestLogged(): Unit = requestLoggedMonitor.join()
-
-    /** Suspends until the row has been updated with the response. Intended for tests. */
-    public suspend fun joinResponseLogged(): Unit = responseLoggedMonitor.join()
 }

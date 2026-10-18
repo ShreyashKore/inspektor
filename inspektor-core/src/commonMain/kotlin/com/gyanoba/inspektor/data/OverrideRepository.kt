@@ -8,9 +8,11 @@ import io.github.xxfast.kstore.extensions.minus
 import io.github.xxfast.kstore.extensions.plus
 import io.github.xxfast.kstore.extensions.updatesOrEmpty
 import io.github.xxfast.kstore.file.extensions.listStoreOf
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -57,8 +59,12 @@ public class OverrideRepositoryImpl(
 
     override val updates: Flow<List<Override>> get() = store.updatesOrEmpty
 
+    // Not `MainScope()`: a JVM with no Swing, JavaFX or Android -- a server, or an OkHttp-only
+    // desktop app -- has no Main dispatcher, and the cache would never see an override added after
+    // startup. Nothing here touches UI state, so any thread will do.
     private val cached : StateFlow<List<Override>> = store.updatesOrEmpty.stateIn(
-        MainScope(), SharingStarted.WhileSubscribed(4000),
+        CoroutineScope(SupervisorJob() + Dispatchers.Default),
+        SharingStarted.WhileSubscribed(4000),
         runBlocking {
             store.getOrEmpty()
         }

@@ -1,18 +1,33 @@
 import com.gyanoba.inspektor.LogLevel
+import com.gyanoba.inspektor.data.HttpMethod
+import com.gyanoba.inspektor.data.HttpRequest
 import com.gyanoba.inspektor.data.HttpTransaction
-import com.gyanoba.inspektor.data.InspektorDataSourceImpl
+import com.gyanoba.inspektor.data.Override
+import com.gyanoba.inspektor.data.OverrideAction
 import com.gyanoba.inspektor.data.OverrideRepositoryImpl
+import com.gyanoba.inspektor.data.PathMatcher
 import com.gyanoba.inspektor.okhttp.InterceptorMode
 import com.gyanoba.inspektor.okhttp.InspektorOkHttpConfig
 import com.gyanoba.inspektor.okhttp.installInspektor
 import com.gyanoba.inspektor.platform.NotificationManager
+import io.github.xxfast.kstore.extensions.plus
+import kotlinx.coroutines.runBlocking
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.Response
+import okhttp3.ResponseBody.Companion.asResponseBody
+import okio.Pipe
+import okio.buffer
 import utils.DbTestBase
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.TimeUnit
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -20,6 +35,25 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+
+/** A repeatable upload that counts every byte it produces, across all `writeTo` calls. */
+private class CountingBody(private val size: Int) : okhttp3.RequestBody() {
+    val produced = AtomicLong()
+
+    override fun contentType() = "text/plain".toMediaType()
+    override fun contentLength() = size.toLong()
+
+    override fun writeTo(sink: okio.BufferedSink) {
+        val chunk = ByteArray(8 * 1024) { 'x'.code.toByte() }
+        var remaining = size
+        while (remaining > 0) {
+            val n = minOf(chunk.size, remaining)
+            sink.write(chunk, 0, n)
+            produced.addAndGet(n.toLong())
+            remaining -= n
+        }
+    }
+}
 
 class InspektorInterceptorTest : DbTestBase() {
 
@@ -43,7 +77,7 @@ class InspektorInterceptorTest : DbTestBase() {
     ): OkHttpClient = OkHttpClient.Builder()
         .installInspektor(mode) {
             level = LogLevel.BODY
-            dataSource = InspektorDataSourceImpl(db)
+            dataSource = testDataSource
             overrideRepository = OverrideRepositoryImpl(store)
             notificationManager = object : NotificationManager {
                 override fun notify(title: String, message: String) = Unit
@@ -53,15 +87,14 @@ class InspektorInterceptorTest : DbTestBase() {
         .build()
 
     /**
-     * The recorder writes off the calling thread, so a test that reads straight after the call
-     * races the insert.
+     * Waits until [expected] response logs have been written, then returns every row.
+     *
+     * The recorder writes off the calling thread. Polling the table for a status code is not
+     * enough: the insert snapshots the call whenever it gets to run, so a row can show its status
+     * before the response log -- which carries the body, recorded as the app reads it -- lands.
      */
     private fun awaitTransaction(expected: Int = 1): List<HttpTransaction> {
-        repeat(200) {
-            val rows = db.httpTransactionQueries.getAll().executeAsList()
-            if (rows.size >= expected && rows.all { it.responseCode != null }) return rows
-            Thread.sleep(25)
-        }
+        runBlocking { repeat(expected) { awaitResponseLogged() } }
         return db.httpTransactionQueries.getAll().executeAsList()
     }
 
@@ -180,6 +213,159 @@ class InspektorInterceptorTest : DbTestBase() {
         val transaction = awaitTransaction().single()
         assertNull(transaction.requestBody)
         assertEquals("POST", transaction.method)
+    }
+
+    /**
+     * The override editor defaults to GET and accepts a request body. OkHttp refuses a body on GET
+     * outright, so applying it threw out of `intercept()` -- and crashed the app for an enqueued
+     * call. The body is now skipped and the rest of the override still applies.
+     */
+    @Test
+    fun `a request override with a body on a GET still sends the request`() {
+        runBlocking {
+            store.plus(
+                Override(
+                    id = 0,
+                    type = HttpRequest(HttpMethod.Get),
+                    matchers = listOf(PathMatcher("/todos/1")),
+                    action = OverrideAction(
+                        type = OverrideAction.Type.FixedRequest,
+                        requestHeaders = mapOf("X-Overridden" to listOf("yes")),
+                        requestBody = "not allowed on GET",
+                    ),
+                )
+            )
+        }
+        server.enqueue(MockResponse.Builder().code(200).body("ok").build())
+
+        client().newCall(Request.Builder().url(server.url("/todos/1")).build()).execute().close()
+
+        val sent = server.takeRequest()
+        assertEquals("GET", sent.method)
+        assertEquals("yes", sent.headers["X-Overridden"])
+        assertEquals(0L, sent.bodySize)
+
+        val transaction = awaitTransaction().single()
+        assertEquals(200L, transaction.responseCode)
+        assertNull(transaction.requestBody)
+        assertTrue(transaction.requestHeaders.orEmpty().any { it.key == "X-Overridden" })
+    }
+
+    /**
+     * The interceptor used to `peekBody` before returning, which blocks until `maxContentLength`
+     * bytes or the end of the stream. For server-sent events that meant the app saw nothing until
+     * 250 KB of events had arrived or the server hung up.
+     */
+    @Test
+    fun `a streamed response reaches the app before the stream ends`() {
+        val pipe = Pipe(maxBufferSize = 64 * 1024)
+        val events = pipe.sink.buffer()
+        // Stands in for the network: the body stays open until the test closes `events`.
+        val stream = Interceptor { chain ->
+            Response.Builder()
+                .request(chain.request())
+                .protocol(Protocol.HTTP_1_1)
+                .code(200)
+                .message("OK")
+                .body(pipe.source.buffer().asResponseBody("text/event-stream".toMediaType()))
+                .build()
+        }
+        val client = client().newBuilder().addInterceptor(stream).build()
+        val executor = Executors.newSingleThreadExecutor()
+        try {
+            events.writeUtf8("data: first\n\n").flush()
+            val call = executor.submit<Response> {
+                client.newCall(Request.Builder().url(server.url("/events")).build()).execute()
+            }
+
+            val response = call.get(5, TimeUnit.SECONDS)
+            val body = response.body.source()
+            assertEquals("data: first", body.readUtf8Line())
+
+            events.writeUtf8("data: second\n\n").close()
+            assertEquals("\ndata: second\n\n", body.readUtf8())
+            response.close()
+        } finally {
+            events.close()
+            executor.shutdownNow()
+        }
+
+        val transaction = awaitTransaction().single()
+        assertEquals("data: first\n\ndata: second\n\n", transaction.responseBody)
+        assertEquals("text/event-stream", transaction.responseContentType)
+    }
+
+    @Test
+    fun `a response body larger than maxContentLength is truncated in the log only`() {
+        server.enqueue(MockResponse.Builder().code(200).body("y".repeat(5_000)).build())
+
+        val response = client { maxContentLength = 100 }
+            .newCall(Request.Builder().url(server.url("/big")).build()).execute()
+
+        assertEquals("y".repeat(5_000), response.body.string())
+        assertEquals("y".repeat(100), awaitTransaction().single().responseBody)
+    }
+
+    /**
+     * The body is recorded as the app reads it, so a body closed unread has nothing to show. The
+     * call itself must still be recorded, or the row would sit there without a response forever.
+     */
+    @Test
+    fun `a response closed unread is still recorded, without its body`() {
+        server.enqueue(MockResponse.Builder().code(200).body("never read").build())
+
+        client().newCall(Request.Builder().url(server.url("/unread")).build()).execute().close()
+
+        val transaction = awaitTransaction().single()
+        assertEquals(200L, transaction.responseCode)
+        assertNull(transaction.responseBody)
+    }
+
+    @Test
+    fun `a response override replaces what the app reads, and keeps the original`() {
+        runBlocking {
+            store.plus(
+                Override(
+                    id = 0,
+                    type = HttpRequest(HttpMethod.Get),
+                    matchers = listOf(PathMatcher("/todos/1")),
+                    action = OverrideAction(
+                        type = OverrideAction.Type.FixedResponse,
+                        responseHeaders = mapOf("X-Overridden" to listOf("yes")),
+                        responseBody = "overridden",
+                    ),
+                )
+            )
+        }
+        server.enqueue(MockResponse.Builder().code(200).body("original").build())
+
+        val response = client().newCall(Request.Builder().url(server.url("/todos/1")).build())
+            .execute()
+
+        assertEquals("overridden", response.body.string())
+        assertEquals("yes", response.header("X-Overridden"))
+        val transaction = awaitTransaction().single()
+        assertEquals("overridden", transaction.responseBody)
+        assertEquals("original", transaction.originalResponseBody)
+    }
+
+    @Test
+    fun `logging a large upload does not produce all of it a second time`() {
+        server.enqueue(MockResponse.Builder().code(200).body("ok").build())
+        val size = 5 * 1024 * 1024
+        val upload = CountingBody(size)
+
+        client { maxContentLength = 100 }.newCall(
+            Request.Builder().url(server.url("/upload")).post(upload).build()
+        ).execute().close()
+
+        assertEquals(size.toLong(), server.takeRequest().bodySize)
+        assertEquals("x".repeat(100), awaitTransaction().single().requestBody)
+        // One full pass for the network, and only the first few kilobytes for the log.
+        assertTrue(
+            upload.produced.get() < size + 64 * 1024,
+            "produced ${upload.produced.get()} bytes for a $size-byte upload",
+        )
     }
 
     @Test
