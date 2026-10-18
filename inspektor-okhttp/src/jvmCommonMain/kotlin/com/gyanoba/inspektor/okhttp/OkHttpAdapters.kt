@@ -37,42 +37,46 @@ internal val MediaType.typeAndSubType: String get() = "$type/$subtype"
  */
 internal fun RequestBody.peekText(max: Int): String? {
     if (isDuplex() || isOneShot()) return null
-    return try {
-        val sink = TruncatingSink(max.toLong())
+    val sink = TruncatingSink(max.toLong())
+    try {
         val buffered = sink.buffer()
         writeTo(buffered)
         // `buffer()` hands back a sink that holds writes in its own buffer; without the flush
         // nothing reaches the truncating sink and every capture comes back empty.
         buffered.flush()
-        val charset = contentType()?.charset() ?: Charsets.UTF_8
-        sink.collected.readString(charset)
+    } catch (_: CaptureComplete) {
+        // [max] bytes are in; the rest of the body was never produced, which is the point.
     } catch (_: IOException) {
-        null
+        return null
     } catch (_: IllegalStateException) {
-        null
+        return null
     }
+    val charset = contentType()?.charset() ?: Charsets.UTF_8
+    return sink.collected.readString(charset)
+}
+
+/** Thrown by [TruncatingSink] to stop `writeTo` once it has everything the log will keep. */
+private class CaptureComplete : RuntimeException() {
+    // Thrown once per logged upload and always caught; a stack trace would be pure cost.
+    override fun fillInStackTrace(): Throwable = this
 }
 
 /**
- * Collects the first [limit] bytes written to it and discards the rest.
+ * Collects the first [limit] bytes written to it, then stops the write.
  *
- * A large upload must not be held in memory in full just to log its first 250 KB. `writeTo` has to
- * be allowed to run to completion regardless, so the overflow is skipped rather than refused.
+ * A large upload must not be produced twice -- once for the log, once for the network -- just to
+ * log its first 250 KB, so the first write that goes past [limit] throws [CaptureComplete] and
+ * [peekText] ends `writeTo` there. Only repeatable bodies get here, so abandoning this pass leaves
+ * the one OkHttp makes for the network untouched. A body exactly [limit] bytes long finishes
+ * normally.
  */
 private class TruncatingSink(private val limit: Long) : Sink {
     val collected: Buffer = Buffer()
-    private var written = 0L
 
     override fun write(source: Buffer, byteCount: Long) {
-        val remaining = limit - written
-        if (remaining <= 0) {
-            source.skip(byteCount)
-            return
-        }
-        val toCopy = minOf(remaining, byteCount)
+        val toCopy = minOf(limit - collected.size, byteCount)
         collected.write(source, toCopy)
-        written += toCopy
-        if (toCopy < byteCount) source.skip(byteCount - toCopy)
+        if (toCopy < byteCount) throw CaptureComplete()
     }
 
     override fun flush() = Unit

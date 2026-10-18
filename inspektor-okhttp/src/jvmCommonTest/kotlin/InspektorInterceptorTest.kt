@@ -26,6 +26,7 @@ import okio.Pipe
 import okio.buffer
 import utils.DbTestBase
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.TimeUnit
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -34,6 +35,25 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+
+/** A repeatable upload that counts every byte it produces, across all `writeTo` calls. */
+private class CountingBody(private val size: Int) : okhttp3.RequestBody() {
+    val produced = AtomicLong()
+
+    override fun contentType() = "text/plain".toMediaType()
+    override fun contentLength() = size.toLong()
+
+    override fun writeTo(sink: okio.BufferedSink) {
+        val chunk = ByteArray(8 * 1024) { 'x'.code.toByte() }
+        var remaining = size
+        while (remaining > 0) {
+            val n = minOf(chunk.size, remaining)
+            sink.write(chunk, 0, n)
+            produced.addAndGet(n.toLong())
+            remaining -= n
+        }
+    }
+}
 
 class InspektorInterceptorTest : DbTestBase() {
 
@@ -327,6 +347,25 @@ class InspektorInterceptorTest : DbTestBase() {
         val transaction = awaitTransaction().single()
         assertEquals("overridden", transaction.responseBody)
         assertEquals("original", transaction.originalResponseBody)
+    }
+
+    @Test
+    fun `logging a large upload does not produce all of it a second time`() {
+        server.enqueue(MockResponse.Builder().code(200).body("ok").build())
+        val size = 5 * 1024 * 1024
+        val upload = CountingBody(size)
+
+        client { maxContentLength = 100 }.newCall(
+            Request.Builder().url(server.url("/upload")).post(upload).build()
+        ).execute().close()
+
+        assertEquals(size.toLong(), server.takeRequest().bodySize)
+        assertEquals("x".repeat(100), awaitTransaction().single().requestBody)
+        // One full pass for the network, and only the first few kilobytes for the log.
+        assertTrue(
+            upload.produced.get() < size + 64 * 1024,
+            "produced ${upload.produced.get()} bytes for a $size-byte upload",
+        )
     }
 
     @Test
