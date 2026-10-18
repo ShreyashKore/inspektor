@@ -5,7 +5,6 @@ import com.gyanoba.inspektor.LogLevel
 import com.gyanoba.inspektor.RetentionManager
 import com.gyanoba.inspektor.TransactionRecorder
 import com.gyanoba.inspektor.data.Override
-import com.gyanoba.inspektor.data.OverrideAction
 import com.gyanoba.inspektor.data.OverrideEngine
 import com.gyanoba.inspektor.utils.InspektorLog
 import com.gyanoba.inspektor.utils.approxHeaderByteCount
@@ -108,7 +107,6 @@ public class InspektorInterceptor internal constructor(
         view: InspektorRequest,
     ): Request {
         val override = overrideEngine.findRequestOverride(view) ?: return request
-        if (!override.action.isFixedRequest) return request
 
         var built = request.newBuilder()
         var originalBody: String? = null
@@ -189,7 +187,6 @@ public class InspektorInterceptor internal constructor(
         )
 
         val override = overrideEngine.findResponseOverride(view)
-            ?.takeIf { it.action.isFixedResponse }
 
         if (override == null) {
             if (level.headers) recorder.addResponseHeaders(headers)
@@ -293,14 +290,6 @@ public class InspektorInterceptor internal constructor(
 /** Mirrors OkHttp's internal `HttpMethod.permitsRequestBody`, which `Request.Builder` enforces. */
 private val Request.permitsBody: Boolean
     get() = method != "GET" && method != "HEAD"
-
-private val OverrideAction.isFixedRequest: Boolean
-    get() = type == OverrideAction.Type.FixedRequest ||
-        type == OverrideAction.Type.FixedRequestResponse
-
-private val OverrideAction.isFixedResponse: Boolean
-    get() = type == OverrideAction.Type.FixedResponse ||
-        type == OverrideAction.Type.FixedRequestResponse
 
 /**
  * Adds Inspektor to this client.

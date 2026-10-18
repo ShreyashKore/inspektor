@@ -302,6 +302,34 @@ class InspektorInterceptorTest : DbTestBase() {
     }
 
     @Test
+    fun `a response override replaces what the app reads, and keeps the original`() {
+        runBlocking {
+            store.plus(
+                Override(
+                    id = 0,
+                    type = HttpRequest(HttpMethod.Get),
+                    matchers = listOf(PathMatcher("/todos/1")),
+                    action = OverrideAction(
+                        type = OverrideAction.Type.FixedResponse,
+                        responseHeaders = mapOf("X-Overridden" to listOf("yes")),
+                        responseBody = "overridden",
+                    ),
+                )
+            )
+        }
+        server.enqueue(MockResponse.Builder().code(200).body("original").build())
+
+        val response = client().newCall(Request.Builder().url(server.url("/todos/1")).build())
+            .execute()
+
+        assertEquals("overridden", response.body.string())
+        assertEquals("yes", response.header("X-Overridden"))
+        val transaction = awaitTransaction().single()
+        assertEquals("overridden", transaction.responseBody)
+        assertEquals("original", transaction.originalResponseBody)
+    }
+
+    @Test
     fun `a filtered-out call is not recorded`() {
         server.enqueue(MockResponse.Builder().code(200).body("ok").build())
 
