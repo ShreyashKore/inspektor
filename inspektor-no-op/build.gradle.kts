@@ -37,8 +37,12 @@ kotlin {
         target.binaries {
             framework {
                 baseName = "inspektor"
-                // Without this, `openInspektor()` would be missing from the generated headers that a
-                // Swift consumer sees, now that it lives in a dependency.
+                // A framework's generated headers cover its own module only, and most of the no-op
+                // API lives in these two dependencies. Without the exports a Swift consumer would see
+                // no `openInspektor()` or `setApplicationId()`, and `LogLevel` only under the mangled
+                // name `Inspektor_core_no_opLogLevel`, so Swift code that builds against the real
+                // `inspektor.framework` would not build against this one.
+                export(project(":inspektor-core-no-op"))
                 export(project(":inspektor-ui-no-op"))
             }
         }
