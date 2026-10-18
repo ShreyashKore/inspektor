@@ -6,7 +6,9 @@ import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
 import okio.Buffer
+import okio.ForwardingSource
 import okio.Sink
+import okio.Source
 import okio.Timeout
 import okio.buffer
 import java.io.IOException
@@ -76,4 +78,59 @@ private class TruncatingSink(private val limit: Long) : Sink {
     override fun flush() = Unit
     override fun timeout(): Timeout = Timeout.NONE
     override fun close() = Unit
+}
+
+/**
+ * Copies the first [limit] bytes the consumer reads into a buffer, and reports them once.
+ *
+ * This is how a response body is captured without the interceptor reading it first. Even
+ * `peekBody` blocks until [limit] bytes have arrived or the stream ends, so a server-sent-event
+ * stream or a slow download would reach the app only after that.
+ *
+ * [onComplete] runs exactly once, on whichever comes first: the stream is exhausted, [limit] bytes
+ * have been captured, a read fails, or the consumer closes the body. A body the app neither reads
+ * nor closes is never reported -- but OkHttp requires every body to be closed anyway.
+ */
+internal class CapturingSource(
+    delegate: Source,
+    private val limit: Long,
+    private val onComplete: (captured: Buffer, failure: IOException?) -> Unit,
+) : ForwardingSource(delegate) {
+    private val captured = Buffer()
+    private var completed = false
+
+    override fun read(sink: Buffer, byteCount: Long): Long {
+        val read = try {
+            super.read(sink, byteCount)
+        } catch (e: IOException) {
+            complete(e)
+            throw e
+        }
+        if (read == -1L) complete(null) else capture(sink, read)
+        return read
+    }
+
+    override fun close() {
+        try {
+            super.close()
+        } finally {
+            complete(null)
+        }
+    }
+
+    /** Copies the [read] bytes just appended to [sink], up to [limit] in total. */
+    @Synchronized
+    private fun capture(sink: Buffer, read: Long) {
+        if (completed) return
+        val toCopy = minOf(read, limit - captured.size)
+        sink.copyTo(captured, offset = sink.size - read, byteCount = toCopy)
+        if (captured.size >= limit) complete(null)
+    }
+
+    @Synchronized
+    private fun complete(failure: IOException?) {
+        if (completed) return
+        completed = true
+        onComplete(captured, failure)
+    }
 }

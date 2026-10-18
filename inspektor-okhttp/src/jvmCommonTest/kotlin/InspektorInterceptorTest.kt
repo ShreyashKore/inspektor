@@ -2,6 +2,7 @@ import com.gyanoba.inspektor.LogLevel
 import com.gyanoba.inspektor.data.HttpMethod
 import com.gyanoba.inspektor.data.HttpRequest
 import com.gyanoba.inspektor.data.HttpTransaction
+import com.gyanoba.inspektor.data.InspektorDataSource
 import com.gyanoba.inspektor.data.InspektorDataSourceImpl
 import com.gyanoba.inspektor.data.Override
 import com.gyanoba.inspektor.data.OverrideAction
@@ -15,11 +16,20 @@ import io.github.xxfast.kstore.extensions.plus
 import kotlinx.coroutines.runBlocking
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.Response
+import okhttp3.ResponseBody.Companion.asResponseBody
+import okio.Pipe
+import okio.buffer
 import utils.DbTestBase
+import java.util.concurrent.Executors
+import java.util.concurrent.Semaphore
+import java.util.concurrent.TimeUnit
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -31,6 +41,19 @@ import kotlin.test.assertTrue
 class InspektorInterceptorTest : DbTestBase() {
 
     private lateinit var server: MockWebServer
+
+    /** One permit per response log written; see [awaitTransaction]. */
+    private val responseLogs = Semaphore(0)
+
+    private val dataSource: InspektorDataSource by lazy {
+        val real = InspektorDataSourceImpl(db)
+        object : InspektorDataSource by real {
+            override suspend fun updateHttpTransaction(httpTransaction: HttpTransaction) {
+                real.updateHttpTransaction(httpTransaction)
+                responseLogs.release()
+            }
+        }
+    }
 
     @BeforeTest
     fun startServer() {
@@ -50,7 +73,7 @@ class InspektorInterceptorTest : DbTestBase() {
     ): OkHttpClient = OkHttpClient.Builder()
         .installInspektor(mode) {
             level = LogLevel.BODY
-            dataSource = InspektorDataSourceImpl(db)
+            dataSource = this@InspektorInterceptorTest.dataSource
             overrideRepository = OverrideRepositoryImpl(store)
             notificationManager = object : NotificationManager {
                 override fun notify(title: String, message: String) = Unit
@@ -60,15 +83,17 @@ class InspektorInterceptorTest : DbTestBase() {
         .build()
 
     /**
-     * The recorder writes off the calling thread, so a test that reads straight after the call
-     * races the insert.
+     * Waits until [expected] response logs have been written, then returns every row.
+     *
+     * The recorder writes off the calling thread. Polling the table for a status code is not
+     * enough: the insert snapshots the call whenever it gets to run, so a row can show its status
+     * before the response log -- which carries the body, recorded as the app reads it -- lands.
      */
     private fun awaitTransaction(expected: Int = 1): List<HttpTransaction> {
-        repeat(200) {
-            val rows = db.httpTransactionQueries.getAll().executeAsList()
-            if (rows.size >= expected && rows.all { it.responseCode != null }) return rows
-            Thread.sleep(25)
-        }
+        assertTrue(
+            responseLogs.tryAcquire(expected, 5, TimeUnit.SECONDS),
+            "expected $expected response log(s) to be written",
+        )
         return db.httpTransactionQueries.getAll().executeAsList()
     }
 
@@ -223,6 +248,76 @@ class InspektorInterceptorTest : DbTestBase() {
         assertEquals(200L, transaction.responseCode)
         assertNull(transaction.requestBody)
         assertTrue(transaction.requestHeaders.orEmpty().any { it.key == "X-Overridden" })
+    }
+
+    /**
+     * The interceptor used to `peekBody` before returning, which blocks until `maxContentLength`
+     * bytes or the end of the stream. For server-sent events that meant the app saw nothing until
+     * 250 KB of events had arrived or the server hung up.
+     */
+    @Test
+    fun `a streamed response reaches the app before the stream ends`() {
+        val pipe = Pipe(maxBufferSize = 64 * 1024)
+        val events = pipe.sink.buffer()
+        // Stands in for the network: the body stays open until the test closes `events`.
+        val stream = Interceptor { chain ->
+            Response.Builder()
+                .request(chain.request())
+                .protocol(Protocol.HTTP_1_1)
+                .code(200)
+                .message("OK")
+                .body(pipe.source.buffer().asResponseBody("text/event-stream".toMediaType()))
+                .build()
+        }
+        val client = client().newBuilder().addInterceptor(stream).build()
+        val executor = Executors.newSingleThreadExecutor()
+        try {
+            events.writeUtf8("data: first\n\n").flush()
+            val call = executor.submit<Response> {
+                client.newCall(Request.Builder().url(server.url("/events")).build()).execute()
+            }
+
+            val response = call.get(5, TimeUnit.SECONDS)
+            val body = response.body.source()
+            assertEquals("data: first", body.readUtf8Line())
+
+            events.writeUtf8("data: second\n\n").close()
+            assertEquals("\ndata: second\n\n", body.readUtf8())
+            response.close()
+        } finally {
+            events.close()
+            executor.shutdownNow()
+        }
+
+        val transaction = awaitTransaction().single()
+        assertEquals("data: first\n\ndata: second\n\n", transaction.responseBody)
+        assertEquals("text/event-stream", transaction.responseContentType)
+    }
+
+    @Test
+    fun `a response body larger than maxContentLength is truncated in the log only`() {
+        server.enqueue(MockResponse.Builder().code(200).body("y".repeat(5_000)).build())
+
+        val response = client { maxContentLength = 100 }
+            .newCall(Request.Builder().url(server.url("/big")).build()).execute()
+
+        assertEquals("y".repeat(5_000), response.body.string())
+        assertEquals("y".repeat(100), awaitTransaction().single().responseBody)
+    }
+
+    /**
+     * The body is recorded as the app reads it, so a body closed unread has nothing to show. The
+     * call itself must still be recorded, or the row would sit there without a response forever.
+     */
+    @Test
+    fun `a response closed unread is still recorded, without its body`() {
+        server.enqueue(MockResponse.Builder().code(200).body("never read").build())
+
+        client().newCall(Request.Builder().url(server.url("/unread")).build()).execute().close()
+
+        val transaction = awaitTransaction().single()
+        assertEquals(200L, transaction.responseCode)
+        assertNull(transaction.responseBody)
     }
 
     @Test
