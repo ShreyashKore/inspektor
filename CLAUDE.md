@@ -114,6 +114,13 @@ is the spec; change it together with the code.** Key facts:
   - JVM: a `ServerSocket`.
 - **Tests:** JVM tests in `src/jvmTest/kotlin/remote` drive sessions over in-memory pipes and the
   server over a real loopback socket on port 0.
+- **Manual checks:** `scripts/remote-client.py PORT` (standard library only) prints the hello,
+  follows events live, and fetches bodies (`--body ID`) and overrides (`--overrides`).
+  - On Android, get a port with
+    `adb forward tcp:0 localabstract:inspektor_$(adb shell pidof <pkg> | tr -d '\r')_kotlin`.
+    If the device drops offline, adb removes its forwards; run it again.
+  - `curl http://127.0.0.1:PORT/` must fail (`Received HTTP/0.9`), and the app's log must say
+    `Closed a connection that broke the protocol`.
 
 ### HAR export (`har/Har.kt`)
 
