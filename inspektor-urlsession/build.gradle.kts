@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -19,8 +20,18 @@ kotlin {
     val iosSimulatorArm64 = iosSimulatorArm64()
     val appleTargets = listOf(iosArm64, iosSimulatorArm64)
 
+    // What an app that is not Kotlin links -- a Swift or React Native one, through
+    // InspektorUrlSession.podspec: `./gradlew :inspektor-urlsession:assembleInspektorUrlSessionReleaseXCFramework`.
+    // It exports core too, or `InspektorRemote` and `LogLevel` would be missing from its headers.
+    // Static, so CocoaPods has nothing to embed; the app links SQLite itself (the podspec says so).
+    val xcframework = XCFramework("InspektorUrlSession")
     appleTargets.forEach { target ->
-        target.binaries.framework { baseName = "InspektorUrlSession" }
+        target.binaries.framework {
+            baseName = "InspektorUrlSession"
+            export(project(":inspektor-core"))
+            isStatic = true
+            xcframework.add(this)
+        }
     }
 
 

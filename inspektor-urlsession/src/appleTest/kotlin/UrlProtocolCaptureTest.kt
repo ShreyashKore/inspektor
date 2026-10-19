@@ -4,6 +4,7 @@ import com.gyanoba.inspektor.data.InspektorDataSourceImpl
 import com.gyanoba.inspektor.data.OverrideRepositoryImpl
 import com.gyanoba.inspektor.platform.NotificationManager
 import com.gyanoba.inspektor.urlsession.InspektorUrlProtocol
+import com.gyanoba.inspektor.urlsession.InspektorUrlProtocolBridge
 import com.gyanoba.inspektor.urlsession.readFully
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
@@ -49,7 +50,9 @@ class UrlProtocolCaptureTest : DbTestBase() {
 
         val loaderConfiguration = NSURLSessionConfiguration.ephemeralSessionConfiguration
         loaderConfiguration.protocolClasses = listOf(StubUrlProtocol)
-        InspektorUrlProtocol.register(loaderConfiguration) {
+        // `prepare`, not `register`: every session here lists the protocol itself, which is the
+        // React Native set-up, so nothing needs registering globally.
+        InspektorUrlProtocol.prepare(loaderConfiguration) {
             level = LogLevel.BODY
             dataSource = InspektorDataSourceImpl(db)
             overrideRepository = OverrideRepositoryImpl(store)
@@ -67,7 +70,7 @@ class UrlProtocolCaptureTest : DbTestBase() {
 
     private fun session(): NSURLSession {
         val configuration = NSURLSessionConfiguration.ephemeralSessionConfiguration
-        configuration.protocolClasses = listOf(InspektorUrlProtocol)
+        InspektorUrlProtocolBridge.addTo(configuration)
         return NSURLSession.sessionWithConfiguration(configuration)
     }
 
@@ -88,6 +91,16 @@ class UrlProtocolCaptureTest : DbTestBase() {
             platform.posix.usleep(25_000u)
         }
         throw AssertionError("the URLProtocol recorded nothing")
+    }
+
+    @Test
+    fun `the bridge puts the protocol ahead of a configuration's own`() {
+        val configuration = NSURLSessionConfiguration.ephemeralSessionConfiguration
+        val builtIn = configuration.protocolClasses.orEmpty()
+
+        InspektorUrlProtocolBridge.addTo(configuration)
+
+        assertEquals(listOf<Any?>(InspektorUrlProtocol) + builtIn, configuration.protocolClasses)
     }
 
     @Test

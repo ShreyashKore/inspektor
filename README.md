@@ -221,11 +221,47 @@ InspektorUrlProtocol.register {
 }
 ```
 
-`InspektorUrlProtocol` is zero-configuration and does capture completion-handler tasks, but it has
-real costs: requests made before registration are invisible; it never sees `AVPlayer` traffic,
-background sessions or WebSockets; registration is global and mutable and changes caching semantics;
-and it re-issues each request through its own session, so a streamed download is buffered rather
-than delivered incrementally. Prefer the delegate unless you cannot use it.
+`InspektorUrlProtocol` needs no change to how requests are made, and it does capture
+completion-handler tasks, but it has real costs: requests made before registration are invisible; it
+never sees `AVPlayer` traffic, background sessions or WebSockets; registration is global and mutable
+and changes caching semantics; and it re-issues each request through its own session, so a streamed
+download is buffered rather than delivered incrementally. Prefer the delegate unless you cannot use
+it.
+
+A global registration reaches the shared session and `NSURLConnection`. A session built from its
+own configuration consults only that configuration's `protocolClasses`, so add the protocol there,
+or call `prepare` instead of `register` to capture only the sessions that list it.
+
+#### From Swift or React Native
+
+An app that isn't built with Kotlin links `InspektorUrlSession.podspec`. It covers a static
+XCFramework holding the URLSession capture and core, `InspektorRemote` included. Build it, then
+point the app's Podfile at this checkout. List only development configurations:
+
+```bash
+./gradlew :inspektor-urlsession:assembleInspektorUrlSessionReleaseXCFramework
+```
+
+```ruby
+pod 'InspektorUrlSession', :path => '../inspektor', :configurations => ['Debug', 'Release-dev']
+```
+
+Kotlin/Native leaves the members of a Kotlin subclass of an Objective-C class out of the framework
+header, so Swift reaches the protocol through `InspektorUrlProtocolBridge`. React Native builds its
+own `URLSession` from a configuration it asks the app for, so capturing it looks like this:
+
+```swift
+#if canImport(InspektorUrlSession)
+let inspektor = InspektorUrlProtocolBridge.shared
+inspektor.prepare(loaderConfiguration: .default) { $0.level = .body }
+RCTSetCustomNSURLSessionConfigurationProvider {
+  let configuration = URLSessionConfiguration.default
+  inspektor.addTo(configuration: configuration)
+  return configuration
+}
+InspektorRemote.shared.start()
+#endif
+```
 
 For ios you need to add the following `-lsqlite3` to the Other Linker flags under Build Settings.
 See more details [here](https://github.com/cashapp/sqldelight/issues/1442#issuecomment-523435492)
