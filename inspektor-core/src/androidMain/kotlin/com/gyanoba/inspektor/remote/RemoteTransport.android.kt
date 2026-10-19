@@ -83,8 +83,10 @@ internal actual fun remoteAppInfo(): RemoteAppInfo {
     return RemoteAppInfo(
         id = context.packageName,
         name = runCatching { getAppName() }.getOrNull(),
-        version = packageInfo?.let {
-            "${it.versionName} (${PackageInfoCompat.getLongVersionCode(it)})"
+        version = packageInfo?.let { info ->
+            // An app built without a versionName (or code) reports null (or 0) for it.
+            val code = PackageInfoCompat.getLongVersionCode(info).takeIf { it > 0 }
+            listOfNotNull(info.versionName, code?.let { "($it)" }).joinToString(" ").ifEmpty { null }
         },
         pid = Process.myPid().toLong(),
         process = processName(),
