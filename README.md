@@ -291,6 +291,36 @@ This opens up a new activity in Android, a bottom sheet in iOS, and a new window
 
 On Android you can also open the UI by clicking on the generated notifications.
 
+## Remote inspection with Eagly
+
+[Eagly](https://github.com/ShreyashKore/eagly), a desktop viewer for Android and iOS devices, can
+show an app's recorded traffic live, request by request. It can also edit the app's overrides from
+the desktop. Turn it on once, early in the app's life:
+
+```kotlin
+@OptIn(UnstableInspektorAPI::class)
+InspektorRemote.start()
+```
+
+It is safe to call more than once, and it returns at once; the server runs in the background. On
+start it writes one line to the device log naming where it listens.
+
+- **On Android** it listens on a socket local to the device (`@inspektor_<pid>_kotlin`), which
+  Eagly reaches over adb.
+- **On iOS and desktop** it listens on a `127.0.0.1` port from 38470 to 38477, which Eagly
+  reaches over usbmux on iOS.
+
+> [!WARNING]
+> There is no authentication. While it runs, any app on the same device can read the recorded
+> traffic and change responses through overrides, the same trade React Native's Metro makes.
+>
+> Start it only in builds that never reach real users: debug, UAT, dev flavours. Production builds
+> should use the no-op artifacts, where `InspektorRemote` exists but does nothing.
+>
+> The socket is never reachable from the network.
+
+The wire protocol is specified in [docs/REMOTE_PROTOCOL.md](docs/REMOTE_PROTOCOL.md).
+
 ## HAR Export
 
 Inspektor supports exporting the logs in HAR format. You can export the logs by clicking on the

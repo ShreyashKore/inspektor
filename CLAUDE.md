@@ -85,6 +85,36 @@ Constraints for this module:
 - `src/commonTest/kotlin/NoOpInspektorTest.kt` is the behavioural contract: request/response pass through untouched, the body is re-readable, and user-supplied `filter` / `sanitizeHeader` predicates are never invoked. Keep those tests passing.
 - The `:sample` app exercises both artifacts via Android `dev`/`prod` product flavors. Because the sample calls `install(Inspektor)` from `commonMain`, the swap is done with a `dependencySubstitution` on `prod*` configurations (see the bottom of `sample/build.gradle.kts`), not `prodImplementation` — KMP metadata compilation cannot express a per-flavor dependency. `./gradlew :sample:assembleDebug` builds both flavors, so CI catches API drift between the two modules.
 
+### Remote inspection (`remote/`, in `:inspektor-core`)
+
+Eagly, the desktop device viewer, reads a running app's transactions and edits its overrides
+through a server in `com.gyanoba.inspektor.remote`. **[docs/REMOTE_PROTOCOL.md](docs/REMOTE_PROTOCOL.md)
+is the spec; change it together with the code.** Key facts:
+
+- **Off by default.** `InspektorRemote.start()` (`@UnstableInspektorAPI`) turns it on. Its no-op
+  twin lives in `:inspektor-core-no-op`, so keep the two APIs identical (`apiDump`).
+- **No authentication, on purpose.** The scope is development builds, like Metro. What keeps it
+  safe:
+  - production ships the no-op;
+  - the listener is local to the device: an abstract socket on Android, `127.0.0.1` on iOS and
+    JVM, never a network interface;
+  - `FrameReader` rejects an oversized or non-JSON frame before reading it, which is what stops
+    a browser's HTTP request.
+
+  Don't add an HTTP or WebSocket endpoint without adding a token.
+- **Live events come from `InspektorDataSourceImpl.changes`.** It's an internal `SharedFlow`
+  emitted on every insert, update and delete. Each session re-reads the row by id. The flow never
+  suspends the recording side (`DROP_OLDEST`). Writes that bypass `InspektorDataSourceImpl` are
+  invisible to remote clients.
+- **The platform code is small:** `openRemoteListener`, `remoteAppInfo` and `logToDevice`.
+  - Android: a `LocalServerSocket`. Closing it doesn't wake `accept()`, so `close()` connects once
+    first.
+  - iOS: POSIX sockets, polled rather than blocking in `accept()`, with `SO_NOSIGPIPE` set.
+    `iosSimulatorArm64Test` runs the iOS listener for real.
+  - JVM: a `ServerSocket`.
+- **Tests:** JVM tests in `src/jvmTest/kotlin/remote` drive sessions over in-memory pipes and the
+  server over a real loopback socket on port 0.
+
 ### HAR export (`har/Har.kt`)
 
 `List<HttpTransaction>.toHarLogString()` serializes transactions to the [HAR 1.2](http://www.softwareishard.com/blog/har-12-spec/) format for external analysis.
