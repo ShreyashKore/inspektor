@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <!--
+          The viewer's own entries. `:inspektor-core` contributes the androidx.startup
+          `<meta-data>` separately, because storage needs a Context whether or not this module is
+          present.
+        -->
+        <provider
+            android:name="com.gyanoba.inspektor.platform.InspektorFileProvider"
+            android:authorities="${applicationId}.inspektor.file_provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/inspektor_share_paths"/>
+        </provider>
+        <activity
+            android:name="com.gyanoba.inspektor.MainActivity"
+            android:label="Inspektor"
+            android:launchMode="singleTask"
+            android:theme="@android:style/Theme.Material.Light.NoActionBar" />
+    </application>
+
+</manifest>

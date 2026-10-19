@@ -16,6 +16,10 @@ version = project.properties["VERSION_NAME"]!!
 // depend on the real library only in their debug/dev variant and on this one in release/prod, so
 // that neither the inspection code nor its transitive dependencies ever reach a production binary.
 //
+// `openInspektor()` comes from `:inspektor-ui-no-op`, re-exported the same way `:inspektor` re-exports
+// `:inspektor-ui`, so an app that also pairs the viewer with OkHttp or URLSession gets exactly one
+// copy of it.
+//
 // Keep the public API here in sync with `:inspektor` - see the `api` directory of both modules.
 kotlin {
     explicitApiWarning()
@@ -33,6 +37,13 @@ kotlin {
         target.binaries {
             framework {
                 baseName = "inspektor"
+                // A framework's generated headers cover its own module only, and most of the no-op
+                // API lives in these two dependencies. Without the exports a Swift consumer would see
+                // no `openInspektor()` or `setApplicationId()`, and `LogLevel` only under the mangled
+                // name `Inspektor_core_no_opLogLevel`, so Swift code that builds against the real
+                // `inspektor.framework` would not build against this one.
+                export(project(":inspektor-core-no-op"))
+                export(project(":inspektor-ui-no-op"))
             }
         }
     }
@@ -40,8 +51,12 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                // The only dependency. Ktor is already on every consumer's classpath, so depending
-                // on the no-op artifact adds no code and no transitive dependencies of its own.
+                // `LogLevel`, `UnstableInspektorAPI` and `setApplicationId` live in the shared
+                // no-op core so that this artifact and `inspektor-okhttp-no-op` can coexist.
+                api(project(":inspektor-core-no-op"))
+                api(project(":inspektor-ui-no-op"))
+                // Ktor is already on every consumer's classpath, so depending on the no-op
+                // artifact adds no code and no transitive dependencies of its own.
                 implementation(libs.ktor.core)
             }
         }

@@ -12,6 +12,10 @@ group = "com.gyanoba.inspektor.sample"
 version = "1.0"
 
 kotlin {
+    // Declaring the `jvmCommonMain` dependsOn edge below would otherwise suppress the default
+    // hierarchy, and with it `iosMain`.
+    applyDefaultHierarchyTemplate()
+
     androidTarget()
 
     jvm()
@@ -53,6 +57,16 @@ kotlin {
             implementation(project(":inspektor"))
         }
 
+        // Android and desktop share the OkHttp integration; iOS uses URLSession instead.
+        val jvmCommonMain by creating {
+            dependsOn(commonMain.get())
+            dependencies {
+                implementation(project(":inspektor-okhttp"))
+            }
+        }
+        androidMain.get().dependsOn(jvmCommonMain)
+        jvmMain.get().dependsOn(jvmCommonMain)
+
         commonTest.dependencies {
             implementation(kotlin("test"))
             implementation(libs.ktor.client.mock)
@@ -76,6 +90,7 @@ kotlin {
 
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
+            implementation(project(":inspektor-urlsession"))
         }
 
     }
@@ -130,6 +145,9 @@ configurations.matching { it.name.startsWith("prod") }.configureEach {
     resolutionStrategy.dependencySubstitution {
         substitute(project(":inspektor"))
             .using(project(":inspektor-no-op"))
+            .because("Inspektor must not ship in production builds")
+        substitute(project(":inspektor-okhttp"))
+            .using(project(":inspektor-okhttp-no-op"))
             .because("Inspektor must not ship in production builds")
     }
 }

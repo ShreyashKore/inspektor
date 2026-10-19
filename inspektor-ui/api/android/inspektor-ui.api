@@ -1,0 +1,14 @@
+public final class com/gyanoba/inspektor/Inspektor_androidKt {
+	public static final fun openInspektor ()V
+}
+
+public final class com/gyanoba/inspektor/MainActivity : androidx/activity/ComponentActivity {
+	public static final field $stable I
+	public fun <init> ()V
+}
+
+public final class com/gyanoba/inspektor/platform/InspektorFileProvider : androidx/core/content/FileProvider {
+	public static final field $stable I
+	public fun <init> ()V
+}
+

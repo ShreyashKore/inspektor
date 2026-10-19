@@ -1,0 +1,31 @@
+public final class com/gyanoba/inspektor/okhttp/InspektorInterceptor : okhttp3/Interceptor {
+	public fun intercept (Lokhttp3/Interceptor$Chain;)Lokhttp3/Response;
+}
+
+public final class com/gyanoba/inspektor/okhttp/InspektorInterceptorKt {
+	public static final fun installInspektor (Lokhttp3/OkHttpClient$Builder;Lcom/gyanoba/inspektor/okhttp/InterceptorMode;Lkotlin/jvm/functions/Function1;)Lokhttp3/OkHttpClient$Builder;
+	public static synthetic fun installInspektor$default (Lokhttp3/OkHttpClient$Builder;Lcom/gyanoba/inspektor/okhttp/InterceptorMode;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lokhttp3/OkHttpClient$Builder;
+}
+
+public final class com/gyanoba/inspektor/okhttp/InspektorOkHttpConfig {
+	public final fun filter (Lkotlin/jvm/functions/Function1;)V
+	public final fun getLevel ()Lcom/gyanoba/inspektor/LogLevel;
+	public final fun getMaxContentLength ()I
+	public final fun getRetentionDuration-UwyO8pc ()J
+	public final fun getShowNotifications ()Z
+	public final fun sanitizeHeader (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun sanitizeHeader$default (Lcom/gyanoba/inspektor/okhttp/InspektorOkHttpConfig;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public final fun setLevel (Lcom/gyanoba/inspektor/LogLevel;)V
+	public final fun setMaxContentLength (I)V
+	public final fun setRetentionDuration-LRDsOJo (J)V
+	public final fun setShowNotifications (Z)V
+}
+
+public final class com/gyanoba/inspektor/okhttp/InterceptorMode : java/lang/Enum {
+	public static final field APPLICATION Lcom/gyanoba/inspektor/okhttp/InterceptorMode;
+	public static final field NETWORK Lcom/gyanoba/inspektor/okhttp/InterceptorMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/gyanoba/inspektor/okhttp/InterceptorMode;
+	public static fun values ()[Lcom/gyanoba/inspektor/okhttp/InterceptorMode;
+}
+

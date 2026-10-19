@@ -19,5 +19,15 @@ dependencyResolutionManagement {
 
 rootProject.name = "inspektor"
 include(":inspektor")
+include(":inspektor-core")
+include(":inspektor-ktor")
+include(":inspektor-okhttp")
+include(":inspektor-ui")
+include(":inspektor-urlsession")
+include(":inspektor-test-fixtures")
+include(":inspektor-core-no-op")
 include(":inspektor-no-op")
+include(":inspektor-okhttp-no-op")
+include(":inspektor-ui-no-op")
+include(":inspektor-urlsession-no-op")
 include(":sample")

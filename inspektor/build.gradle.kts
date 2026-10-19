@@ -1,25 +1,25 @@
-import org.gradle.kotlin.dsl.invoke
-import org.jetbrains.compose.ExperimentalComposeLibrary
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.compose)
-    alias(libs.plugins.compose.compiler)
-    alias(libs.plugins.kotlinx.serialization)
-    alias(libs.plugins.sqlDelight)
-    alias(libs.plugins.atomifu)
     alias(libs.plugins.vanniktech)
-    alias(libs.plugins.mokkery)
 }
 
 group = "com.gyanoba.inspektor"
 version = project.properties["VERSION_NAME"]!!
 
+// The umbrella artifact. It keeps the coordinates and the meaning it always had --
+// `com.gyanoba.inspektor:inspektor` is "the Ktor plugin plus the viewer" -- and now carries no
+// source of its own; every declaration reaches consumers transitively from the three modules
+// below.
+//
+// `api(...)` rather than `implementation(...)` is what makes that work: the split must not change
+// anything on an existing consumer's compile classpath. `:inspektor-ui` in particular reaches
+// consumers only through this line -- `:inspektor-ktor` is headless on purpose -- and
+// `:inspektor-core` is named too, although `:inspektor-ktor` re-exports it, so that the umbrella's
+// contract does not depend on that staying true.
 kotlin {
     explicitApiWarning()
     jvm()
@@ -31,135 +31,43 @@ kotlin {
     }
     val iosArm64 = iosArm64()
     val iosSimulatorArm64 = iosSimulatorArm64()
-
-    val appleTargets = listOf(
-        iosArm64, iosSimulatorArm64,
-    )
+    val appleTargets = listOf(iosArm64, iosSimulatorArm64)
 
     appleTargets.forEach { target ->
-        with(target) {
-            binaries {
-                framework {
-                    baseName = "inspektor"
-                }
-            }
+        target.binaries.framework {
+            baseName = "inspektor"
+            // A source-free Kotlin/Native module produces an *empty* framework unless its
+            // dependencies are exported, so a Swift consumer would see no Inspektor symbols at
+            // all. Gradle/KMP consumers are unaffected either way.
+            export(project(":inspektor-core"))
+            export(project(":inspektor-ui"))
+            export(project(":inspektor-ktor"))
         }
     }
+
+
+    // SQLDelight's native driver binds to the system SQLite and Kotlin/Native does not add the
+    // library on its own, so every native binary -- frameworks and test executables alike --
+    // needs it. Consumers need the same flag in Xcode's Other Linker Flags.
+    targets.withType<KotlinNativeTarget>().configureEach {
+        binaries.configureEach { linkerOpts("-lsqlite3") }
+    }
+
     sourceSets {
-        all {
-            languageSettings {
-                optIn("org.jetbrains.compose.resources.ExperimentalResourceApi")
-            }
-        }
         val commonMain by getting {
             dependencies {
-                implementation(compose.runtime)
-                implementation(compose.foundation)
-                implementation(compose.material3)
-                implementation(compose.components.resources)
-                implementation(compose.components.uiToolingPreview)
-                implementation(libs.material.icons.core)
-                implementation(libs.lifecycle.viewmodel.compose)
-                implementation(libs.lifecycle.runtime.compose)
-                implementation(libs.androidx.navigation.compose)
-                implementation(libs.sqlDelight.coroutines.extensions)
-                implementation(libs.paging.compose.common)
-                implementation(libs.androidx.paging3.extensions)
-                implementation(libs.kotlinx.atomicfu)
-                implementation(libs.kotlinx.coroutines.core)
-                implementation(libs.kotlinx.serialization.json)
-                implementation(libs.kotlinx.serialization.json.io)
-                implementation(libs.kotlinx.datetime)
-                implementation(libs.ktor.core)
-                implementation(libs.multiplatformSettings)
-                implementation(libs.ktor.client.logging)
-                implementation(libs.jsontree)
-                implementation(libs.kstore)
-                implementation(libs.kstore.file)
+                api(project(":inspektor-core"))
+                api(project(":inspektor-ui"))
+                api(project(":inspektor-ktor"))
             }
-        }
-        val commonTest by getting {
-            dependencies {
-                implementation(libs.kotlin.test)
-                @OptIn(ExperimentalComposeLibrary::class)
-                implementation(compose.uiTest)
-                implementation(libs.kotlinx.coroutines.test)
-                implementation(libs.ktor.client.mock)
-                implementation(libs.ktor.client.content.negotiation)
-                implementation(libs.ktor.serialization.kotlinx.json)
-            }
-        }
-
-        val androidUnitTest by getting {
-            dependencies {
-                // Android unit tests run on the host JVM, so they need the JDBC driver for the
-                // in-memory test database. Test-only: it never reaches the published AAR.
-                implementation(libs.sqlDelight.driver.sqlite)
-            }
-        }
-
-        val androidMain by getting {
-            dependencies {
-                implementation(compose.uiTooling)
-                implementation(libs.androidx.activityCompose)
-                implementation(libs.kotlinx.coroutines.android)
-                implementation(libs.ktor.client.okhttp)
-                implementation(libs.sqlDelight.driver.android)
-                implementation(libs.androidx.startup.runtime)
-            }
-        }
-
-        val jvmMain by getting {
-            dependencies {
-                implementation(compose.desktop.currentOs)
-                implementation(libs.kotlinx.coroutines.swing)
-                implementation(libs.ktor.client.okhttp)
-                implementation(libs.sqlDelight.driver.sqlite)
-            }
-        }
-
-        val appleMain by creating {
-            dependsOn(commonMain)
-            dependencies {
-                implementation(libs.stately.common)
-                implementation(libs.stately.iso.collections)
-                implementation(libs.ktor.client.darwin)
-                implementation(libs.sqlDelight.driver.native)
-            }
-        }
-        val appleTest by creating
-        appleTest.dependsOn(commonTest)
-
-        appleTargets.forEach { target ->
-            getByName("${target.targetName}Main") { dependsOn(appleMain) }
-            getByName("${target.targetName}Test") { dependsOn(appleTest) }
         }
     }
 }
 
 android {
-    namespace = "com.gyanoba.inspektor"
+    namespace = "com.gyanoba.inspektor.umbrella"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()
-    }
-}
-
-fun Project.linkSqlite() {
-    project.extensions.findByType(KotlinMultiplatformExtension::class.java)?.apply {
-        targets
-            .filterIsInstance<KotlinNativeTarget>()
-            .flatMap { it.binaries }
-            .forEach { compilationUnit -> compilationUnit.linkerOpts("-lsqlite3") }
-    }
-}
-
-//linkSqlite()
-
-sqldelight {
-    databases {
-        create("InspektorDatabase") {
-            packageName.set("com.gyanoba.inspektor.data")
-        }
     }
 }
