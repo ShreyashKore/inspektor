@@ -149,7 +149,11 @@ public class InspektorInterceptor internal constructor(
             method = request.method,
             requestHeadersSize = approxHeaderByteCount(headers),
             requestContentType = request.body?.contentType()?.typeAndSubType,
-            requestPayloadSize = request.body?.contentLength()?.takeIf { it >= 0 },
+            // No body is a payload of 0 bytes, not an unknown one: readers tell "empty" from
+            // "not captured" by it.
+            requestPayloadSize = request.body.let { body ->
+                if (body == null) 0L else body.contentLength().takeIf { it >= 0 }
+            },
             requestDate = Clock.System.now(),
         )
         if (level.headers) recorder.addRequestHeaders(headers)
