@@ -7,6 +7,7 @@ import com.gyanoba.inspektor.remote.PosixConnection
 import com.gyanoba.inspektor.remote.REMOTE_FIRST_PORT
 import com.gyanoba.inspektor.remote.REMOTE_PORT_COUNT
 import com.gyanoba.inspektor.remote.encodeFrame
+import com.gyanoba.inspektor.remote.logToDevice
 import com.gyanoba.inspektor.remote.openRemoteListener
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.alloc
@@ -85,5 +86,13 @@ class RemoteTransportAppleTest {
             first.close()
             second.close()
         }
+    }
+
+    @Test
+    fun `the device log line is written as text whatever it contains`() {
+        // A Kotlin String passed through a C vararg arrives as a C string, so a `%@` in NSLog's
+        // format would be handed a char pointer and crash the app.
+        logToDevice("Inspektor remote inspection listening on 127.0.0.1:38470")
+        logToDevice("100% of %@ and %s stay text")
     }
 }

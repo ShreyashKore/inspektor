@@ -201,5 +201,7 @@ internal actual fun remoteAppInfo(): RemoteAppInfo {
 
 internal actual fun logToDevice(message: String) {
     // stdout does not reach the unified log on a device; NSLog does, as a public message.
-    NSLog("%@", message)
+    // The message is the format, escaped, never an argument: Kotlin/Native passes a String vararg
+    // as a C string, so `NSLog("%@", message)` hands `%@` a char pointer and crashes the app.
+    NSLog(message.replace("%", "%%"))
 }
