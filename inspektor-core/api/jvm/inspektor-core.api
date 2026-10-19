@@ -285,6 +285,8 @@ public final class com/gyanoba/inspektor/data/HttpTransactionQueries : app/cash/
 	public final fun delete (J)Lapp/cash/sqldelight/db/QueryResult;
 	public final fun deleteAll ()Lapp/cash/sqldelight/db/QueryResult;
 	public final fun deleteBefore (Lkotlin/time/Instant;)Lapp/cash/sqldelight/db/QueryResult;
+	public final fun getAfterId (JJ)Lapp/cash/sqldelight/Query;
+	public final fun getAfterId (JJLkotlin/jvm/functions/FunctionN;)Lapp/cash/sqldelight/Query;
 	public final fun getAll ()Lapp/cash/sqldelight/Query;
 	public final fun getAll (Lkotlin/jvm/functions/FunctionN;)Lapp/cash/sqldelight/Query;
 	public final fun getAllCount ()Lapp/cash/sqldelight/Query;
@@ -296,6 +298,8 @@ public final class com/gyanoba/inspektor/data/HttpTransactionQueries : app/cash/
 	public final fun getAllLatestWithLimit (Lkotlin/time/Instant;Lkotlin/time/Instant;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function13;)Lapp/cash/sqldelight/Query;
 	public final fun getById (J)Lapp/cash/sqldelight/Query;
 	public final fun getById (JLkotlin/jvm/functions/FunctionN;)Lapp/cash/sqldelight/Query;
+	public final fun getFirst ()Lapp/cash/sqldelight/Query;
+	public final fun getFirst (Lkotlin/jvm/functions/FunctionN;)Lapp/cash/sqldelight/Query;
 	public final fun getLast ()Lapp/cash/sqldelight/Query;
 	public final fun getLast (Lkotlin/jvm/functions/FunctionN;)Lapp/cash/sqldelight/Query;
 	public final fun insert (Lcom/gyanoba/inspektor/data/HttpTransaction;)Lapp/cash/sqldelight/db/QueryResult;
@@ -637,6 +641,13 @@ public final class com/gyanoba/inspektor/platform/Os$IOS : com/gyanoba/inspektor
 
 public final class com/gyanoba/inspektor/platform/Os_jvmKt {
 	public static final fun getCurrentOs ()Lcom/gyanoba/inspektor/platform/Os;
+}
+
+public final class com/gyanoba/inspektor/remote/InspektorRemote {
+	public static final field INSTANCE Lcom/gyanoba/inspektor/remote/InspektorRemote;
+	public final fun isRunning ()Z
+	public final fun start ()V
+	public final fun stop ()V
 }
 
 public final class com/gyanoba/inspektor/utils/CurlKt {
