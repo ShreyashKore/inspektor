@@ -32,6 +32,9 @@ internal fun openLoopbackListener(ports: IntRange): RemoteListener {
 private class SocketListener(private val server: ServerSocket) : RemoteListener {
     override val address: String = "127.0.0.1:${server.localPort}"
 
+    // Any process of any user on the machine can reach a loopback port.
+    override val verifiesPeers: Boolean = false
+
     // A blocked accept() is not cancellable; close() unblocks it with a SocketException.
     override suspend fun accept(): RemoteConnection = withContext(Dispatchers.IO) {
         val socket = server.accept()

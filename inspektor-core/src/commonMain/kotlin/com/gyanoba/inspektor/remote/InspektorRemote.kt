@@ -39,10 +39,12 @@ import kotlin.uuid.Uuid
  *
  * The socket is local to the device: an abstract Unix socket on Android, a `127.0.0.1` port on iOS
  * and desktop. Nothing on the network can reach it, and it does not speak HTTP, so a web page
- * cannot drive it either.
+ * cannot drive it either. Other apps on the device are kept out too: Android accepts only adb, root
+ * and the app itself; on iOS and desktop a client must first present a token that is new on every
+ * start and written only to the device log.
  *
- * When the server starts listening it writes one line to the device log naming its socket or port;
- * when [start] refuses, that line says why.
+ * When the server starts listening it writes one line to the device log naming its socket or port,
+ * and its token where it has one; when [start] refuses, that line says why.
  */
 @UnstableInspektorAPI
 public object InspektorRemote {

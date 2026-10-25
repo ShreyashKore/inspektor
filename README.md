@@ -357,15 +357,14 @@ code can't turn it on in the build that reaches users.
   Eagly reaches over adb. It accepts only adb, root and the app itself, by the peer's uid, so other
   apps on the device can't connect.
 - **On iOS and desktop** it listens on a `127.0.0.1` port from 38470 to 38477, which Eagly
-  reaches over usbmux on iOS.
+  reaches over usbmux on iOS. Any app on the device can reach a loopback port, so a client must
+  first present a token. The token is new on every start, and the app writes it only to its log:
+  `Inspektor: remote inspection listening on 127.0.0.1:38470, token <32 hex digits>`.
 
 > [!WARNING]
-> On iOS and desktop there is no authentication. While it runs, any app on the same device can
-> read the recorded traffic and change responses through overrides, the same trade React Native's
-> Metro makes.
->
-> Opt in only builds that never reach real users. Production builds should still use the no-op
-> artifacts, where `InspektorRemote` exists but does nothing.
+> Whoever connects can read the recorded traffic, tokens and cookies included, and change responses
+> through overrides. Opt in only builds that never reach real users. Production builds should
+> still use the no-op artifacts, where `InspektorRemote` exists but does nothing.
 >
 > The socket is never reachable from the network.
 

@@ -1,4 +1,4 @@
-# Inspektor remote protocol, v1
+# Inspektor remote protocol, v2
 
 This document specifies how a desktop tool reads an app's recorded traffic and edits its overrides
 while the app runs. The tool is [Eagly](https://github.com/ShreyashKore/eagly), the desktop viewer
@@ -42,15 +42,20 @@ Inspektor is a development tool. Production releases ship the no-op artifacts. T
 only in builds that never reach real users (debug, UAT, dev flavours), and only after
 `InspektorRemote.start()`.
 
-**There is no authentication on iOS and desktop.** Whoever reaches the socket can read every
-recorded transaction and create or delete overrides. That includes Eagly, through usbmux, and also
-any other app on the same device, since iOS apps can connect to each other's loopback ports. React
-Native's Metro makes the same trade.
+Whoever is let in can read every recorded transaction and create or delete overrides, so the
+server makes sure the client is the developer's tool:
 
-**On Android the kernel names the peer, and the server checks it.** An abstract socket has no file
-permissions, and before Android 9 any app could connect to another app's. So the server asks for
-the peer's uid (`SO_PEERCRED`) and accepts only adb's shell user (2000), root (0) and the app's own
-uid. Any other connection is closed before `hello`.
+- **On Android, the kernel names the peer and the server checks it.** An abstract socket has no
+  file permissions, and before Android 9 any app could connect to another app's. So the server
+  asks for the peer's uid (`SO_PEERCRED`). It accepts only adb's shell user (2000), root (0) and
+  the app's own uid, and closes any other connection before `hello`.
+- **On iOS and desktop, the client must present a token.** A loopback port names no peer: every
+  app on an iOS device can connect to it, and so can every user's processes on a desktop.
+  - Each server makes a random token when it starts (122 bits from the platform's secure
+    generator).
+  - It writes the token only to the device log, which other apps can't read, but adb, a paired
+    Mac and the developer's terminal can.
+  - The client's first request must present it; see [Authentication](#authentication).
 
 What bounds it:
 
@@ -62,7 +67,8 @@ What bounds it:
     network can't reach it. That is unlike Metro, which listens on every interface.
   - It isn't HTTP, so a web page can't drive it (see the rules below).
 - **It is visible.** On start, the server writes one line to the device log naming its socket or
-  port: logcat on Android, the unified log (`NSLog`) on iOS, stdout on desktop.
+  port, and its token where it has one: logcat on Android, the unified log (`NSLog`) on iOS,
+  stdout on desktop.
 
 Two rules keep "a web page can't drive it" true. Every server must follow both:
 
@@ -111,7 +117,7 @@ peer fails fast instead of being buffered.
 The server speaks first, with `hello`. It carries only public identity:
 
 ```json
-{"type": "hello", "protocol": 1,
+{"type": "hello", "protocol": 2, "auth": "token",
  "sdk":   {"name": "inspektor", "runtime": "kotlin", "adapters": [], "overrides": true},
  "app":   {"id": "com.example.app", "name": "Example", "version": "1.4.0 (51)",
            "pid": 12345, "process": "com.example.app"},
@@ -121,6 +127,7 @@ The server speaks first, with `hello`. It carries only public identity:
 | Field | Meaning |
 |---|---|
 | `protocol` | The version the server speaks. A client that can't speak it closes the connection and says which side to update. |
+| `auth` | `token`: the client's first request must be `auth`. `none`: the transport has already checked who connected (Android). |
 | `sdk.runtime` | `kotlin` or `dart`. |
 | `sdk.adapters` | The HTTP stacks recording in this process. Kotlin doesn't track them yet, so it sends `[]`. |
 | `sdk.overrides` | Whether the `overrides.*` methods work. |
@@ -129,7 +136,34 @@ The server speaks first, with `hello`. It carries only public identity:
 | `store.persistent` | Whether the store outlives the process. |
 | `store.oldestId` | The oldest transaction still stored, when there is one. |
 
-The client may send requests as soon as `hello` arrives. There is no authentication step.
+When `auth` is `none`, the client may send requests as soon as `hello` arrives.
+
+### Authentication
+
+When `auth` is `token`, the client's first request must be:
+
+```json
+{"id": 1, "method": "auth", "params": {"token": "9f86d081884c4d659a2feaa0c55ad015"}}
+```
+
+- **A matching token** gets `{"id": 1, "result": {}}`, and the session goes on as usual.
+- **Anything else** gets the error `unauthorized`, after which the server closes the connection.
+  That covers a wrong token, a missing one and any other method. There is one attempt per
+  connection.
+
+The client reads the token from the line the server writes to the device log:
+
+```
+Inspektor: remote inspection listening on 127.0.0.1:38470, token 9f86d081884c4d659a2feaa0c55ad015
+```
+
+- **The token is 32 lowercase hex digits.** It changes every time the server starts.
+- **The server writes the line again for every connection it accepts.** A client that began
+  reading the log after the app started, for example through iOS's live-only syslog relay,
+  connects first and then finds the line.
+- **A client matches the line by its address,** and on iOS by the pid of the process that logged
+  it. Several apps may be listening at once.
+- **The server compares tokens in constant time.**
 
 ## Requests and replies
 
@@ -154,7 +188,8 @@ Transaction ids travel as strings. Servers accept a number as well.
 | `overrides.delete` | `id` | `{}` |
 | `ping` | – | `{}` |
 
-Error codes: `invalid_params`, `not_found`, `unknown_method`, `internal`.
+Error codes: `invalid_params`, `not_found`, `unknown_method`, `internal`, and `unauthorized`
+(only in reply to the first request; see [Authentication](#authentication)).
 
 ## Events
 
@@ -261,3 +296,8 @@ A Dart server must produce and accept exactly this JSON.
   `unknown_method`.
 - **Anything else bumps `protocol`.** A client that meets a version it can't speak tells the user
   which side to update: Eagly when the server is newer, the app's Inspektor when it is older.
+
+| Version | Change |
+|---|---|
+| 1 | First version. |
+| 2 | The `auth` field in `hello`, and the `auth` request a client must send first when it says `token`. A v1 client fails at its first request, so this isn't additive. |

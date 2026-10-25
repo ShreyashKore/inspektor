@@ -103,6 +103,9 @@ private class PosixListener(private val fd: Int, port: Int) : RemoteListener {
 
     override val address: String = "127.0.0.1:$port"
 
+    // Every app on the device shares the loopback interface, and runs as the same user.
+    override val verifiesPeers: Boolean = false
+
     override suspend fun accept(): RemoteConnection =
         withContext(Dispatchers.IO) { awaitClient() }
 

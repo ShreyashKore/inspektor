@@ -38,10 +38,12 @@ private class RequestException(val code: String, message: String) : Exception(me
 /**
  * One client connection (docs/REMOTE_PROTOCOL.md).
  *
- * The server speaks first with `hello`. After that the client sends requests, each answered with
- * a reply carrying its id, and after `subscribe` the session also pushes events: first every
- * stored transaction after the client's `afterId` (the backfill), then each write as it happens.
- * Replies and events share one connection, so every write goes through [writeLock].
+ * The server speaks first with `hello`. With a [token], the client's first request must be `auth`
+ * presenting it; anything else, or a wrong token, ends the session. After that the client sends
+ * requests, each answered with a reply carrying its id, and after `subscribe` the session also
+ * pushes events: first every stored transaction after the client's `afterId` (the backfill), then
+ * each write as it happens. Replies and events share one connection, so every write goes through
+ * [writeLock].
  */
 @OptIn(UnstableInspektorAPI::class)
 internal class RemoteSession(
@@ -49,6 +51,7 @@ internal class RemoteSession(
     private val dataSource: InspektorDataSourceImpl,
     private val overrides: OverrideRepository,
     private val hello: suspend () -> JsonObject,
+    private val token: String?,
     parent: CoroutineScope,
 ) {
     private val scope = CoroutineScope(
@@ -62,6 +65,7 @@ internal class RemoteSession(
         try {
             send(hello())
             val reader = FrameReader(connection)
+            if (token != null && !authenticate(reader, token)) return@launch
             while (true) {
                 val frame = reader.next() ?: break
                 handle(frame)
@@ -80,6 +84,34 @@ internal class RemoteSession(
     fun close() {
         scope.cancel()
         connection.close()
+    }
+
+    /**
+     * Reads the client's first request, which must be `auth` with [token]. Answers it either way,
+     * and returns whether the session may go on; one attempt per connection.
+     */
+    private suspend fun authenticate(reader: FrameReader, token: String): Boolean {
+        val frame = reader.next() ?: return false
+        val id = (frame["id"] as? JsonPrimitive)?.longOrNull
+        val method = (frame["method"] as? JsonPrimitive)?.contentOrNull
+        val presented = ((frame["params"] as? JsonObject)?.get("token") as? JsonPrimitive)
+            ?.contentOrNull
+        if (method == "auth" && presented != null && constantTimeEquals(presented, token)) {
+            if (id != null) send(resultMessage(id, EmptyJsonObject))
+            return true
+        }
+        if (id != null) {
+            send(
+                errorMessage(
+                    id = id,
+                    code = "unauthorized",
+                    message = "The first request must be \"auth\" with the token the app wrote " +
+                        "to the device log.",
+                ),
+            )
+        }
+        InspektorLog.info(TAG) { "Closed a connection that did not present the token" }
+        return false
     }
 
     // ── Requests ──────────────────────────────────────────────────────────
@@ -281,3 +313,13 @@ private fun JsonObject.longParam(key: String): Long? {
 }
 
 private fun JsonObject.intParam(key: String): Int? = (this[key] as? JsonPrimitive)?.intOrNull
+
+/** Compares in time that depends only on the length, so timing can't reveal a token's prefix. */
+private fun constantTimeEquals(a: String, b: String): Boolean {
+    val x = a.encodeToByteArray()
+    val y = b.encodeToByteArray()
+    if (x.size != y.size) return false
+    var difference = 0
+    for (i in x.indices) difference = difference or (x[i].toInt() xor y[i].toInt())
+    return difference == 0
+}

@@ -14,6 +14,11 @@ the app closes the connection or you press Ctrl-C. Standard library only.
 PORT is a port on this machine: `adb forward tcp:0 localabstract:inspektor_<pid>_kotlin` prints
 one for an Android app; an iOS simulator or desktop app listens on 38470-38477 directly; a
 physical iPhone needs `iproxy 38470 38470` first.
+
+An iOS or desktop app also wants its token, which only its log shows, in the line
+`Inspektor: remote inspection listening on 127.0.0.1:38470, token <TOKEN>`:
+
+    python3 scripts/remote-client.py 38470 --token 0123456789abcdef0123456789abcdef
 """
 import argparse
 import base64
@@ -92,6 +97,7 @@ def main():
                         choices=["request", "response", "originalRequest", "originalResponse"])
     parser.add_argument("--overrides", action="store_true", help="list overrides and exit")
     parser.add_argument("--raw", action="store_true", help="print frames as full JSON")
+    parser.add_argument("--token", help="the token from the app's log line (iOS and desktop)")
     args = parser.parse_args()
 
     sock = socket.create_connection((args.host, args.port), timeout=10)
@@ -105,6 +111,12 @@ def main():
           f"oldest #{store.get('oldestId')}")
     if args.raw:
         print(json.dumps(hello, indent=2))
+
+    if hello.get("auth") == "token":
+        if not args.token:
+            sys.exit("This app wants a token. Pass --token with the one in its log line "
+                     "'Inspektor: remote inspection listening on ..., token <TOKEN>'.")
+        request(sock, 0, "auth", {"token": args.token})
 
     if args.body:
         result = request(sock, 1, "body.get", {"id": args.body, "part": args.part})

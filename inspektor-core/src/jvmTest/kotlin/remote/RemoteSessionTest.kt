@@ -41,13 +41,17 @@ class RemoteSessionTest {
         scope.cancel()
     }
 
-    private fun connect(): Pair<TestClient, PipeConnection> {
+    /** A session; without a [token], as on Android, where the transport has vouched for the peer. */
+    private fun connect(token: String? = null): Pair<TestClient, PipeConnection> {
         val (clientSide, serverSide) = connectionPair()
         RemoteSession(
             connection = serverSide,
             dataSource = dataSource,
             overrides = overrides,
-            hello = { helloMessage(app, "store-1", dataSource.oldestTransactionId()) },
+            hello = {
+                helloMessage(app, "store-1", dataSource.oldestTransactionId(), token != null)
+            },
+            token = token,
             parent = scope,
         ).start()
         return TestClient(clientSide) to clientSide
@@ -64,7 +68,8 @@ class RemoteSessionTest {
 
         val hello = client.hello()
 
-        assertEquals("1", hello["protocol"].text)
+        assertEquals("2", hello["protocol"].text)
+        assertEquals("none", hello["auth"].text)
         assertEquals("kotlin", hello.obj("sdk")["runtime"].text)
         assertEquals("true", hello.obj("sdk")["overrides"].text)
         assertEquals("com.example.app", hello.obj("app")["id"].text)
@@ -268,6 +273,42 @@ class RemoteSessionTest {
         val garbage = client.request("overrides.put", buildJsonObject { put("nonsense", true) })
         assertEquals("invalid_params", garbage.obj("error")["code"].text)
     }
+
+    @Test
+    fun `with a token, the session serves once the client presents it`() = runBlocking<Unit> {
+        val (client, _) = connect(token = "0123456789abcdef0123456789abcdef")
+        assertEquals("token", client.hello()["auth"].text)
+
+        val reply = client.request("auth", json("""{"token": "0123456789abcdef0123456789abcdef"}"""))
+
+        assertEquals(JsonObject(emptyMap()), reply["result"])
+        assertEquals(JsonObject(emptyMap()), client.request("ping")["result"])
+    }
+
+    @Test
+    fun `a wrong token is refused and the connection closed`() = runBlocking<Unit> {
+        val (client, _) = connect(token = "0123456789abcdef0123456789abcdef")
+        client.hello()
+
+        val reply = client.request("auth", json("""{"token": "0123456789abcdef0123456789abcdee"}"""))
+
+        assertEquals("unauthorized", reply.obj("error")["code"].text)
+        assertNull(client.nextFrame())
+    }
+
+    @Test
+    fun `a request before the token is refused, unanswered, and the connection closed`() =
+        runBlocking<Unit> {
+            record("https://a.example.com/1")
+            val (client, _) = connect(token = "0123456789abcdef0123456789abcdef")
+            client.hello()
+
+            val reply = client.request("transactions.list")
+
+            assertEquals("unauthorized", reply.obj("error")["code"].text)
+            assertNull(reply["result"])
+            assertNull(client.nextFrame())
+        }
 
     @Test
     fun `an unknown method is an error, and the session carries on`() = runBlocking<Unit> {

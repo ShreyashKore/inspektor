@@ -141,7 +141,7 @@ internal class PipeConnection(
 /**
  * The Eagly side of a session: sends requests, and sorts what comes back into replies and events.
  */
-internal class TestClient(private val connection: PipeConnection) {
+internal class TestClient(private val connection: RemoteConnection) {
     private val reader = com.gyanoba.inspektor.remote.FrameReader(connection)
     private val events = ArrayDeque<JsonObject>()
     private val replies = mutableMapOf<Long, JsonObject>()

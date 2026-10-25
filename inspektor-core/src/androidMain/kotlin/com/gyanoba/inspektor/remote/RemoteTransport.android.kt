@@ -51,6 +51,8 @@ private class LocalSocketListener(
 
     override val address: String = "@$name"
 
+    override val verifiesPeers: Boolean = true
+
     override suspend fun accept(): RemoteConnection =
         withContext(Dispatchers.IO) { LocalSocketConnection(acceptTrusted()) }
 

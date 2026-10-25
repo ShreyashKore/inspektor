@@ -19,7 +19,7 @@ import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
 /** The protocol version this server speaks (docs/REMOTE_PROTOCOL.md). */
-internal const val REMOTE_PROTOCOL_VERSION: Int = 1
+internal const val REMOTE_PROTOCOL_VERSION: Int = 2
 
 /** Which body of a transaction a `body.get` asks for. */
 internal enum class BodyPart(val wireName: String) {
@@ -34,10 +34,18 @@ internal enum class BodyPart(val wireName: String) {
 }
 
 /** The `hello` a server sends first on every connection. Public identity only, no traffic. */
-internal fun helloMessage(app: RemoteAppInfo, storeId: String, oldestId: Long?): JsonObject =
+internal fun helloMessage(
+    app: RemoteAppInfo,
+    storeId: String,
+    oldestId: Long?,
+    tokenRequired: Boolean,
+): JsonObject =
     buildJsonObject {
         put("type", "hello")
         put("protocol", REMOTE_PROTOCOL_VERSION)
+        // "token": the client's first request must be `auth`. "none": the transport has already
+        // checked who connected.
+        put("auth", if (tokenRequired) "token" else "none")
         putJsonObject("sdk") {
             put("name", "inspektor")
             put("runtime", "kotlin")

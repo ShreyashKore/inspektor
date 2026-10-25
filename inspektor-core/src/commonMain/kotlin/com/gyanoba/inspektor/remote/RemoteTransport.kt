@@ -30,6 +30,12 @@ internal interface RemoteListener {
     /** Where a client finds this listener: `@socket-name` or `127.0.0.1:port`. */
     val address: String
 
+    /**
+     * Whether [accept] lets in only peers the OS has vouched for (Android, by uid). Where it
+     * can't tell who connected, a client must present the server's token before anything else.
+     */
+    val verifiesPeers: Boolean
+
     /** Waits for the next client. Throws once [close] has been called. */
     suspend fun accept(): RemoteConnection
 

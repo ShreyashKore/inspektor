@@ -97,15 +97,21 @@ is the spec; change it together with the code.** Key facts:
   app, an iOS simulator or development-signed app (`get-task-allow`), or a build whose manifest,
   Info.plist or JVM launch (`-Dinspektor.remote.allow=true`) opts in. Keep the opt-in out of code,
   such as a `start()` parameter: shared code would then turn it on in every build, release included.
-- **No authentication, on purpose.** The scope is development builds, like Metro. What keeps it
-  safe:
-  - production ships the no-op;
+- **Only the developer's tool gets in.** Whoever connects can read every transaction and plant
+  overrides, so:
+  - production ships the no-op, and `start()` refuses a build that isn't a development build;
   - the listener is local to the device: an abstract socket on Android, `127.0.0.1` on iOS and
     JVM, never a network interface;
+  - on Android, the kernel names the peer, and only shell, root and the app's own uid are
+    accepted (`RemoteListener.verifiesPeers`);
+  - on iOS and JVM, a loopback port names no peer. So `RemoteServer` makes a random token per start
+    and writes it only to the device log. `RemoteSession.authenticate` requires it as the first
+    request (`auth`), and closes the connection on anything else;
   - `FrameReader` rejects an oversized or non-JSON frame before reading it, which is what stops
     a browser's HTTP request.
 
-  Don't add an HTTP or WebSocket endpoint without adding a token.
+  Never send the token anywhere but the device log, and never skip `auth` on a listener that
+  doesn't verify peers. Don't add an HTTP or WebSocket endpoint without the same token.
 - **Live events come from `InspektorDataSourceImpl.changes`.** It's an internal `SharedFlow`
   emitted on every insert, update and delete. Each session re-reads the row by id. The flow never
   suspends the recording side (`DROP_OLDEST`). Writes that bypass `InspektorDataSourceImpl` are
@@ -120,7 +126,8 @@ is the spec; change it together with the code.** Key facts:
 - **Tests:** JVM tests in `src/jvmTest/kotlin/remote` drive sessions over in-memory pipes and the
   server over a real loopback socket on port 0.
 - **Manual checks:** `scripts/remote-client.py PORT` (standard library only) prints the hello,
-  follows events live, and fetches bodies (`--body ID`) and overrides (`--overrides`).
+  follows events live, and fetches bodies (`--body ID`) and overrides (`--overrides`). iOS and
+  desktop apps also need `--token`, taken from the app's `listening on …, token …` log line.
   - On Android, get a port with
     `adb forward tcp:0 localabstract:inspektor_$(adb shell pidof <pkg> | tr -d '\r')_kotlin`.
     If the device drops offline, adb removes its forwards; run it again.

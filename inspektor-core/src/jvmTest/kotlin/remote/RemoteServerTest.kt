@@ -5,6 +5,7 @@ import com.gyanoba.inspektor.remote.FrameReader
 import com.gyanoba.inspektor.remote.RemoteAppInfo
 import com.gyanoba.inspektor.remote.RemoteServer
 import com.gyanoba.inspektor.remote.StreamConnection
+import com.gyanoba.inspektor.remote.newRemoteToken
 import com.gyanoba.inspektor.remote.openLoopbackListener
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -25,6 +26,8 @@ import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
+private const val TOKEN = "0123456789abcdef0123456789abcdef"
+
 @OptIn(UnstableInspektorAPI::class)
 class RemoteServerTest {
     private val announced = CopyOnWriteArrayList<String>()
@@ -38,6 +41,7 @@ class RemoteServerTest {
         openListener = { openLoopbackListener(0..0) },
         announce = { announced += it },
         retryDelay = 50.milliseconds,
+        token = TOKEN,
     )
 
     @AfterTest
@@ -56,16 +60,40 @@ class RemoteServerTest {
     }
 
     @Test
-    fun `listens on loopback, announces where, and greets a client`() = runBlocking<Unit> {
+    fun `listens on loopback, announces where with the token, and greets a client`() =
+        runBlocking<Unit> {
+            server.start()
+            val address = awaitAddress()
+
+            val hello = withContext(Dispatchers.IO) { FrameReader(connect(address)).next()!! }
+
+            assertTrue(address.startsWith("127.0.0.1:"))
+            assertEquals("hello", hello["type"].text)
+            assertEquals("token", hello["auth"].text)
+            assertEquals("com.example.app", hello.obj("app")["id"].text)
+            // Once on listening, and again for the client, which may have missed the first.
+            val line = "Inspektor: remote inspection listening on $address, token $TOKEN"
+            assertEquals(listOf(line, line), announced)
+        }
+
+    @Test
+    fun `a loopback client is served only after presenting the token`() = runBlocking<Unit> {
         server.start()
-        val address = awaitAddress()
+        val client = TestClient(connect(awaitAddress()))
+        client.hello()
 
-        val hello = withContext(Dispatchers.IO) { FrameReader(connect(address)).next()!! }
+        val reply = client.request("auth", json("""{"token": "$TOKEN"}"""))
 
-        assertTrue(address.startsWith("127.0.0.1:"))
-        assertEquals(listOf("Inspektor: remote inspection listening on $address"), announced)
-        assertEquals("hello", hello["type"].text)
-        assertEquals("com.example.app", hello.obj("app")["id"].text)
+        assertEquals("{}", reply["result"].toString())
+        assertEquals("{}", client.request("ping")["result"].toString())
+    }
+
+    @Test
+    fun `each server makes its own token`() {
+        val tokens = List(100) { newRemoteToken() }
+
+        assertEquals(100, tokens.toSet().size)
+        assertTrue(tokens.all { it.matches(Regex("[0-9a-f]{32}")) })
     }
 
     @Test
