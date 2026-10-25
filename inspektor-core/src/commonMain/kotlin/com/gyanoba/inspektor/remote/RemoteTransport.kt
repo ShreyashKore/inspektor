@@ -55,6 +55,16 @@ internal expect fun openRemoteListener(): RemoteListener
 internal expect fun remoteAppInfo(): RemoteAppInfo
 
 /**
+ * Why this build may not serve remote inspection, or null when it may.
+ *
+ * A development build may: a debuggable Android app, or an iOS app on the simulator or signed for
+ * development. Any other build serves only when that build itself says so, through its manifest,
+ * its Info.plist or a JVM system property, never through code, so a call to `start()` in shared
+ * code cannot open a socket in the build that reaches users.
+ */
+internal expect fun remoteStartRefusal(): String?
+
+/**
  * Writes [message] where the host can read it: logcat on Android, the unified log on iOS (stdout
  * never reaches it there), stdout on desktop.
  */

@@ -93,6 +93,10 @@ is the spec; change it together with the code.** Key facts:
 
 - **Off by default.** `InspektorRemote.start()` (`@UnstableInspektorAPI`) turns it on. Its no-op
   twin lives in `:inspektor-core-no-op`, so keep the two APIs identical (`apiDump`).
+- **Development builds only.** `start()` asks `remoteStartRefusal()` first: a debuggable Android
+  app, an iOS simulator or development-signed app (`get-task-allow`), or a build whose manifest,
+  Info.plist or JVM launch (`-Dinspektor.remote.allow=true`) opts in. Keep the opt-in out of code,
+  such as a `start()` parameter: shared code would then turn it on in every build, release included.
 - **No authentication, on purpose.** The scope is development builds, like Metro. What keeps it
   safe:
   - production ships the no-op;

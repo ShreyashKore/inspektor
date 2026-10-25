@@ -9,6 +9,7 @@ import com.gyanoba.inspektor.remote.REMOTE_PORT_COUNT
 import com.gyanoba.inspektor.remote.encodeFrame
 import com.gyanoba.inspektor.remote.logToDevice
 import com.gyanoba.inspektor.remote.openRemoteListener
+import com.gyanoba.inspektor.remote.remoteStartRefusal
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.convert
@@ -86,6 +87,11 @@ class RemoteTransportAppleTest {
             first.close()
             second.close()
         }
+    }
+
+    @Test
+    fun theSimulatorCountsAsADevelopmentBuild() {
+        assertNull(remoteStartRefusal())
     }
 
     @Test

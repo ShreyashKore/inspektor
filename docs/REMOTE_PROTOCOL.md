@@ -23,6 +23,19 @@ InspektorRemote.start()   // idempotent, returns at once; the server runs in the
 `InspektorRemote` also exists in the no-op artifacts, where it does nothing. Code that starts it
 compiles in production builds, and nothing listens there.
 
+`start()` also refuses to serve a build that isn't a development build, so a production build that
+links the real library by mistake still exposes nothing. When it refuses, it writes why to the
+device log.
+
+| Platform | Serves | Opting another build in |
+|---|---|---|
+| Android | A debuggable app | `<meta-data android:name="com.gyanoba.inspektor.remote.ALLOW" android:value="true"/>` in that build's manifest |
+| iOS | The simulator, or an app signed for development (`get-task-allow` in its embedded profile) | `InspektorRemoteAllow` = `YES` in that build's Info.plist |
+| Desktop (JVM) | Nothing by default: a JVM has no debug flag | Launching with `-Dinspektor.remote.allow=true` |
+
+The opt-in is always part of one build's own manifest, Info.plist or launch arguments, never code.
+A call in shared code therefore can't turn the server on in the build that reaches users.
+
 ## Scope and trust model
 
 Inspektor is a development tool. Production releases ship the no-op artifacts. The server runs
@@ -37,7 +50,8 @@ to each other's abstract sockets. React Native's Metro makes the same trade.
 What bounds it:
 
 - **Production releases contain no server.** The no-op artifacts have no transport code.
-- **The server is opt-in,** through `InspektorRemote.start()`.
+- **The server is opt-in,** through `InspektorRemote.start()`, and only in a development build or
+  one whose own configuration allows it (see [Turning it on](#turning-it-on)).
 - **It is reachable only on the device.**
   - The listener is an abstract Unix socket on Android and `127.0.0.1` everywhere else, so the
     network can't reach it. That is unlike Metro, which listens on every interface.

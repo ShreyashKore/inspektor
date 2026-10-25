@@ -76,6 +76,19 @@ internal actual fun remoteAppInfo(): RemoteAppInfo {
     )
 }
 
+/** The system property that turns remote inspection on for a desktop app. */
+internal const val ALLOW_PROPERTY: String = "inspektor.remote.allow"
+
+// A JVM carries no debug flag to go by, so desktop always needs the launch to opt in.
+internal actual fun remoteStartRefusal(): String? =
+    if (System.getProperty(ALLOW_PROPERTY) == "true") {
+        null
+    } else {
+        "a desktop app serves remote inspection only when launched with " +
+            "-D$ALLOW_PROPERTY=true. Set it in the development run configuration, not in the " +
+            "packaged app."
+    }
+
 internal actual fun logToDevice(message: String) {
     println(message)
 }

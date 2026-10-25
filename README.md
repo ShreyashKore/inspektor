@@ -339,7 +339,19 @@ InspektorRemote.start()
 ```
 
 It is safe to call more than once, and it returns at once; the server runs in the background. On
-start it writes one line to the device log naming where it listens.
+start it writes one line to the device log naming where it listens, or why it didn't start.
+
+It serves only a development build, so a release build that links the real library by mistake
+still exposes nothing:
+
+| Platform | Serves | To serve another build, such as UAT |
+|---|---|---|
+| Android | A debuggable app | Add `<meta-data android:name="com.gyanoba.inspektor.remote.ALLOW" android:value="true"/>` to that build's manifest, e.g. `src/uat/AndroidManifest.xml` |
+| iOS | The simulator, or an app signed for development | Set `InspektorRemoteAllow` to `YES` in that configuration's Info.plist, e.g. from a build setting defined for that configuration alone |
+| Desktop | Nothing until opted in | Launch with `-Dinspektor.remote.allow=true`, in the run configuration rather than the packaged app |
+
+The opt-in belongs to one build's configuration, never to code, so calling `start()` from shared
+code can't turn it on in the build that reaches users.
 
 - **On Android** it listens on a socket local to the device (`@inspektor_<pid>_kotlin`), which
   Eagly reaches over adb.
@@ -350,8 +362,8 @@ start it writes one line to the device log naming where it listens.
 > There is no authentication. While it runs, any app on the same device can read the recorded
 > traffic and change responses through overrides, the same trade React Native's Metro makes.
 >
-> Start it only in builds that never reach real users: debug, UAT, dev flavours. Production builds
-> should use the no-op artifacts, where `InspektorRemote` exists but does nothing.
+> Opt in only builds that never reach real users. Production builds should still use the no-op
+> artifacts, where `InspektorRemote` exists but does nothing.
 >
 > The socket is never reachable from the network.
 

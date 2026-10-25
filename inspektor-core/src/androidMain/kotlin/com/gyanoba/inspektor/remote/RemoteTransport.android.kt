@@ -1,6 +1,8 @@
 package com.gyanoba.inspektor.remote
 
 import android.app.Application
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
 import android.net.LocalServerSocket
 import android.net.LocalSocket
 import android.net.LocalSocketAddress
@@ -91,6 +93,24 @@ internal actual fun remoteAppInfo(): RemoteAppInfo {
         pid = Process.myPid().toLong(),
         process = processName(),
     )
+}
+
+/** Manifest meta-data that lets a build that is not debuggable serve remote inspection. */
+private const val ALLOW_META_DATA = "com.gyanoba.inspektor.remote.ALLOW"
+
+internal actual fun remoteStartRefusal(): String? {
+    val context = ContextInitializer.appContext
+    if (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) return null
+    val allowed = runCatching {
+        @Suppress("DEPRECATION") // The flags overload needs API 33.
+        context.packageManager
+            .getApplicationInfo(context.packageName, PackageManager.GET_META_DATA)
+            .metaData?.getBoolean(ALLOW_META_DATA) == true
+    }.getOrDefault(false)
+    if (allowed) return null
+    return "this build is not debuggable. To serve a build that is not debuggable, such as a UAT " +
+        "build, add <meta-data android:name=\"$ALLOW_META_DATA\" android:value=\"true\"/> to " +
+        "that build's manifest only."
 }
 
 private fun processName(): String? =

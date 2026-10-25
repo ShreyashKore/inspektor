@@ -22,8 +22,14 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import platform.Foundation.NSBundle
+import platform.Foundation.NSData
+import platform.Foundation.NSISOLatin1StringEncoding
 import platform.Foundation.NSLog
+import platform.Foundation.NSNumber
 import platform.Foundation.NSProcessInfo
+import platform.Foundation.NSString
+import platform.Foundation.create
+import platform.Foundation.dataWithContentsOfFile
 import platform.posix.AF_INET
 import platform.posix.EAGAIN
 import platform.posix.ECONNABORTED
@@ -198,6 +204,45 @@ internal actual fun remoteAppInfo(): RemoteAppInfo {
         process = NSProcessInfo.processInfo.processName,
     )
 }
+
+/** The Info.plist key that lets an ad hoc or TestFlight build serve remote inspection. */
+private const val ALLOW_INFO_KEY = "InspektorRemoteAllow"
+
+internal actual fun remoteStartRefusal(): String? {
+    if (isSimulator() || isSignedForDevelopment() || isAllowedByInfoPlist()) return null
+    return "this build is not signed for development. To serve an ad hoc or TestFlight build, " +
+        "set $ALLOW_INFO_KEY to YES in that build's Info.plist only, for instance from a build " +
+        "setting defined for that configuration alone."
+}
+
+private fun isSimulator(): Boolean =
+    NSProcessInfo.processInfo.environment["SIMULATOR_UDID"] != null
+
+private val GET_TASK_ALLOW = Regex("""<key>get-task-allow</key>\s*<true\s*/>""")
+
+/**
+ * Whether the provisioning profile lets a debugger attach, as Xcode's development profiles do and
+ * ad hoc, enterprise and App Store ones never do. An App Store or TestFlight build has no
+ * embedded profile at all.
+ */
+private fun isSignedForDevelopment(): Boolean {
+    val path = NSBundle.mainBundle.pathForResource("embedded", ofType = "mobileprovision")
+        ?: return false
+    val data = NSData.dataWithContentsOfFile(path) ?: return false
+    // The profile is a signed CMS envelope around a plain-text plist. Latin-1 decodes any byte,
+    // so the envelope does not stop the plist from being found.
+    val text = NSString.create(data = data, encoding = NSISOLatin1StringEncoding) as String?
+        ?: return false
+    return GET_TASK_ALLOW.containsMatchIn(text)
+}
+
+private fun isAllowedByInfoPlist(): Boolean =
+    when (val value = NSBundle.mainBundle.objectForInfoDictionaryKey(ALLOW_INFO_KEY)) {
+        is NSNumber -> value.boolValue
+        // A value filled in from a build setting arrives as a string.
+        is String -> value.equals("YES", ignoreCase = true) || value == "true" || value == "1"
+        else -> false
+    }
 
 internal actual fun logToDevice(message: String) {
     // stdout does not reach the unified log on a device; NSLog does, as a public message.
