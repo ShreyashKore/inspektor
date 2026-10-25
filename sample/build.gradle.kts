@@ -138,10 +138,15 @@ android {
 // `:inspektor-no-op`. This works precisely because the two expose an identical public API under the
 // same package; if they ever diverge, the prod variants stop compiling.
 //
+// That reaches Android flavours only: Kotlin/Native resolves one set of dependencies for its debug
+// and release frameworks, and desktop has no flavours. So iOS and desktop release builds are made
+// with `-PinspektorNoOp`, which substitutes in every configuration.
+//
 // A pure-Android consumer needs none of this and can just write:
 //   devImplementation("com.gyanoba.inspektor:inspektor:<version>")
 //   prodImplementation("com.gyanoba.inspektor:inspektor-no-op:<version>")
-configurations.matching { it.name.startsWith("prod") }.configureEach {
+val inspektorNoOp = providers.gradleProperty("inspektorNoOp").isPresent
+configurations.matching { inspektorNoOp || it.name.startsWith("prod") }.configureEach {
     resolutionStrategy.dependencySubstitution {
         substitute(project(":inspektor"))
             .using(project(":inspektor-no-op"))
@@ -149,7 +154,17 @@ configurations.matching { it.name.startsWith("prod") }.configureEach {
         substitute(project(":inspektor-okhttp"))
             .using(project(":inspektor-okhttp-no-op"))
             .because("Inspektor must not ship in production builds")
+        substitute(project(":inspektor-urlsession"))
+            .using(project(":inspektor-urlsession-no-op"))
+            .because("Inspektor must not ship in production builds")
     }
+}
+
+// A JVM has no debug flag, so desktop remote inspection is opted into by the launch. Only the
+// development run gets it; runRelease and the packaged app don't, and there start() does nothing.
+// The Compose plugin registers `run` after this script runs, hence a lazy match, not `named`.
+tasks.withType<JavaExec>().matching { it.name == "run" }.configureEach {
+    systemProperty("inspektor.remote.allow", "true")
 }
 
 compose.desktop {

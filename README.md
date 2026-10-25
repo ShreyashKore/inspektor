@@ -144,14 +144,24 @@ common compile classpath for *every* target, so a per-variant `devImplementation
 Substitute the module for the production variants instead — see `sample/build.gradle.kts`:
 
 ```kotlin
-configurations.matching { it.name.startsWith("prod") }.configureEach {
+// Android prod flavours always; every configuration when built with -PinspektorNoOp.
+val inspektorNoOp = providers.gradleProperty("inspektorNoOp").isPresent
+configurations.matching { inspektorNoOp || it.name.startsWith("prod") }.configureEach {
     resolutionStrategy.dependencySubstitution {
         substitute(module("com.gyanoba.inspektor:inspektor"))
             .using(module("com.gyanoba.inspektor:inspektor-no-op:latest-version"))
             .because("Inspektor must not ship in production builds")
+        // ...and the same for each integration you use: inspektor-okhttp, inspektor-urlsession.
     }
 }
 ```
+
+The `prod` match reaches Android flavours only. Kotlin/Native resolves one set of dependencies for
+its debug and release frameworks alike, and a desktop app has no flavours. So build iOS and
+desktop releases with `-PinspektorNoOp`, for instance from the release configuration's Xcode build
+phase or your packaging job. If a release is built without it, it links the real library: recording
+stays on, and only `InspektorRemote.start()` refusing a build that isn't a development build keeps
+remote inspection off (see [Remote inspection with Eagly](#remote-inspection-with-eagly)).
 
 ## Usage
 
