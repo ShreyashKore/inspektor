@@ -35,6 +35,10 @@ kotlin {
 
     appleTargets.forEach { target ->
         target.binaries.framework { baseName = "InspektorCore" }
+        // os_log for remote inspection's log line; see the .def file for why not NSLog.
+        target.compilations.getByName("main").cinterops.create("oslog") {
+            definitionFile.set(project.file("src/nativeInterop/cinterop/oslog.def"))
+        }
     }
 
 

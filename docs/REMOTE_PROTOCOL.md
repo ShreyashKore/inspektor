@@ -67,7 +67,7 @@ What bounds it:
     network can't reach it. That is unlike Metro, which listens on every interface.
   - It isn't HTTP, so a web page can't drive it (see the rules below).
 - **It is visible.** On start, the server writes one line to the device log naming its socket or
-  port, and its token where it has one: logcat on Android, the unified log (`NSLog`) on iOS,
+  port, and its token where it has one: logcat on Android, the unified log on iOS,
   stdout on desktop.
 
 Two rules keep "a web page can't drive it" true. Every server must follow both:
@@ -158,9 +158,12 @@ Inspektor: remote inspection listening on 127.0.0.1:38470, token 9f86d081884c4d6
 ```
 
 - **The token is 32 lowercase hex digits.** It changes every time the server starts.
-- **The server writes the line again for every connection it accepts.** A client that began
-  reading the log after the app started, for example through iOS's live-only syslog relay,
-  connects first and then finds the line.
+- **The server writes the line again for every connection it accepts.** iOS's syslog relay
+  carries only live lines. So a client starts reading the log, then connects, and finds the line
+  written for its own connection.
+- **The line must reach the log readable.** iOS shows a message whose format is built at run time
+  as `<private>`. So an iOS server logs through `os_log` with the constant format `%{public}s`, and
+  the line is its argument. `NSLog(line)` is not enough.
 - **A client matches the line by its address,** and on iOS by the pid of the process that logged
   it. Several apps may be listening at once.
 - **The server compares tokens in constant time.**

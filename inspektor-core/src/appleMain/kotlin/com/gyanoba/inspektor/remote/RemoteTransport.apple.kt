@@ -4,6 +4,7 @@ package com.gyanoba.inspektor.remote
 
 import com.gyanoba.inspektor.UnstableInspektorAPI
 import com.gyanoba.inspektor.platform.getAppName
+import com.gyanoba.inspektor.remote.oslog.inspektor_log_public
 import kotlinx.atomicfu.atomic
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.IntVar
@@ -24,7 +25,6 @@ import kotlinx.coroutines.withContext
 import platform.Foundation.NSBundle
 import platform.Foundation.NSData
 import platform.Foundation.NSISOLatin1StringEncoding
-import platform.Foundation.NSLog
 import platform.Foundation.NSNumber
 import platform.Foundation.NSProcessInfo
 import platform.Foundation.NSString
@@ -248,8 +248,9 @@ private fun isAllowedByInfoPlist(): Boolean =
     }
 
 internal actual fun logToDevice(message: String) {
-    // stdout does not reach the unified log on a device; NSLog does, as a public message.
-    // The message is the format, escaped, never an argument: Kotlin/Native passes a String vararg
-    // as a C string, so `NSLog("%@", message)` hands `%@` a char pointer and crashes the app.
-    NSLog(message.replace("%", "%%"))
+    // stdout does not reach the unified log on a device. NSLog does, but iOS shows a message whose
+    // format is built at run time as <private>, and a client must read the token in this line. So
+    // the message is an argument to a constant "%{public}s" format (oslog.def), never a format
+    // itself, which also keeps a `%` in it from being read as a specifier.
+    inspektor_log_public(message)
 }
