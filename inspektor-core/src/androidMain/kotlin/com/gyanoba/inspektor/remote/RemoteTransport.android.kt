@@ -12,6 +12,7 @@ import android.util.Log
 import androidx.core.content.pm.PackageInfoCompat
 import com.gyanoba.inspektor.UnstableInspektorAPI
 import com.gyanoba.inspektor.platform.getAppName
+import com.gyanoba.inspektor.utils.InspektorLog
 import com.gyanoba.inspektor.utils.ContextInitializer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -22,11 +23,24 @@ import java.io.IOException
  * An abstract Unix socket named `inspektor_<pid>_kotlin`. Eagly finds it in `/proc/net/unix` and
  * reaches it with `adb forward tcp:0 localabstract:<name>`; the pid keeps the processes of one app
  * apart, and the runtime suffix keeps a Dart server in the same process apart from this one.
+ *
+ * An abstract socket has no file permissions, and before Android 9 any app can connect to another
+ * app's. So the kernel's word on who connected decides instead: only adb, root and this app itself.
  */
 internal actual fun openRemoteListener(): RemoteListener {
     val name = "inspektor_${Process.myPid()}_kotlin"
     return LocalSocketListener(LocalServerSocket(name), name)
 }
+
+private const val TAG = "Inspektor remote"
+
+/** adb's shell user, which `adb forward` connects as. `Process.SHELL_UID` is public from API 29. */
+private const val SHELL_UID = 2000
+
+private const val ROOT_UID = 0
+
+/** Who may connect: adb (as shell, or as root after `adb root`), and this app, which wakes itself. */
+private val trustedUids = setOf(SHELL_UID, ROOT_UID, Process.myUid())
 
 private class LocalSocketListener(
     private val server: LocalServerSocket,
@@ -37,13 +51,24 @@ private class LocalSocketListener(
 
     override val address: String = "@$name"
 
-    override suspend fun accept(): RemoteConnection = withContext(Dispatchers.IO) {
-        val socket = server.accept()
-        if (closed) {
-            socket.close()
-            throw IOException("The listener is closed.")
+    override suspend fun accept(): RemoteConnection =
+        withContext(Dispatchers.IO) { LocalSocketConnection(acceptTrusted()) }
+
+    /** The next client whose uid is trusted; any other is closed as soon as it connects. */
+    private fun acceptTrusted(): LocalSocket {
+        while (true) {
+            val socket = server.accept()
+            if (closed) {
+                socket.close()
+                throw IOException("The listener is closed.")
+            }
+            val uid = runCatching { socket.peerCredentials.uid }.getOrNull()
+            if (uid != null && uid in trustedUids) return socket
+            runCatching { socket.close() }
+            InspektorLog.info(TAG) {
+                "Refused a connection from uid $uid: only adb, root and this app may connect."
+            }
         }
-        LocalSocketConnection(socket)
     }
 
     override fun close() {

@@ -112,7 +112,8 @@ is the spec; change it together with the code.** Key facts:
   invisible to remote clients.
 - **The platform code is small:** `openRemoteListener`, `remoteAppInfo` and `logToDevice`.
   - Android: a `LocalServerSocket`. Closing it doesn't wake `accept()`, so `close()` connects once
-    first.
+    first. `accept()` closes any peer whose uid isn't shell (2000, what `adb forward` connects as),
+    root or the app's own: before Android 9 any app can connect to another's abstract socket.
   - iOS: POSIX sockets, polled rather than blocking in `accept()`, with `SO_NOSIGPIPE` set.
     `iosSimulatorArm64Test` runs the iOS listener for real.
   - JVM: a `ServerSocket`.

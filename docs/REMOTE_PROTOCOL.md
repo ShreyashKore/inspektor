@@ -42,10 +42,15 @@ Inspektor is a development tool. Production releases ship the no-op artifacts. T
 only in builds that never reach real users (debug, UAT, dev flavours), and only after
 `InspektorRemote.start()`.
 
-**There is no authentication.** Whoever reaches the socket can read every recorded transaction and
-create or delete overrides. That includes Eagly, through adb or usbmux, and also any other app on
-the same device: iOS apps can connect to each other's loopback ports, and Android apps can connect
-to each other's abstract sockets. React Native's Metro makes the same trade.
+**There is no authentication on iOS and desktop.** Whoever reaches the socket can read every
+recorded transaction and create or delete overrides. That includes Eagly, through usbmux, and also
+any other app on the same device, since iOS apps can connect to each other's loopback ports. React
+Native's Metro makes the same trade.
+
+**On Android the kernel names the peer, and the server checks it.** An abstract socket has no file
+permissions, and before Android 9 any app could connect to another app's. So the server asks for
+the peer's uid (`SO_PEERCRED`) and accepts only adb's shell user (2000), root (0) and the app's own
+uid. Any other connection is closed before `hello`.
 
 What bounds it:
 
@@ -83,6 +88,7 @@ platforms: iOS has no way for a device to open a connection to the host.
 | Port or name | `runtime` is `kotlin` or `dart` | First free port of 38470–38477 | First free port of 38470–38477 |
 | How a client finds it | `@inspektor_` in `/proc/net/unix` | Probing the port range | Probing the port range |
 | How a client reaches it | `adb forward tcp:0 localabstract:<name>` | usbmux, which connects to the device's loopback | Directly |
+| Who may connect | adb's shell user, root and the app itself, by peer uid | Anyone on the device | Anyone on the machine |
 
 - **Why the pid and runtime are in the Android name:** separate processes of one app get separate
   sockets, and a Dart server in the same process as a Kotlin one gets its own.

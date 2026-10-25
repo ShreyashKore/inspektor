@@ -354,13 +354,15 @@ The opt-in belongs to one build's configuration, never to code, so calling `star
 code can't turn it on in the build that reaches users.
 
 - **On Android** it listens on a socket local to the device (`@inspektor_<pid>_kotlin`), which
-  Eagly reaches over adb.
+  Eagly reaches over adb. It accepts only adb, root and the app itself, by the peer's uid, so other
+  apps on the device can't connect.
 - **On iOS and desktop** it listens on a `127.0.0.1` port from 38470 to 38477, which Eagly
   reaches over usbmux on iOS.
 
 > [!WARNING]
-> There is no authentication. While it runs, any app on the same device can read the recorded
-> traffic and change responses through overrides, the same trade React Native's Metro makes.
+> On iOS and desktop there is no authentication. While it runs, any app on the same device can
+> read the recorded traffic and change responses through overrides, the same trade React Native's
+> Metro makes.
 >
 > Opt in only builds that never reach real users. Production builds should still use the no-op
 > artifacts, where `InspektorRemote` exists but does nothing.
