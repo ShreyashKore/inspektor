@@ -1,0 +1,15 @@
+# The device-log line remote inspection writes on iOS (RemoteTransport.apple.kt).
+#
+# iOS shows a log message whose format is built at run time as <private>, which is
+# what NSLog(message) produced, so a client reading the log could never see the
+# token in it. os_log with a constant "%{public}s" format is shown as written.
+# os_log is a macro, which Kotlin cannot call, hence this inline function.
+package = com.gyanoba.inspektor.remote.oslog
+
+---
+
+#include <os/log.h>
+
+static inline void inspektor_log_public(const char *message) {
+    os_log(OS_LOG_DEFAULT, "%{public}s", message);
+}

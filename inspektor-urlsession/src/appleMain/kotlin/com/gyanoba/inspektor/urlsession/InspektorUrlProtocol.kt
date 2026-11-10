@@ -25,10 +25,13 @@ private const val HANDLED_KEY = "com.gyanoba.inspektor.handled"
 /**
  * Zero-configuration URLSession capture, at a price.
  *
- * Registering this protocol records every `http`/`https` request the URL loading system makes,
- * without the app changing how it builds sessions. Prefer [inspektorUrlSession] unless that is
- * impossible: a `URLProtocol` has hard limits that a delegate does not.
+ * Registering this protocol records every `http`/`https` request made through the shared session
+ * and `NSURLConnection`, without the app changing how it makes them. Prefer [inspektorUrlSession]
+ * unless that is impossible: a `URLProtocol` has hard limits that a delegate does not.
  *
+ * - A session built from its own configuration consults only that configuration's
+ *   `protocolClasses`, so it is captured only once the protocol is listed there
+ *   ([InspektorUrlProtocolBridge.addTo]). [prepare] captures just those sessions.
  * - It must be registered **before** any request is made; earlier requests are invisible.
  * - It never sees `AVPlayer` traffic, background sessions or WebSockets, which bypass the URL
  *   loading system.
@@ -142,12 +145,25 @@ public class InspektorUrlProtocol : NSURLProtocol {
                 NSURLSessionConfiguration.ephemeralSessionConfiguration,
             configure: InspektorUrlSessionConfig.() -> Unit = {},
         ) {
-            activeCapture.value = UrlSessionCapture(InspektorUrlSessionConfig().apply(configure))
-            loaderSession.value = NSURLSession.sessionWithConfiguration(loaderConfiguration)
+            prepare(loaderConfiguration, configure)
             NSURLProtocol.registerClass(this)
         }
 
-        /** Unregisters the protocol. In-flight requests are unaffected. */
+        /**
+         * Sets the protocol up without registering it globally, so it captures only the sessions
+         * whose configuration lists it among its `protocolClasses`: one session, such as React
+         * Native's, and nothing else in the app. Parameters as for [register].
+         */
+        public fun prepare(
+            loaderConfiguration: NSURLSessionConfiguration =
+                NSURLSessionConfiguration.ephemeralSessionConfiguration,
+            configure: InspektorUrlSessionConfig.() -> Unit = {},
+        ) {
+            activeCapture.value = UrlSessionCapture(InspektorUrlSessionConfig().apply(configure))
+            loaderSession.value = NSURLSession.sessionWithConfiguration(loaderConfiguration)
+        }
+
+        /** Undoes [register] or [prepare]. In-flight requests are unaffected. */
         public fun unregister() {
             NSURLProtocol.unregisterClass(this)
             activeCapture.value = null

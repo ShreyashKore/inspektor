@@ -144,14 +144,24 @@ common compile classpath for *every* target, so a per-variant `devImplementation
 Substitute the module for the production variants instead — see `sample/build.gradle.kts`:
 
 ```kotlin
-configurations.matching { it.name.startsWith("prod") }.configureEach {
+// Android prod flavours always; every configuration when built with -PinspektorNoOp.
+val inspektorNoOp = providers.gradleProperty("inspektorNoOp").isPresent
+configurations.matching { inspektorNoOp || it.name.startsWith("prod") }.configureEach {
     resolutionStrategy.dependencySubstitution {
         substitute(module("com.gyanoba.inspektor:inspektor"))
             .using(module("com.gyanoba.inspektor:inspektor-no-op:latest-version"))
             .because("Inspektor must not ship in production builds")
+        // ...and the same for each integration you use: inspektor-okhttp, inspektor-urlsession.
     }
 }
 ```
+
+The `prod` match reaches Android flavours only. Kotlin/Native resolves one set of dependencies for
+its debug and release frameworks alike, and a desktop app has no flavours. So build iOS and
+desktop releases with `-PinspektorNoOp`, for instance from the release configuration's Xcode build
+phase or your packaging job. If a release is built without it, it links the real library: recording
+stays on, and only `InspektorRemote.start()` refusing a build that isn't a development build keeps
+remote inspection off (see [Remote inspection with Eagly](#remote-inspection-with-eagly)).
 
 ## Usage
 
@@ -221,11 +231,47 @@ InspektorUrlProtocol.register {
 }
 ```
 
-`InspektorUrlProtocol` is zero-configuration and does capture completion-handler tasks, but it has
-real costs: requests made before registration are invisible; it never sees `AVPlayer` traffic,
-background sessions or WebSockets; registration is global and mutable and changes caching semantics;
-and it re-issues each request through its own session, so a streamed download is buffered rather
-than delivered incrementally. Prefer the delegate unless you cannot use it.
+`InspektorUrlProtocol` needs no change to how requests are made, and it does capture
+completion-handler tasks, but it has real costs: requests made before registration are invisible; it
+never sees `AVPlayer` traffic, background sessions or WebSockets; registration is global and mutable
+and changes caching semantics; and it re-issues each request through its own session, so a streamed
+download is buffered rather than delivered incrementally. Prefer the delegate unless you cannot use
+it.
+
+A global registration reaches the shared session and `NSURLConnection`. A session built from its
+own configuration consults only that configuration's `protocolClasses`, so add the protocol there,
+or call `prepare` instead of `register` to capture only the sessions that list it.
+
+#### From Swift or React Native
+
+An app that isn't built with Kotlin links `InspektorUrlSession.podspec`. It covers a static
+XCFramework holding the URLSession capture and core, `InspektorRemote` included. Build it, then
+point the app's Podfile at this checkout. List only development configurations:
+
+```bash
+./gradlew :inspektor-urlsession:assembleInspektorUrlSessionReleaseXCFramework
+```
+
+```ruby
+pod 'InspektorUrlSession', :path => '../inspektor', :configurations => ['Debug', 'Release-dev']
+```
+
+Kotlin/Native leaves the members of a Kotlin subclass of an Objective-C class out of the framework
+header, so Swift reaches the protocol through `InspektorUrlProtocolBridge`. React Native builds its
+own `URLSession` from a configuration it asks the app for, so capturing it looks like this:
+
+```swift
+#if canImport(InspektorUrlSession)
+let inspektor = InspektorUrlProtocolBridge.shared
+inspektor.prepare(loaderConfiguration: .default) { $0.level = .body }
+RCTSetCustomNSURLSessionConfigurationProvider {
+  let configuration = URLSessionConfiguration.default
+  inspektor.addTo(configuration: configuration)
+  return configuration
+}
+InspektorRemote.shared.start()
+#endif
+```
 
 For ios you need to add the following `-lsqlite3` to the Other Linker flags under Build Settings.
 See more details [here](https://github.com/cashapp/sqldelight/issues/1442#issuecomment-523435492)
@@ -290,6 +336,49 @@ Inspektor provides a UI to view the logs. You can access it by invoking `openIns
 This opens up a new activity in Android, a bottom sheet in iOS, and a new window in the Desktop.
 
 On Android you can also open the UI by clicking on the generated notifications.
+
+## Remote inspection with Eagly
+
+[Eagly](https://github.com/ShreyashKore/eagly), a desktop viewer for Android and iOS devices, can
+show an app's recorded traffic live, request by request. It can also edit the app's overrides from
+the desktop. Turn it on once, early in the app's life:
+
+```kotlin
+@OptIn(UnstableInspektorAPI::class)
+InspektorRemote.start()
+```
+
+It is safe to call more than once, and it returns at once; the server runs in the background. On
+start it writes one line to the device log naming where it listens, or why it didn't start.
+
+It serves only a development build, so a release build that links the real library by mistake
+still exposes nothing:
+
+| Platform | Serves | To serve another build, such as UAT |
+|---|---|---|
+| Android | A debuggable app | Add `<meta-data android:name="com.gyanoba.inspektor.remote.ALLOW" android:value="true"/>` to that build's manifest, e.g. `src/uat/AndroidManifest.xml` |
+| iOS | The simulator, or an app signed for development | Set `InspektorRemoteAllow` to `YES` in that configuration's Info.plist, e.g. from a build setting defined for that configuration alone |
+| Desktop | Nothing until opted in | Launch with `-Dinspektor.remote.allow=true`, in the run configuration rather than the packaged app |
+
+The opt-in belongs to one build's configuration, never to code, so calling `start()` from shared
+code can't turn it on in the build that reaches users.
+
+- **On Android** it listens on a socket local to the device (`@inspektor_<pid>_kotlin`), which
+  Eagly reaches over adb. It accepts only adb, root and the app itself, by the peer's uid, so other
+  apps on the device can't connect.
+- **On iOS and desktop** it listens on a `127.0.0.1` port from 38470 to 38477, which Eagly
+  reaches over usbmux on iOS. Any app on the device can reach a loopback port, so a client must
+  first present a token. The token is new on every start, and the app writes it only to its log:
+  `Inspektor: remote inspection listening on 127.0.0.1:38470, token <32 hex digits>`.
+
+> [!WARNING]
+> Whoever connects can read the recorded traffic, tokens and cookies included, and change responses
+> through overrides. Opt in only builds that never reach real users. Production builds should
+> still use the no-op artifacts, where `InspektorRemote` exists but does nothing.
+>
+> The socket is never reachable from the network.
+
+The wire protocol is specified in [docs/REMOTE_PROTOCOL.md](docs/REMOTE_PROTOCOL.md).
 
 ## HAR Export
 

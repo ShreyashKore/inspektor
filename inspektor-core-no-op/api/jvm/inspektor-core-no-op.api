@@ -28,3 +28,10 @@ public final class com/gyanoba/inspektor/data/Db_jvmKt {
 	public static final fun setApplicationId (Ljava/lang/String;)V
 }
 
+public final class com/gyanoba/inspektor/remote/InspektorRemote {
+	public static final field INSTANCE Lcom/gyanoba/inspektor/remote/InspektorRemote;
+	public final fun isRunning ()Z
+	public final fun start ()V
+	public final fun stop ()V
+}
+
