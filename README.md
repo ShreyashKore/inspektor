@@ -62,6 +62,27 @@ That ships both in every build, release included; to keep them out, use the no-o
 Every artifact is released together and must be kept at the same version -- they share
 `inspektor-core`, and a mismatched pair fails in confusing ways.
 
+### Snapshots
+
+Work that has landed on `main` but is not released yet is published as a snapshot, on request, to
+Maven Central's snapshot repository. Add that repository and ask for the snapshot version:
+
+```kotlin
+repositories {
+    mavenCentral()
+    maven("https://central.sonatype.com/repository/maven-snapshots/")
+}
+
+dependencies {
+    implementation("com.gyanoba.inspektor:inspektor:1.1.0-SNAPSHOT")
+}
+```
+
+A snapshot is republished in place whenever a new one goes out, so the artifact behind that version
+changes under you -- fine for trying an unreleased feature, not for anything you ship. Everything
+reached through `@UnstableInspektorAPI`, remote inspection included, can change or disappear in the
+release that follows.
+
 ### Keeping Inspektor out of production builds
 
 Inspektor bundles a database, a Compose UI and everything needed to inspect traffic, so you almost

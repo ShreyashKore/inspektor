@@ -7,6 +7,9 @@ on:
     branches:
       - main
   pull_request:
+  # Snapshots go out only when you ask for one: Actions -> CI -> Run workflow.
+  # Releases still ride a 'v*.*.*' tag.
+  workflow_dispatch:
 concurrency:
   # Limit concurrency to 1 for PRs. 'main' concurrency isn't limited.
   group: ${{ github.head_ref || github.run_id }}
@@ -183,7 +186,9 @@ jobs:
     name: Deploy
     runs-on: macos-latest
     timeout-minutes: 60
-    if: github.repository == 'ShreyashKore/inspektor' && startsWith(github.ref, 'refs/tags/v')
+    if: >
+      github.repository == 'ShreyashKore/inspektor'
+      && (startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch')
 #    needs: [ checks, unit-tests, instrumentation-tests, build-sample ]
     needs: [ checks, unit-tests, build-sample ]
     steps:
@@ -192,6 +197,25 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Check the version suits the trigger
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          version=$(sed -n 's/^VERSION_NAME=//p' gradle.properties)
+          case "$EVENT_NAME:$version" in
+            workflow_dispatch:*-SNAPSHOT)
+              echo "Publishing snapshot $version" ;;
+            workflow_dispatch:*)
+              echo "::error::A manual run publishes snapshots only, but VERSION_NAME is '$version'. Push a v$version tag to publish it as a release."
+              exit 1 ;;
+            *:*-SNAPSHOT)
+              echo "::error::Tag '$REF_NAME' sits on snapshot version '$version'. Set a release VERSION_NAME before tagging."
+              exit 1 ;;
+            *)
+              echo "Publishing release $version" ;;
+          esac
 
       - name: Deploy
         env:
